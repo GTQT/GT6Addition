@@ -1,0 +1,150 @@
+[14:17:45] [main/INFO] [GradleStart]: userProperties: {}
+[14:17:45] [main/INFO] [GradleStart]: assetsDir: C:\Users\WX\.gradle\caches\retro_futura_gradle\assets
+[14:17:45] [main/INFO] [GradleStart]: assetIndex: 1.12.2
+[14:17:45] [main/INFO] [GradleStart]: version: FML_DEV
+[14:17:45] [main/INFO] [GradleStart]: username: Dragonwx
+[14:17:45] [main/INFO] [GradleStart]: Extra: [--gameDir, E:\GTQT\TemplateDevEnv\run, --uuid, 3fa7c024-6f05-4036-b5aa-b93d25bdbeb6]
+[14:17:45] [main/INFO] [GradleStart]: Found and added coremod: gregtech.mixins.GregTechMixinLoadingPlugin
+[14:17:45] [main/INFO] [GradleStart]: Found and added coremod: com.cleanroommc.groovyscript.core.GroovyScriptCore
+[14:17:45] [main/INFO] [GradleStart]: Found and added coremod: com.cleanroommc.modularui.core.ModularUICore
+[14:17:45] [main/INFO] [GradleStart]: Found and added coremod: team.chisel.ctm.client.asm.CTMCorePlugin
+[14:17:45] [main/INFO] [GradleStart]: Found and added coremod: appeng.core.AE2ELCore
+[14:17:45] [main/INFO] [GradleStart]: Found and added coremod: com.cleanroommc.osxnarratorblocker.OSXNarratorBlocker
+[14:17:45] [main/INFO] [GradleStart]: Found and added coremod: com.cleanroommc.stripforgereq.StripLatestForgeRequirements
+[14:17:45] [main/INFO] [GradleStart]: Found and added coremod: zone.rong.mixinbooter.MixinBooterPlugin
+[14:17:45] [main/INFO] [GradleStart]: Found and added cascading tweaker: org.spongepowered.asm.launch.MixinTweaker
+[14:17:45] [main/INFO] [GradleStart]: Running with arguments: [--userProperties, {}, --assetsDir, C:\Users\WX\.gradle\caches\retro_futura_gradle\assets, --assetIndex, 1.12.2, --accessToken{REDACTED}, --version, FML_DEV, --username, Dragonwx, --tweakClass, net.minecraftforge.fml.common.launcher.FMLTweaker, --gameDir, E:\GTQT\TemplateDevEnv\run, --uuid, 3fa7c024-6f05-4036-b5aa-b93d25bdbeb6, --tweakClass, org.spongepowered.asm.launch.MixinTweaker, --tweakClass, net.minecraftforge.gradle.tweakers.CoremodTweaker]
+[14:17:45] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.fml.common.launcher.FMLTweaker
+[14:17:45] [main/INFO] [LaunchWrapper]: Using primary tweak class name net.minecraftforge.fml.common.launcher.FMLTweaker
+[14:17:45] [main/INFO] [LaunchWrapper]: Loading tweak class name org.spongepowered.asm.launch.MixinTweaker
+[14:17:46] [main/INFO] [mixin]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=file:/C:/Users/WX/.gradle/caches/modules-2/files-2.1/zone.rong/mixinbooter/9.1/bbf73abfc0099e9e475f8f8303f3d5139a4a69af/mixinbooter-9.1.jar Service=LaunchWrapper Env=CLIENT
+[14:17:46] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.gradle.tweakers.CoremodTweaker
+[14:17:46] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLTweaker
+[14:17:46] [main/INFO] [FML]: Forge Mod Loader version 14.23.5.2847 for Minecraft 1.12.2 loading
+[14:17:46] [main/INFO] [FML]: Java is OpenJDK 64-Bit Server VM, version 1.8.0_432, running on Windows 11:amd64:10.0, installed at C:\Users\WX\.gradle\jdks\azul_systems__inc_-8-amd64-windows.2\jre
+[14:17:46] [main/ERROR] [FML]: Apache Maven library folder was not in the format expected. Using default libraries directory.
+[14:17:46] [main/ERROR] [FML]: Full: C:\Users\WX\.gradle\caches\modules-2\files-2.1\org.apache.maven\maven-artifact\3.5.3\7dc72b6d6d8a6dced3d294ed54c2cc3515ade9f4\maven-artifact-3.5.3.jar
+[14:17:46] [main/ERROR] [FML]: Trimmed: c:/users/wx/.gradle/caches/modules-2/files-2.1/org.apache.maven/maven-artifact/3.5.3/
+[14:17:46] [main/INFO] [FML]: Managed to load a deobfuscated Minecraft name- we are in a deobfuscated environment. Skipping runtime deobfuscation
+[14:17:46] [main/INFO] [FML]: Detected deobfuscated environment, loading log configs for colored console logs.
+[14:17:46] [main/INFO] [FML]: Ignoring missing certificate for coremod FMLCorePlugin (net.minecraftforge.fml.relauncher.FMLCorePlugin), we are in deobf and it's a forge core plugin
+[14:17:46] [main/INFO] [FML]: Ignoring missing certificate for coremod FMLForgePlugin (net.minecraftforge.classloading.FMLForgePlugin), we are in deobf and it's a forge core plugin
+[14:17:46] [main/INFO] [FML]: Found a command line coremod : com.cleanroommc.groovyscript.core.GroovyScriptCore
+[14:17:46] [main/INFO] [FML]: Ignoring missing certificate for coremod GroovyScript-Core (com.cleanroommc.groovyscript.core.GroovyScriptCore), as this is probably a dev workspace
+[14:17:46] [main/INFO] [FML]: Found a command line coremod : com.cleanroommc.stripforgereq.StripLatestForgeRequirements
+[14:17:46] [main/WARN] [FML]: The coremod com.cleanroommc.stripforgereq.StripLatestForgeRequirements does not have a MCVersion annotation, it may cause issues with this version of Minecraft
+[14:17:46] [main/INFO] [FML]: Ignoring missing certificate for coremod StripLatestForgeRequirements (com.cleanroommc.stripforgereq.StripLatestForgeRequirements), as this is probably a dev workspace
+[14:17:46] [main/INFO] [FML]: Found a command line coremod : team.chisel.ctm.client.asm.CTMCorePlugin
+[14:17:46] [main/WARN] [FML]: The coremod team.chisel.ctm.client.asm.CTMCorePlugin does not have a MCVersion annotation, it may cause issues with this version of Minecraft
+[14:17:46] [main/INFO] [FML]: Ignoring missing certificate for coremod CTMCorePlugin (team.chisel.ctm.client.asm.CTMCorePlugin), as this is probably a dev workspace
+[14:17:46] [main/INFO] [FML]: Found a command line coremod : gregtech.mixins.GregTechMixinLoadingPlugin
+[14:17:46] [main/INFO] [FML]: Ignoring missing certificate for coremod GregTechMixinLoadingPlugin (gregtech.mixins.GregTechMixinLoadingPlugin), as this is probably a dev workspace
+[14:17:46] [main/INFO] [FML]: Found a command line coremod : com.cleanroommc.modularui.core.ModularUICore
+[14:17:46] [main/INFO] [FML]: Ignoring missing certificate for coremod ModularUI-Core (com.cleanroommc.modularui.core.ModularUICore), as this is probably a dev workspace
+[14:17:46] [main/INFO] [FML]: Found a command line coremod : com.cleanroommc.osxnarratorblocker.OSXNarratorBlocker
+[14:17:46] [main/WARN] [FML]: The coremod com.cleanroommc.osxnarratorblocker.OSXNarratorBlocker does not have a MCVersion annotation, it may cause issues with this version of Minecraft
+[14:17:46] [main/INFO] [FML]: Ignoring missing certificate for coremod OSXNarratorBlocker (com.cleanroommc.osxnarratorblocker.OSXNarratorBlocker), as this is probably a dev workspace
+[14:17:46] [main/INFO] [FML]: Found a command line coremod : appeng.core.AE2ELCore
+[14:17:46] [main/INFO] [FML]: Ignoring missing certificate for coremod AE2ELCore (appeng.core.AE2ELCore), as this is probably a dev workspace
+[14:17:46] [main/INFO] [FML]: Found a command line coremod : zone.rong.mixinbooter.MixinBooterPlugin
+[14:17:46] [main/WARN] [FML]: The coremod zone.rong.mixinbooter.MixinBooterPlugin does not have a MCVersion annotation, it may cause issues with this version of Minecraft
+[14:17:46] [main/INFO] [FML]: Ignoring missing certificate for coremod MixinBooter (zone.rong.mixinbooter.MixinBooterPlugin), as this is probably a dev workspace
+[14:17:46] [main/INFO] [MixinBooter]: Initializing Mixins...
+[14:17:46] [main/INFO] [mixin]: Compatibility level set to JAVA_8
+[14:17:46] [main/INFO] [MixinBooter]: Initializing MixinExtras...
+[14:17:46] [main/INFO] [FML]: Searching E:\GTQT\TemplateDevEnv\run\mods for mods
+[14:17:46] [main/INFO] [LaunchWrapper]: Calling tweak class org.spongepowered.asm.launch.MixinTweaker
+[14:17:47] [main/INFO] [mixin]: Initialised Mixin FML Remapper Adapter with net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper@5c153b9e
+[14:17:47] [main/INFO] [mixin]: Initialised Legacy FML Dev Remapper
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.gradle.tweakers.CoremodTweaker
+[14:17:47] [main/INFO] [GradleStart]: Injecting location in coremod net.minecraftforge.fml.relauncher.FMLCorePlugin
+[14:17:47] [main/INFO] [GradleStart]: Injecting location in coremod net.minecraftforge.classloading.FMLForgePlugin
+[14:17:47] [main/INFO] [GradleStart]: Injecting location in coremod com.cleanroommc.groovyscript.core.GroovyScriptCore
+[14:17:47] [main/INFO] [GradleStart]: Injecting location in coremod com.cleanroommc.stripforgereq.StripLatestForgeRequirements
+[14:17:47] [main/INFO] [GradleStart]: Injecting location in coremod team.chisel.ctm.client.asm.CTMCorePlugin
+[14:17:47] [main/INFO] [GradleStart]: Injecting location in coremod gregtech.mixins.GregTechMixinLoadingPlugin
+[14:17:47] [main/INFO] [GradleStart]: Injecting location in coremod com.cleanroommc.modularui.core.ModularUICore
+[14:17:47] [main/INFO] [GradleStart]: Injecting location in coremod com.cleanroommc.osxnarratorblocker.OSXNarratorBlocker
+[14:17:47] [main/INFO] [GradleStart]: Injecting location in coremod appeng.core.AE2ELCore
+[14:17:47] [main/INFO] [GradleStart]: Injecting location in coremod zone.rong.mixinbooter.MixinBooterPlugin
+[14:17:47] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.fml.common.launcher.FMLInjectionAndSortingTweaker
+[14:17:47] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.fml.common.launcher.FMLDeobfTweaker
+[14:17:47] [main/INFO] [LaunchWrapper]: Loading tweak class name org.spongepowered.asm.mixin.EnvironmentStateTweaker
+[14:17:47] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.gradle.tweakers.AccessTransformerTweaker
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLInjectionAndSortingTweaker
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLInjectionAndSortingTweaker
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[14:17:47] [main/INFO] [MixinBooter]: Grabbing class com.cleanroommc.groovyscript.core.GroovyScriptCore for its mixins.
+[14:17:47] [main/INFO] [MixinBooter]: Grabbing class com.cleanroommc.stripforgereq.StripLatestForgeRequirements for its mixins.
+[14:17:47] [main/INFO] [MixinBooter]: Grabbing class gregtech.mixins.GregTechMixinLoadingPlugin for its mixins.
+[14:17:47] [main/INFO] [MixinBooter]: Grabbing class com.cleanroommc.modularui.core.ModularUICore for its mixins.
+[14:17:47] [main/INFO] [MixinBooter]: Grabbing class com.cleanroommc.osxnarratorblocker.OSXNarratorBlocker for its mixins.
+[14:17:47] [main/INFO] [MixinBooter]: Adding mixin.groovyscript.json mixin configuration.
+[14:17:47] [main/INFO] [MixinBooter]: Adding mixins.striplatestforgerequirements.json mixin configuration.
+[14:17:47] [main/INFO] [MixinBooter]: Adding mixins.gregtech.forge.json mixin configuration.
+[14:17:47] [main/INFO] [MixinBooter]: Adding mixins.gregtech.minecraft.json mixin configuration.
+[14:17:47] [main/INFO] [MixinBooter]: Adding mixin.modularui.json mixin configuration.
+[14:17:47] [main/INFO] [MixinBooter]: Adding mixins.osxnarratorblocker.json mixin configuration.
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[14:17:47] [main/ERROR] [FML]: FML appears to be missing any signature data. This is not a good thing
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class org.spongepowered.asm.mixin.EnvironmentStateTweaker
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLDeobfTweaker
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.gradle.tweakers.AccessTransformerTweaker
+[14:17:47] [main/INFO] [GradleStart]: Remapping AccessTransformer rules...
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[14:17:47] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.fml.common.launcher.TerminalTweaker
+[14:17:47] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.TerminalTweaker
+[14:17:47] [main/INFO] [STDOUT]: [appeng.core.transformer.ItemStackPatch:patchCountGetSet:53]: Patched ItemStack Count getter!
+[14:17:47] [main/INFO] [STDOUT]: [appeng.core.transformer.ItemStackPatch:patchCountGetSet:81]: Patched ItemStack Count setter!
+[14:17:47] [main/INFO] [STDOUT]: [team.chisel.ctm.client.asm.CTMTransformer:preTransform:230]: Transforming Class [net.minecraft.block.Block], Method [getExtendedState]
+[14:17:47] [main/INFO] [STDOUT]: [team.chisel.ctm.client.asm.CTMTransformer:finishTransform:242]: Transforming net.minecraft.block.Block Finished.
+[14:17:48] [main/INFO] [LaunchWrapper]: Launching wrapped minecraft {net.minecraft.client.main.Main}
+[14:17:48] [main/INFO] [MixinExtras|Service]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.3.5).
+[14:17:48] [Client thread/INFO] [STDOUT]: [team.chisel.ctm.client.asm.CTMTransformer:preTransform:230]: Transforming Class [net.minecraftforge.client.ForgeHooksClient], Method [getDamageModel]
+[14:17:48] [Client thread/INFO] [STDOUT]: [team.chisel.ctm.client.asm.CTMTransformer:finishTransform:242]: Transforming net.minecraftforge.client.ForgeHooksClient Finished.
+[14:17:48] [Client thread/INFO] [net.minecraft.client.Minecraft]: Setting user: Dragonwx
+[14:17:48] [Client thread/INFO] [STDOUT]: [team.chisel.ctm.client.asm.CTMTransformer:preTransform:230]: Transforming Class [net.minecraft.block.Block], Method [getExtendedState]
+[14:17:48] [Client thread/INFO] [STDOUT]: [team.chisel.ctm.client.asm.CTMTransformer:finishTransform:242]: Transforming net.minecraft.block.Block Finished.
+[14:17:49] [Client thread/INFO] [STDOUT]: [appeng.core.transformer.ItemStackPatch:patchCountGetSet:53]: Patched ItemStack Count getter!
+[14:17:49] [Client thread/INFO] [STDOUT]: [appeng.core.transformer.ItemStackPatch:patchCountGetSet:81]: Patched ItemStack Count setter!
+[14:17:49] [Client thread/INFO] [org.spongepowered.asm.service.mojang.MixinServiceLaunchWrapper]: A re-entrant transformer '$wrapper.appeng.core.transformer.AE2ELTransformer' was detected and will no longer process meta class data
+[14:17:50] [Client thread/INFO] [FML]: Starts to replace vanilla recipe ingredients with ore ingredients.
+[14:17:50] [Client thread/INFO] [FML]: Invalid recipe found with multiple oredict ingredients in the same ingredient...
+[14:17:50] [Client thread/INFO] [FML]: Replaced 1227 ore ingredients
+[14:17:50] [Client thread/INFO] [net.minecraft.client.Minecraft]: LWJGL Version: 2.9.4
+[14:17:52] [Client thread/INFO] [FML]: -- System Details --
+Details:
+	Minecraft Version: 1.12.2
+	Operating System: Windows 11 (amd64) version 10.0
+	Java Version: 1.8.0_432, Azul Systems, Inc.
+	Java VM Version: OpenJDK 64-Bit Server VM (mixed mode), Azul Systems, Inc.
+	Memory: 1475428688 bytes (1407 MB) / 1783627776 bytes (1701 MB) up to 5726797824 bytes (5461 MB)
+	JVM Flags: 2 total; -Xms1G -Xmx6G
+	IntCache: cache: 0, tcache: 0, allocated: 0, tallocated: 0
+	FML: 
+	Loaded coremods (and transformers): 
+StripLatestForgeRequirements (strip-latest-forge-requirements-1.0-dev.jar)
+  
+GroovyScript-Core (groovyscript-1.2.0-hotfix1-dev.jar)
+  
+ModularUI-Core (modularui-3.0.5-dev.jar)
+  com.cleanroommc.modularui.core.ClassTransformer
+OSXNarratorBlocker (osxnarratorblocker-1.0-dev.jar)
+  
+CTMCorePlugin (ctm-267602-2915363-deobf.jar)
+  team.chisel.ctm.client.asm.CTMTransformer
+GregTechMixinLoadingPlugin (gregtech-MeowmelMuku-1.12.2-2.9.0-190-deobf.jar)
+  
+AE2ELCore (ae2-extended-life-570458-6302098-deobf.jar)
+  appeng.core.transformer.AE2ELTransformer
+MixinBooter (mixinbooter-9.1.jar)
+  
+	GL info: ' Vendor: 'NVIDIA Corporation' Version: '4.6.0 NVIDIA 591.59' Renderer: 'NVIDIA GeForce RTX 5080 Laptop GPU/PCIe/SSE2'
+[14:17:52] [Client thread/INFO] [FML]: MinecraftForge v14.23.5.2847 Initialized

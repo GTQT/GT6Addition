@@ -1,0 +1,7 @@
+============  GroovyLog  ====  30.12.2025  ============
+GroovyScript version: 1.2.0-hotfix1
+[14:01:09] [CLIENT/INFO] [placeholdername]: Running scripts in loader 'preInit'
+[14:01:24] [CLIENT/INFO] [groovyscript]: Skipping load stage init, since no scripts are configured!
+[14:01:24] [CLIENT/INFO] [placeholdername]: Running scripts in loader 'postInit'
+[14:01:25] [CLIENT/INFO] [placeholdername]:  - running postInit.main
+Hello World!
