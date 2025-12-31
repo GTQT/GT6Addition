@@ -1,6 +1,7 @@
 // CommonProxy.java
 package com.drppp.gt6addition;
 
+import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraftforge.event.RegistryEvent;
@@ -16,6 +17,7 @@ public class CommonProxy {
     public void preInit(FMLPreInitializationEvent event) {
         // 服务端和客户端共同的预初始化逻辑
         GT6AdditionMain.LOGGER.info("CommonProxy preInit");
+        Gt6AdditionTextures.init();
     }
 
     public void init(FMLInitializationEvent event) {
