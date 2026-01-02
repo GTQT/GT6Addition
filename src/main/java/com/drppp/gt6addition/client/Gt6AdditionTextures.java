@@ -9,7 +9,7 @@ public class Gt6AdditionTextures {
     public static OrientedOverlayRenderer HU_BASE_BURRING_BOX_LIQUID;
     public static SimpleOverlayRenderer HU_BURRING_BOX_SIDE_OVERLAY;
     public static  SimpleOverlayRenderer HU_BURRING_BOX_SIDE_FULL_OVERLAY;
-    public static final SimpleSidedCubeRenderer BASE_BURRING_BOX_TEXTURE = new SimpleSidedCubeRenderer("casings/drtmachine/base");
+    public static final SimpleSidedCubeRenderer BASE_BURRING_BOX_TEXTURE = new SimpleSidedCubeRenderer("casings/gt6base/base");
     public static void init()
     {
         HU_BASE_BURRING_BOX= new OrientedOverlayRenderer("machines/hu_base_burring_box");

@@ -35,8 +35,8 @@ public class LiquidBurringInfo {
             {
                 int eut =(int) recipe.getEUt();
                 int time = recipe.getDuration();
-                var fluid = recipe.getFluidInputs();
-                for (var item : fluid)
+                List<gregtech.api.recipes.ingredients.GTRecipeInput> fluid = recipe.getFluidInputs();
+                for (gregtech.api.recipes.ingredients.GTRecipeInput item : fluid)
                 {
                     if(!ContainsFuel(item.getInputFluidStack()))
                     {
@@ -49,8 +49,8 @@ public class LiquidBurringInfo {
             {
                 int eut =(int) recipe.getEUt();
                 int time = recipe.getDuration();
-                var fluid = recipe.getFluidInputs();
-                for (var item : fluid)
+                List<gregtech.api.recipes.ingredients.GTRecipeInput> fluid = recipe.getFluidInputs();
+                for (gregtech.api.recipes.ingredients.GTRecipeInput item : fluid)
                 {
                     if(!ContainsFuel(item.getInputFluidStack()))
                     {
@@ -84,7 +84,7 @@ public class LiquidBurringInfo {
     {
         if(source.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,null))
         {
-            var item = source.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,null);
+            net.minecraftforge.fluids.capability.IFluidHandlerItem item = source.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,null);
             FluidStack fluidStack = item.drain(Integer.MAX_VALUE, false);
             return ContainsFuel(fluidStack);
         }
@@ -92,7 +92,7 @@ public class LiquidBurringInfo {
     }
     public static int getMlHu(FluidStack fuel)
     {
-        for (var s: LiquidBurringInfo.listFuel)
+        for (LiquidAndHu s: LiquidBurringInfo.listFuel)
         {
             if(s.fuel.equals(fuel))
                 return s.mlHu;
@@ -101,7 +101,7 @@ public class LiquidBurringInfo {
     }
     public static int getRocketMlHu(FluidStack fuel)
     {
-        for (var s: LiquidBurringInfo.listRocketFuel)
+        for (LiquidAndHu s: LiquidBurringInfo.listRocketFuel)
         {
             if(s.fuel.equals(fuel))
                 return s.mlHu;

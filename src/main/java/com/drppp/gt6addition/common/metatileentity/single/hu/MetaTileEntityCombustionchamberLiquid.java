@@ -10,7 +10,6 @@ import com.drppp.gt6addition.api.capability.impl.HeatEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
 import com.drppp.gt6addition.api.utils.CraftingGetItemUtils;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
-import com.sun.istack.internal.NotNull;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.gui.ModularUI;
@@ -22,6 +21,7 @@ import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
+import org.jetbrains.annotations.NotNull;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -125,7 +125,7 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
         IVertexOperation[] pipeline1 = ArrayUtils.add(pipeline, new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(this.color)));
         this.getBaseRenderer().render(renderState, translation, colouredPipeline);
         this.renderer_full.renderSided(EnumFacing.UP, renderState, translation, pipeline1);
-        for (var facing : EnumFacing.HORIZONTALS) {
+        for (EnumFacing facing : EnumFacing.HORIZONTALS) {
             this.renderer.renderSided(facing, renderState, translation, pipeline1);
         }
         this.rendererBASE.renderOrientedState(renderState, translation, pipeline, this.getFrontFacing(), isActive, isActive);
@@ -172,18 +172,18 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, @NotNull List<String> tooltip, boolean advanced) {
         super.addInformation(stack, world, tooltip, advanced);
-        tooltip.add(I18n.format("drtech.hu.generator.info.7"));
-        tooltip.add(I18n.format("drtech.hu.generator.info.2", this.efficiency * 100 + "%"));
-        tooltip.add(I18n.format("drtech.hu.generator.info.3", this.outPutHu));
-        tooltip.add(I18n.format("drtech.hu.generator.info.4"));
-        tooltip.add(I18n.format("drtech.hu.generator.info.5"));
+        tooltip.add(I18n.format("gt6addition.hu.generator.info.7"));
+        tooltip.add(I18n.format("gt6addition.hu.generator.info.2", this.efficiency * 100 + "%"));
+        tooltip.add(I18n.format("gt6addition.hu.generator.info.3", this.outPutHu));
+        tooltip.add(I18n.format("gt6addition.hu.generator.info.4"));
+        tooltip.add(I18n.format("gt6addition.hu.generator.info.5"));
     }
 
     @Override
     public void update() {
         super.update();
         if (getWorld().isRemote && getOffsetTimer() % 10 == 0 && isActive) {
-            var pos = getPos();
+            net.minecraft.util.math.BlockPos pos = getPos();
             double d0 = (double) pos.getX() + 0.5D;
             double d1 = (double) pos.getY() + random.nextDouble() * 6.0D / 16.0D;
             double d2 = (double) pos.getZ() + 0.5D;
@@ -214,8 +214,8 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
         if (!getWorld().isRemote) {
             if (this.getOffsetTimer() % 20L == 0L && isActive) {
                 {
-                    var list = getWorld().getEntitiesWithinAABB(EntityPlayer.class, new AxisAlignedBB(getPos().up()));
-                    for (var e : list)
+                    List<EntityPlayer> list = getWorld().getEntitiesWithinAABB(EntityPlayer.class, new AxisAlignedBB(getPos().up()));
+                    for (EntityPlayer e : list)
                         attackPlayer(e);
                 }
             }
@@ -278,16 +278,16 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
             attackPlayer(playerIn);
         if (!getWorld().isRemote && !playerIn.isSneaking() && facing == getFrontFacing())
         {
-            var filleditem = CraftingGetItemUtils.getItemStack("<forge:bucketfilled>");
+            ItemStack filleditem = CraftingGetItemUtils.getItemStack("<forge:bucketfilled>");
             if (!playerIn.getHeldItem(hand).isEmpty() && LiquidBurringInfo.ContainsFuel(playerIn.getHeldItem(hand)) && playerIn.getHeldItem(hand).getItem()!=filleditem.getItem())
             {
-                var item = playerIn.getHeldItem(hand).getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,null);
+                net.minecraftforge.fluids.capability.IFluidHandlerItem item = playerIn.getHeldItem(hand).getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,null);
                 GTTransferUtils.transferFluids(item,this.importFluids);
                 return true;
             }
             if (!playerIn.getHeldItem(hand).isEmpty())
             {
-                var item = playerIn.getHeldItem(hand);
+                ItemStack item = playerIn.getHeldItem(hand);
                 if (item.getItem() == Items.FLINT_AND_STEEL)
                 {
                     item.damageItem(1, playerIn);
@@ -298,7 +298,7 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
                 }
                 if(  playerIn.getHeldItem(hand).getItem()!=filleditem.getItem() && playerIn.getHeldItem(hand).hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,null))
                 {
-                    var cap = playerIn.getHeldItem(hand).getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,null);
+                    net.minecraftforge.fluids.capability.IFluidHandlerItem cap = playerIn.getHeldItem(hand).getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,null);
                     if (this.exportFluids.getTankAt(0).getFluid()!=null && this.exportFluids.getTankAt(0).getFluidAmount()>0)
                     {
                         int fluidInserted = cap.fill(getSelfFluid(), true);

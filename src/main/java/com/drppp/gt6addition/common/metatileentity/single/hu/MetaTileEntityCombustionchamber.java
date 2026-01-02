@@ -11,7 +11,6 @@ import com.drppp.gt6addition.api.capability.impl.HeatEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
 import com.drppp.gt6addition.api.utils.CraftingGetItemUtils;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
-import com.sun.istack.internal.NotNull;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
@@ -21,6 +20,7 @@ import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
+import org.jetbrains.annotations.NotNull;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.item.EntityItem;
@@ -34,6 +34,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.*;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fml.relauncher.Side;
@@ -123,7 +124,7 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity {
         IVertexOperation[] pipeline1 = ArrayUtils.add(pipeline, new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(this.color)));
         this.getBaseRenderer().render(renderState, translation, colouredPipeline);
         this.renderer_full.renderSided(EnumFacing.UP, renderState, translation, pipeline1);
-        for (var facing : EnumFacing.HORIZONTALS) {
+        for (EnumFacing facing : EnumFacing.HORIZONTALS) {
             this.renderer.renderSided(facing, renderState, translation, pipeline1);
         }
         this.rendererBASE.renderOrientedState(renderState, translation, pipeline, this.getFrontFacing(), isActive, isActive);
@@ -172,19 +173,19 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity {
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, @NotNull List<String> tooltip, boolean advanced) {
         super.addInformation(stack, world, tooltip, advanced);
-        tooltip.add(I18n.format("drtech.hu.generator.info.1"));
-        tooltip.add(I18n.format("drtech.hu.generator.info.2", this.efficiency * 100 + "%"));
-        tooltip.add(I18n.format("drtech.hu.generator.info.3", this.outPutHu));
-        tooltip.add(I18n.format("drtech.hu.generator.info.4"));
-        tooltip.add(I18n.format("drtech.hu.generator.info.5"));
-        tooltip.add(I18n.format("drtech.hu.generator.info.6"));
+        tooltip.add(I18n.format("gt6addition.hu.generator.info.1"));
+        tooltip.add(I18n.format("gt6addition.hu.generator.info.2", this.efficiency * 100 + "%"));
+        tooltip.add(I18n.format("gt6addition.hu.generator.info.3", this.outPutHu));
+        tooltip.add(I18n.format("gt6addition.hu.generator.info.4"));
+        tooltip.add(I18n.format("gt6addition.hu.generator.info.5"));
+        tooltip.add(I18n.format("gt6addition.hu.generator.info.6"));
     }
 
     @Override
     public void update() {
         super.update();
         if (getWorld().isRemote && getOffsetTimer() % 10 == 0 && isActive) {
-            var pos = getPos();
+            BlockPos pos = getPos();
             double d0 = (double) pos.getX() + 0.5D;
             double d1 = (double) pos.getY() + random.nextDouble() * 6.0D / 16.0D;
             double d2 = (double) pos.getZ() + 0.5D;
@@ -215,8 +216,8 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity {
         if (!getWorld().isRemote) {
             if (this.getOffsetTimer() % 20L == 0L && isActive) {
                 {
-                    var list = getWorld().getEntitiesWithinAABB(EntityPlayer.class, new AxisAlignedBB(getPos().up()));
-                    for (var e : list)
+                    List<EntityPlayer> list = getWorld().getEntitiesWithinAABB(EntityPlayer.class, new AxisAlignedBB(getPos().up()));
+                    for (EntityPlayer e : list)
                         attackPlayer(e);
                 }
             }
@@ -231,7 +232,7 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity {
                     this.currentItemBurnTime = TileEntityFurnace.getItemBurnTime(getItemInventory().getStackInSlot(0)) * 25;
                     this.burnSpeed = (int) (this.outPutHu / this.efficiency);
                     importItems.extractItem(0, 1, false);
-                    var item = exportItems.insertItem(0, CraftingGetItemUtils.getItemStack("<gregtech:meta_dust:275>"), true);
+                    ItemStack item = exportItems.insertItem(0, CraftingGetItemUtils.getItemStack("<gregtech:meta_dust:275>"), true);
                     if (item.isEmpty()) {
                         exportItems.insertItem(0, CraftingGetItemUtils.getItemStack("<gregtech:meta_dust:275>"), false);
                     } else {
@@ -264,9 +265,9 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity {
     public boolean onRightClick(EntityPlayer playerIn, EnumHand hand, EnumFacing facing, CuboidRayTraceResult hitResult) {
         if (!getWorld().isRemote && !playerIn.isSneaking() && facing == getFrontFacing()) {
             if (TileEntityFurnace.getItemBurnTime(playerIn.getHeldItem(hand)) > 0) {
-                var item = this.importItems.insertItem(0, playerIn.getHeldItem(hand), true);
+                ItemStack item = this.importItems.insertItem(0, playerIn.getHeldItem(hand), true);
                 if (item.isEmpty() || item.getCount() < playerIn.getHeldItem(hand).getCount()) {
-                    var ins = this.importItems.insertItem(0, playerIn.getHeldItem(hand).copy(), false);
+                    ItemStack ins = this.importItems.insertItem(0, playerIn.getHeldItem(hand).copy(), false);
                     if (ins.isEmpty())
                         playerIn.getHeldItem(hand).shrink(playerIn.getHeldItem(hand).getCount());
                     else
@@ -275,7 +276,7 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity {
                 return true;
             }
             if (!playerIn.getHeldItem(hand).isEmpty()) {
-                var item = playerIn.getHeldItem(hand);
+                ItemStack item = playerIn.getHeldItem(hand);
                 if (item.getItem() == Items.FLINT_AND_STEEL) {
                     item.damageItem(1, playerIn);
                     if (random.nextInt(4) == 1 && !importItems.getStackInSlot(0).isEmpty()) {
@@ -287,11 +288,11 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity {
                 if (isActive)
                     attackPlayer(playerIn);
                 if (!this.exportItems.getStackInSlot(0).isEmpty()) {
-                    var pos = getPos().offset(getFrontFacing());
+                    BlockPos pos = getPos().offset(getFrontFacing());
                     getWorld().spawnEntity(new EntityItem(getWorld(), pos.getX(), pos.getY(), pos.getZ(), this.exportItems.getStackInSlot(0).copy()));
                     this.exportItems.extractItem(0, this.exportItems.getStackInSlot(0).getCount(), false);
                 } else if (!this.importItems.getStackInSlot(0).isEmpty()) {
-                    var pos = getPos().offset(getFrontFacing());
+                    BlockPos pos = getPos().offset(getFrontFacing());
                     getWorld().spawnEntity(new EntityItem(getWorld(), pos.getX(), pos.getY(), pos.getZ(), this.importItems.getStackInSlot(0).copy()));
                     this.importItems.extractItem(0, this.importItems.getStackInSlot(0).getCount(), false);
                 }

@@ -11,7 +11,7 @@ public class CraftingGetItemUtils {
     }
 
     public static ItemStack getItemStack(String itemstr, int num) {
-        var item = getItemStack(itemstr, 0);
+        ItemStack item = getItemStack(itemstr, 0);
         item.setCount(num);
         return item;
     }

@@ -30,3 +30,11 @@ gt6addition.machine.dense_chrome_burring_box_liquid.name=致密流体燃烧室(�
 gt6addition.machine.dense_titanium_burring_box_liquid.name=致密流体燃烧室(钛)
 gt6addition.machine.dense_tungsten_burring_box_liquid.name=致密流体燃烧室(钨)
 gt6addition.machine.dense_tungstensteel_burring_box_liquid.name=致密流体燃烧室(钨钢)
+
+gt6addition.hu.generator.info.1=§b配方: §f熔炉燃料(燃烧时间:总HU输出 = 1:25)
+gt6addition.hu.generator.info.2=§6效率: §f%s
+gt6addition.hu.generator.info.3=§4效率: §f%s §4HU§f/t
+gt6addition.hu.generator.info.4=§6需要正面为空气才能工作
+gt6addition.hu.generator.info.5=§6正面右键交互存储物品和打火
+gt6addition.hu.generator.info.6=§6灰烬存满后会停机
+gt6addition.hu.generator.info.7=§b配方: §f可燃燃料(内燃机、燃气轮机燃料)

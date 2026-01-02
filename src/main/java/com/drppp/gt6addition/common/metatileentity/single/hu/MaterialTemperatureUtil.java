@@ -47,14 +47,14 @@ public class MaterialTemperatureUtil {
     }
     public static Material getMaterialFromItemStack(ItemStack item)
     {
-        var stack =  OreDictUnifier.getMaterial(item);
+        gregtech.api.unification.stack.@org.jetbrains.annotations.Nullable MaterialStack stack =  OreDictUnifier.getMaterial(item);
         if(stack==null)
             return null;
         return stack.material;
     }
     public static float getContentByItemStack(ItemStack item)
     {
-        var ore = OreDictUnifier.getPrefix(item);
+        @org.jetbrains.annotations.Nullable OrePrefix ore = OreDictUnifier.getPrefix(item);
         if(ore!=null)
         {
             if(MaterialContent.containsKey(ore))
