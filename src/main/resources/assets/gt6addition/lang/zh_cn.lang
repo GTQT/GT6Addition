@@ -38,3 +38,8 @@ gt6addition.hu.generator.info.4=§6需要正面为空气才能工作
 gt6addition.hu.generator.info.5=§6正面右键交互存储物品和打火
 gt6addition.hu.generator.info.6=§6灰烬存满后会停机
 gt6addition.hu.generator.info.7=§b配方: §f可燃燃料(内燃机、燃气轮机燃料)
+
+gt6addition.universal.tooltip.voltage_in=§a输入能量：§f%,d %s（%s§f）
+gt6addition.universal.tooltip.energy_storage_capacity=§c无能量缓存
+gt6addition.universal.tooltip.fluid_storage_capacity=§9流体容量：§f%,d L
+gt6addition.tricorder.workable_stored_energy=能量缓存：%s
