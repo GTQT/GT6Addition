@@ -4,6 +4,8 @@ import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
 import com.drppp.gt6addition.api.capability.interfaces.IKineticEnergy;
 import com.drppp.gt6addition.api.capability.interfaces.IRotationEnergy;
 import com.drppp.gt6addition.api.utils.EnergyTypeList;
+import com.drppp.gt6addition.api.utils.MachineEnergyAcceptFacing;
+import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.GTValues;
 import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.impl.EnergyContainerHandler;
@@ -32,11 +34,13 @@ public abstract class TieredMutiEnergyMetaTileEntity extends MetaTileEntity
     private final int tier;
     protected IEnergyContainer energyContainer;
     public String EnergyType;
-    IMutiEnergyProxy mutiEnergyProxy ;
-    public TieredMutiEnergyMetaTileEntity(ResourceLocation metaTileEntityId, int tier,String type) {
+    public IMutiEnergyProxy mutiEnergyProxy ;
+    public MachineEnergyAcceptFacing[] acceptFacing;
+    public TieredMutiEnergyMetaTileEntity(ResourceLocation metaTileEntityId, int tier,String type,MachineEnergyAcceptFacing[] acceptFacing) {
         super(metaTileEntityId);
         this.tier = tier;
         this.EnergyType = type;
+        this.acceptFacing = acceptFacing;
         mutiEnergyProxy = new MutiEnergyProxyManager(type,tier);
         reinitializeEnergyContainer();
     }
@@ -56,7 +60,7 @@ public abstract class TieredMutiEnergyMetaTileEntity extends MetaTileEntity
 
     @SideOnly(Side.CLIENT)
     protected SimpleSidedCubeRenderer getBaseRenderer() {
-        return Textures.VOLTAGE_CASINGS[tier];
+        return Gt6AdditionTextures.MACHINE_BASES[tier];
     }
 
     @Override

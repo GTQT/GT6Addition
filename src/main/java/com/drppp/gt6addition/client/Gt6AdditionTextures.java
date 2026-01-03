@@ -10,11 +10,21 @@ public class Gt6AdditionTextures {
     public static SimpleOverlayRenderer HU_BURRING_BOX_SIDE_OVERLAY;
     public static  SimpleOverlayRenderer HU_BURRING_BOX_SIDE_FULL_OVERLAY;
     public static final SimpleSidedCubeRenderer BASE_BURRING_BOX_TEXTURE = new SimpleSidedCubeRenderer("casings/gt6base/base");
+    public static final SimpleSidedCubeRenderer[] MACHINE_BASES = new SimpleSidedCubeRenderer[6];
+    public static OrientedOverlayRenderer RU_BENDER;
+    public static OrientedOverlayRenderer RU_WIREMILL;
     public static void init()
     {
         HU_BASE_BURRING_BOX= new OrientedOverlayRenderer("machines/hu_base_burring_box");
         HU_BASE_BURRING_BOX_LIQUID= new OrientedOverlayRenderer("machines/hu_base_burring_box_liquid");
         HU_BURRING_BOX_SIDE_OVERLAY = new SimpleOverlayRenderer("casings/hu_burring_box_side_overlay");
         HU_BURRING_BOX_SIDE_FULL_OVERLAY = new SimpleOverlayRenderer("casings/hu_burring_box_side_full_overlay");
+        RU_BENDER= new OrientedOverlayRenderer("machines/ru_machines/ru_bender");
+        RU_WIREMILL= new OrientedOverlayRenderer("machines/ru_machines/ru_wiremill");
+        MACHINE_BASES[1] = new SimpleSidedCubeRenderer("base/bronze");
+        MACHINE_BASES[2] = new SimpleSidedCubeRenderer("base/steel");
+        MACHINE_BASES[3] = new SimpleSidedCubeRenderer("base/stainless_steel");
+        MACHINE_BASES[4] = new SimpleSidedCubeRenderer("base/titanium");
+        MACHINE_BASES[5] = new SimpleSidedCubeRenderer("base/tungsten_steel");
     }
 }

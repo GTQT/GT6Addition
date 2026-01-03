@@ -1,6 +1,8 @@
 package com.drppp.gt6addition.api.baseMTile;
 
 
+import com.drppp.gt6addition.api.recipeLogic.RecipeLogicMutiEnergy;
+import com.drppp.gt6addition.api.utils.MachineEnergyAcceptFacing;
 import gregtech.api.GTValues;
 import gregtech.api.capability.impl.AbstractRecipeLogic;
 import gregtech.api.capability.impl.EnergyContainerHandler;
@@ -55,14 +57,14 @@ public abstract class WorkableTieredMutiEnergyMetaTileEntity extends TieredMutiE
 
     public WorkableTieredMutiEnergyMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
                                         ICubeRenderer renderer, int tier,
-                                        Function<Integer, Integer> tankScalingFunction,String energyType) {
-        this(metaTileEntityId, recipeMap, renderer, tier, tankScalingFunction, true,energyType);
+                                        Function<Integer, Integer> tankScalingFunction,String energyType,MachineEnergyAcceptFacing[] acceptFacing) {
+        this(metaTileEntityId, recipeMap, renderer, tier, tankScalingFunction, true,energyType,acceptFacing);
     }
 
     public WorkableTieredMutiEnergyMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
-                                        ICubeRenderer renderer, int tier,
-                                        Function<Integer, Integer> tankScalingFunction, boolean handlesRecipeOutputs,String energyType) {
-        super(metaTileEntityId, tier,energyType);
+                                                  ICubeRenderer renderer, int tier,
+                                                  Function<Integer, Integer> tankScalingFunction, boolean handlesRecipeOutputs, String energyType, MachineEnergyAcceptFacing[] acceptFacing) {
+        super(metaTileEntityId, tier,energyType,acceptFacing);
         this.renderer = renderer;
         this.handlesRecipeOutputs = handlesRecipeOutputs;
         this.workable = createWorkable(recipeMap);
@@ -73,7 +75,7 @@ public abstract class WorkableTieredMutiEnergyMetaTileEntity extends TieredMutiE
     }
 
     protected AbstractRecipeLogic createWorkable(RecipeMap<?> recipeMap) {
-        return new RecipeLogicEnergy(this, recipeMap, () -> energyContainer);
+        return new RecipeLogicMutiEnergy(this, recipeMap, this.mutiEnergyProxy);
     }
 
     @Override

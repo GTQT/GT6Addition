@@ -10,11 +10,13 @@ public class RecipeLogicMutiEnergy extends AbstractRecipeLogic {
     public RecipeLogicMutiEnergy(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, IMutiEnergyProxy mutiEnergyProxy) {
         super(tileEntity, recipeMap);
         this.mutiEnergyProxy = mutiEnergyProxy;
+        this.setParallelLimit(1);
     }
 
     public RecipeLogicMutiEnergy(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, boolean hasPerfectOC, IMutiEnergyProxy mutiEnergyProxy) {
         super(tileEntity, recipeMap, hasPerfectOC);
         this.mutiEnergyProxy = mutiEnergyProxy;
+        this.setParallelLimit(1);
     }
     @Override
     protected long getEnergyInputPerSecond() {
@@ -63,6 +65,11 @@ public class RecipeLogicMutiEnergy extends AbstractRecipeLogic {
     @Override
     public void setParallelRecipesPerformed(int amount) {
         super.setParallelRecipesPerformed(amount);
+    }
+
+    @Override
+    public void setParallelLimit(int amount) {
+        super.setParallelLimit(amount);
     }
 
     @Override

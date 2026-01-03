@@ -1,9 +1,10 @@
 package com.drppp.gt6addition.api.capability;
 
 import com.drppp.gt6addition.Tags;
-import com.drppp.gt6addition.api.capability.impl.HeatEnergyHandler;
-import com.drppp.gt6addition.api.capability.impl.HeatEnergyStore;
+import com.drppp.gt6addition.api.capability.impl.*;
 import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
+import com.drppp.gt6addition.api.capability.interfaces.IKineticEnergy;
+import com.drppp.gt6addition.api.capability.interfaces.IRotationEnergy;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
@@ -15,6 +16,8 @@ import net.minecraftforge.fml.common.Mod;
 public class CapabilityHandler {
     @CapabilityInject(IHeatEnergy.class)
     public static Capability<IHeatEnergy> CAPABILITY_HEAT_ENERGY= null;
+    public static Capability<IHeatEnergy> CAPABILITY_ROTATION_ENERGY= null;
+    public static Capability<IHeatEnergy> CAPABILITY_KINETIC_ENERGY= null;
 
     public static <T> void registerCapabilityWithNoDefault(Class<T> capabilityClass) {
         CapabilityManager.INSTANCE.register(capabilityClass, new Capability.IStorage<T>() {
@@ -33,5 +36,7 @@ public class CapabilityHandler {
     public static void init()
     {
         CapabilityManager.INSTANCE.register(IHeatEnergy.class,new HeatEnergyStore(),  HeatEnergyHandler::new);
+        CapabilityManager.INSTANCE.register(IRotationEnergy.class,new RotationEnergyStore(),  RotationEnergyHandler::new);
+        CapabilityManager.INSTANCE.register(IKineticEnergy.class,new KineticEnergyStore(),  KineticEnergyHandler::new);
     }
 }

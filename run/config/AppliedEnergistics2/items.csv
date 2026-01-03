@@ -3863,38 +3863,48 @@ gregtech:combination_wrench, item.gt.tool.combination_wrench.name.name
 gregtech:universal_spade, item.gt.tool.universal_spade.name.name
 gregtech:flint_and_steel, item.gt.tool.flint_and_steel.name.name
 gregtech:universal_tool, item.gt.tool.universal_tool.name.name
-gt6addition:mte:10, 固体燃烧室(铅)
-gt6addition:mte:11, 固体燃烧室(青铜)
-gt6addition:mte:12, 固体燃烧室(钢)
+gt6addition:mte:1, 固体燃烧室(铅)
+gt6addition:mte:2, 致密固体燃烧室(铅)
+gt6addition:mte:3, 流体燃烧室(铅)
+gt6addition:mte:4, 致密流体燃烧室(铅)
+gt6addition:mte:5, 固体燃烧室(青铜)
+gt6addition:mte:6, 致密固体燃烧室(青铜)
+gt6addition:mte:7, 流体燃烧室(青铜)
+gt6addition:mte:8, 致密流体燃烧室(青铜)
+gt6addition:mte:9, 固体燃烧室(钢)
+gt6addition:mte:10, 致密固体燃烧室(钢)
+gt6addition:mte:11, 流体燃烧室(钢)
+gt6addition:mte:12, 致密流体燃烧室(钢)
 gt6addition:mte:13, 固体燃烧室(殷钢)
-gt6addition:mte:14, 固体燃烧室(铬)
-gt6addition:mte:15, 固体燃烧室(钛)
-gt6addition:mte:16, 固体燃烧室(钨)
-gt6addition:mte:17, 固体燃烧室(钨钢)
-gt6addition:mte:20, 致密固体燃烧室(铅)
-gt6addition:mte:21, 致密固体燃烧室(青铜)
-gt6addition:mte:22, 致密固体燃烧室(钢)
-gt6addition:mte:23, 致密固体燃烧室(殷钢)
-gt6addition:mte:24, 致密固体燃烧室(铬)
-gt6addition:mte:25, 致密固体燃烧室(钛)
+gt6addition:mte:14, 致密固体燃烧室(殷钢)
+gt6addition:mte:15, 流体燃烧室(殷钢)
+gt6addition:mte:16, 致密流体燃烧室(殷钢)
+gt6addition:mte:17, 固体燃烧室(铬)
+gt6addition:mte:18, 致密固体燃烧室(铬)
+gt6addition:mte:19, 流体燃烧室(铬)
+gt6addition:mte:20, 致密流体燃烧室(铬)
+gt6addition:mte:21, 固体燃烧室(钛)
+gt6addition:mte:22, 致密固体燃烧室(钛)
+gt6addition:mte:23, 流体燃烧室(钛)
+gt6addition:mte:24, 致密流体燃烧室(钛)
+gt6addition:mte:25, 固体燃烧室(钨)
 gt6addition:mte:26, 致密固体燃烧室(钨)
-gt6addition:mte:27, 致密固体燃烧室(钨钢)
-gt6addition:mte:30, 流体燃烧室(铅)
-gt6addition:mte:31, 流体燃烧室(青铜)
-gt6addition:mte:32, 流体燃烧室(钢)
-gt6addition:mte:33, 流体燃烧室(殷钢)
-gt6addition:mte:34, 流体燃烧室(铬)
-gt6addition:mte:35, 流体燃烧室(钛)
-gt6addition:mte:36, 流体燃烧室(钨)
-gt6addition:mte:37, 流体燃烧室(钨钢)
-gt6addition:mte:40, 致密流体燃烧室(铅)
-gt6addition:mte:41, 致密流体燃烧室(青铜)
-gt6addition:mte:42, 致密流体燃烧室(钢)
-gt6addition:mte:43, 致密流体燃烧室(殷钢)
-gt6addition:mte:44, 致密流体燃烧室(铬)
-gt6addition:mte:45, 致密流体燃烧室(钛)
-gt6addition:mte:46, 致密流体燃烧室(钨)
-gt6addition:mte:47, 致密流体燃烧室(钨钢)
+gt6addition:mte:27, 流体燃烧室(钨)
+gt6addition:mte:28, 致密流体燃烧室(钨)
+gt6addition:mte:29, 固体燃烧室(钨钢)
+gt6addition:mte:30, 致密固体燃烧室(钨钢)
+gt6addition:mte:31, 流体燃烧室(钨钢)
+gt6addition:mte:32, 致密流体燃烧室(钨钢)
+gt6addition:mte:33, 旋转能卷板机(青铜)
+gt6addition:mte:34, 旋转能卷板机(钢)
+gt6addition:mte:35, 旋转能卷板机(不锈钢)
+gt6addition:mte:36, 旋转能卷板机(钛)
+gt6addition:mte:37, 旋转能卷板机(钨钢)
+gt6addition:mte:38, 旋转能线材轧机(青铜)
+gt6addition:mte:39, 旋转能线材轧机(钢)
+gt6addition:mte:40, 旋转能线材轧机(不锈钢)
+gt6addition:mte:41, 旋转能线材轧机(钛)
+gt6addition:mte:42, 旋转能线材轧机(钨钢)
 gregtech:mte:0, 上锁的保险柜
 gregtech:mte:1, 小型蒸汽固体燃料锅炉
 gregtech:mte:2, 高压蒸汽固体燃料锅炉
@@ -5433,89 +5443,104 @@ gregtech:mte:2539, §aUEV§r样板总成
 gregtech:mte:2540, §2UIV§r样板总成
 gregtech:mte:2541, §eUXV§r样板总成
 gregtech:mte:2542, §9OpV§r样板总成
-gregtech:mte:2545, §7LV§r巨型输入总成
-gregtech:mte:2546, §bMV§r巨型输入总成
-gregtech:mte:2547, §6HV§r巨型输入总成
-gregtech:mte:2548, §5EV§r巨型输入总成
-gregtech:mte:2549, §1IV§r巨型输入总成
-gregtech:mte:2550, §dLuV§r巨型输入总成
-gregtech:mte:2551, §cZPM§r巨型输入总成
-gregtech:mte:2552, §3UV§r巨型输入总成
-gregtech:mte:2553, §4UHV§r巨型输入总成
-gregtech:mte:2554, §aUEV§r巨型输入总成
-gregtech:mte:2555, §2UIV§r巨型输入总成
-gregtech:mte:2556, §eUXV§r巨型输入总成
-gregtech:mte:2557, §9OpV§r巨型输入总成
-gregtech:mte:2560, §7LV§r巨型输出总成
-gregtech:mte:2561, §bMV§r巨型输出总成
-gregtech:mte:2562, §6HV§r巨型输出总成
-gregtech:mte:2563, §5EV§r巨型输出总成
-gregtech:mte:2564, §1IV§r巨型输出总成
-gregtech:mte:2565, §dLuV§r巨型输出总成
-gregtech:mte:2566, §cZPM§r巨型输出总成
-gregtech:mte:2567, §3UV§r巨型输出总成
-gregtech:mte:2568, §4UHV§r巨型输出总成
-gregtech:mte:2569, §aUEV§r巨型输出总成
-gregtech:mte:2570, §2UIV§r巨型输出总成
-gregtech:mte:2571, §eUXV§r巨型输出总成
-gregtech:mte:2572, §9OpV§r巨型输出总成
-gregtech:mte:2575, §7LV§r巨型样板总成
-gregtech:mte:2576, §bMV§r巨型样板总成
-gregtech:mte:2577, §6HV§r巨型样板总成
-gregtech:mte:2578, §5EV§r巨型样板总成
-gregtech:mte:2579, §1IV§r巨型样板总成
-gregtech:mte:2580, §dLuV§r巨型样板总成
-gregtech:mte:2581, §cZPM§r巨型样板总成
-gregtech:mte:2582, §3UV§r巨型样板总成
-gregtech:mte:2583, §4UHV§r巨型样板总成
-gregtech:mte:2584, §aUEV§r巨型样板总成
-gregtech:mte:2585, §2UIV§r巨型样板总成
-gregtech:mte:2586, §eUXV§r巨型样板总成
-gregtech:mte:2587, §9OpV§r巨型样板总成
-gregtech:mte:2600, §7LV§r回环总成
-gregtech:mte:2601, §bMV§r回环总成
-gregtech:mte:2602, §6HV§r回环总成
-gregtech:mte:2603, §5EV§r回环总成
-gregtech:mte:2604, §1IV§r回环总成
-gregtech:mte:2605, §dLuV§r回环总成
-gregtech:mte:2606, §cZPM§r回环总成
-gregtech:mte:2607, §3UV§r回环总成
-gregtech:mte:2608, §4UHV§r回环总成
-gregtech:mte:2609, §aUEV§r回环总成
-gregtech:mte:2610, §2UIV§r回环总成
-gregtech:mte:2611, §eUXV§r回环总成
-gregtech:mte:2612, §9OpV§r回环总成
-gregtech:mte:2615, §7LV§r巨型回环总成
-gregtech:mte:2616, §bMV§r巨型回环总成
-gregtech:mte:2617, §6HV§r巨型回环总成
-gregtech:mte:2618, §5EV§r巨型回环总成
-gregtech:mte:2619, §1IV§r巨型回环总成
-gregtech:mte:2620, §dLuV§r巨型回环总成
-gregtech:mte:2621, §cZPM§r巨型回环总成
-gregtech:mte:2622, §3UV§r巨型回环总成
-gregtech:mte:2623, §4UHV§r巨型回环总成
-gregtech:mte:2624, §aUEV§r巨型回环总成
-gregtech:mte:2625, §2UIV§r巨型回环总成
-gregtech:mte:2626, §eUXV§r巨型回环总成
-gregtech:mte:2627, §9OpV§r巨型回环总成
-gregtech:mte:2630, gregtech.machine.mould_item_bus.lv.name
-gregtech:mte:2631, gregtech.machine.mould_item_bus.mv.name
-gregtech:mte:2632, gregtech.machine.mould_item_bus.hv.name
-gregtech:mte:2633, gregtech.machine.mould_item_bus.ev.name
-gregtech:mte:2634, gregtech.machine.mould_item_bus.iv.name
-gregtech:mte:2635, gregtech.machine.mould_item_bus.luv.name
-gregtech:mte:2636, gregtech.machine.mould_item_bus.zpm.name
-gregtech:mte:2637, gregtech.machine.mould_item_bus.uv.name
-gregtech:mte:2638, gregtech.machine.mould_item_bus.uhv.name
-gregtech:mte:2639, gregtech.machine.mould_item_bus.uev.name
-gregtech:mte:2640, gregtech.machine.mould_item_bus.uiv.name
-gregtech:mte:2641, gregtech.machine.mould_item_bus.uxv.name
-gregtech:mte:2642, gregtech.machine.mould_item_bus.opv.name
+gregtech:mte:2545, §7LV§r矿辞前缀样板总成
+gregtech:mte:2546, §bMV§r矿辞前缀样板总成
+gregtech:mte:2547, §6HV§r矿辞前缀样板总成
+gregtech:mte:2548, §5EV§r矿辞前缀样板总成
+gregtech:mte:2549, §1IV§r矿辞前缀样板总成
+gregtech:mte:2550, §dLuV§r矿辞前缀样板总成
+gregtech:mte:2551, §cZPM§r矿辞前缀样板总成
+gregtech:mte:2552, §3UV§r矿辞前缀样板总成
+gregtech:mte:2553, §4UHV§r矿辞前缀样板总成
+gregtech:mte:2554, §aUEV§r矿辞前缀样板总成
+gregtech:mte:2555, §2UIV§r矿辞前缀样板总成
+gregtech:mte:2556, §eUXV§r矿辞前缀样板总成
+gregtech:mte:2557, §9OpV§r矿辞前缀样板总成
+gregtech:mte:2560, §7LV§r回环总成
+gregtech:mte:2561, §bMV§r回环总成
+gregtech:mte:2562, §6HV§r回环总成
+gregtech:mte:2563, §5EV§r回环总成
+gregtech:mte:2564, §1IV§r回环总成
+gregtech:mte:2565, §dLuV§r回环总成
+gregtech:mte:2566, §cZPM§r回环总成
+gregtech:mte:2567, §3UV§r回环总成
+gregtech:mte:2568, §4UHV§r回环总成
+gregtech:mte:2569, §aUEV§r回环总成
+gregtech:mte:2570, §2UIV§r回环总成
+gregtech:mte:2571, §eUXV§r回环总成
+gregtech:mte:2572, §9OpV§r回环总成
+gregtech:mte:2600, §7LV§r巨型输入总成
+gregtech:mte:2601, §bMV§r巨型输入总成
+gregtech:mte:2602, §6HV§r巨型输入总成
+gregtech:mte:2603, §5EV§r巨型输入总成
+gregtech:mte:2604, §1IV§r巨型输入总成
+gregtech:mte:2605, §dLuV§r巨型输入总成
+gregtech:mte:2606, §cZPM§r巨型输入总成
+gregtech:mte:2607, §3UV§r巨型输入总成
+gregtech:mte:2608, §4UHV§r巨型输入总成
+gregtech:mte:2609, §aUEV§r巨型输入总成
+gregtech:mte:2610, §2UIV§r巨型输入总成
+gregtech:mte:2611, §eUXV§r巨型输入总成
+gregtech:mte:2612, §9OpV§r巨型输入总成
+gregtech:mte:2615, §7LV§r巨型输出总成
+gregtech:mte:2616, §bMV§r巨型输出总成
+gregtech:mte:2617, §6HV§r巨型输出总成
+gregtech:mte:2618, §5EV§r巨型输出总成
+gregtech:mte:2619, §1IV§r巨型输出总成
+gregtech:mte:2620, §dLuV§r巨型输出总成
+gregtech:mte:2621, §cZPM§r巨型输出总成
+gregtech:mte:2622, §3UV§r巨型输出总成
+gregtech:mte:2623, §4UHV§r巨型输出总成
+gregtech:mte:2624, §aUEV§r巨型输出总成
+gregtech:mte:2625, §2UIV§r巨型输出总成
+gregtech:mte:2626, §eUXV§r巨型输出总成
+gregtech:mte:2627, §9OpV§r巨型输出总成
+gregtech:mte:2630, §7LV§r巨型样板总成
+gregtech:mte:2631, §bMV§r巨型样板总成
+gregtech:mte:2632, §6HV§r巨型样板总成
+gregtech:mte:2633, §5EV§r巨型样板总成
+gregtech:mte:2634, §1IV§r巨型样板总成
+gregtech:mte:2635, §dLuV§r巨型样板总成
+gregtech:mte:2636, §cZPM§r巨型样板总成
+gregtech:mte:2637, §3UV§r巨型样板总成
+gregtech:mte:2638, §4UHV§r巨型样板总成
+gregtech:mte:2639, §aUEV§r巨型样板总成
+gregtech:mte:2640, §2UIV§r巨型样板总成
+gregtech:mte:2641, §eUXV§r巨型样板总成
+gregtech:mte:2642, §9OpV§r巨型样板总成
+gregtech:mte:2645, §7LV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2646, §bMV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2647, §6HV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2648, §5EV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2649, §1IV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2650, §dLuV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2651, §cZPM§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2652, §3UV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2653, §4UHV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2654, §aUEV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2655, §2UIV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2656, §eUXV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2657, §9OpV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2660, §7LV§r巨型回环总成
+gregtech:mte:2661, §bMV§r巨型回环总成
+gregtech:mte:2662, §6HV§r巨型回环总成
+gregtech:mte:2663, §5EV§r巨型回环总成
+gregtech:mte:2664, §1IV§r巨型回环总成
+gregtech:mte:2665, §dLuV§r巨型回环总成
+gregtech:mte:2666, §cZPM§r巨型回环总成
+gregtech:mte:2667, §3UV§r巨型回环总成
+gregtech:mte:2668, §4UHV§r巨型回环总成
+gregtech:mte:2669, §aUEV§r巨型回环总成
+gregtech:mte:2670, §2UIV§r巨型回环总成
+gregtech:mte:2671, §eUXV§r巨型回环总成
+gregtech:mte:2672, §9OpV§r巨型回环总成
 gregtech:mte:2700, ME输入总成
 gregtech:mte:2701, ME输出总成
 gregtech:mte:2702, ME代理样板总成
 gregtech:mte:2703, 巨型ME代理样板总成
-gregtech:mte:2704, ME矿辞输入总线
+gregtech:mte:2704, 巨型ME矿辞前缀样板总成
+gregtech:mte:2750, ME矿辞输入总线
+gregtech:mte:2751, ME样板管理器
 gregtech:mte:2800, §8ULV§r巨型输入总线
 gregtech:mte:2801, §7LV§r巨型输入总线
 gregtech:mte:2802, §bMV§r巨型输入总线
@@ -5544,6 +5569,20 @@ gregtech:mte:2825, §aUEV§r巨型输出总线
 gregtech:mte:2826, §2UIV§r巨型输出总线
 gregtech:mte:2827, §eUXV§r巨型输出总线
 gregtech:mte:2828, §9OpV§r巨型输出总线
+gregtech:mte:2830, gregtech.machine.mould_item_bus.ulv.name
+gregtech:mte:2831, gregtech.machine.mould_item_bus.lv.name
+gregtech:mte:2832, gregtech.machine.mould_item_bus.mv.name
+gregtech:mte:2833, gregtech.machine.mould_item_bus.hv.name
+gregtech:mte:2834, gregtech.machine.mould_item_bus.ev.name
+gregtech:mte:2835, gregtech.machine.mould_item_bus.iv.name
+gregtech:mte:2836, gregtech.machine.mould_item_bus.luv.name
+gregtech:mte:2837, gregtech.machine.mould_item_bus.zpm.name
+gregtech:mte:2838, gregtech.machine.mould_item_bus.uv.name
+gregtech:mte:2839, gregtech.machine.mould_item_bus.uhv.name
+gregtech:mte:2840, gregtech.machine.mould_item_bus.uev.name
+gregtech:mte:2841, gregtech.machine.mould_item_bus.uiv.name
+gregtech:mte:2842, gregtech.machine.mould_item_bus.uxv.name
+gregtech:mte:2843, gregtech.machine.mould_item_bus.opv.name
 gregtech:mte:2860, 线程控制仓(LV)
 gregtech:mte:2861, 线程控制仓(MV)
 gregtech:mte:2862, 线程控制仓(HV)
@@ -5567,6 +5606,19 @@ gregtech:mte:2880, §dLuV§r ME消声仓
 gregtech:mte:2881, §cZPM§r ME消声仓
 gregtech:mte:2882, §3UV§r ME消声仓
 gregtech:mte:2883, §4UHV§r ME消声仓
+gregtech:mte:2890, §7LV§r 除尘器
+gregtech:mte:2891, §bMV§r 除尘器
+gregtech:mte:2892, §6HV§r 除尘器
+gregtech:mte:2893, §5EV§r 除尘器
+gregtech:mte:2894, §1IV§r 除尘器
+gregtech:mte:2895, §dLuV§r 除尘器
+gregtech:mte:2896, §cZPM§r 除尘器
+gregtech:mte:2897, §3UV§r 除尘器
+gregtech:mte:2898, §4UHV§r 除尘器
+gregtech:mte:2899, §aUEV§r 除尘器
+gregtech:mte:2900, §2UIV§r 除尘器
+gregtech:mte:2901, §eUXV§r 除尘器
+gregtech:mte:2902, §9OpV§r 除尘器
 gregtech:mte:3500, gregtech.machine.wireless_controller.ulv.name
 gregtech:mte:3501, gregtech.machine.wireless_controller.lv.name
 gregtech:mte:3502, gregtech.machine.wireless_controller.mv.name
@@ -5977,6 +6029,16 @@ gregtech:cable_hex:115, 16x钨线缆
 gregtech:cable_hex:2013, 16x钨钢线缆
 gregtech:cable_hex:334, 16x钒镓合金线缆
 gregtech:cable_hex:338, 16x钇钡铜氧化物线缆
+gregtech:heat_conductor_1x:25, 1x铜热导管道
+gregtech:heat_conductor_2x:25, 2x铜热导管道
+gregtech:heat_conductor_4x:25, 4x铜热导管道
+gregtech:heat_conductor_8x:25, 8x铜热导管道
+gregtech:heat_conductor_16x:25, 16x铜热导管道
+gregtech:insulated_heat_conductor_1x:25, 1x铜隔热热导管道
+gregtech:insulated_heat_conductor_2x:25, 2x铜隔热热导管道
+gregtech:insulated_heat_conductor_4x:25, 4x铜隔热热导管道
+gregtech:insulated_heat_conductor_8x:25, 8x铜隔热热导管道
+gregtech:insulated_heat_conductor_16x:25, 16x铜隔热热导管道
 gregtech:fluid_pipe_tiny:2, 微型铝流体管道
 gregtech:fluid_pipe_tiny:260, 微型青铜流体管道
 gregtech:fluid_pipe_tiny:22, 微型铬流体管道
