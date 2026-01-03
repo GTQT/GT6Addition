@@ -30,16 +30,45 @@ gt6addition.machine.dense_chrome_burring_box_liquid.name=Dense Liquid Burning Ch
 gt6addition.machine.dense_titanium_burring_box_liquid.name=Dense Liquid Burning Chamber (Titanium)
 gt6addition.machine.dense_tungsten_burring_box_liquid.name=Dense Liquid Burning Chamber (Tungsten)
 gt6addition.machine.dense_tungstensteel_burring_box_liquid.name=Dense Liquid Burning Chamber (Tungsten Steel)
-
-gt6addition.hu.generator.info.1=§bRecipe: §fFurnace fuel (Burn time : Total HU output = 1:25)
+gt6addition.machine.ru_bender_bronze.name=Rotational Energy Bender (Bronze)
+gt6addition.machine.ru_bender_steel.name=Rotational Energy Bender (Steel)
+gt6addition.machine.ru_bender_stainlesssteel.name=Rotational Energy Bender (Stainless Steel)
+gt6addition.machine.ru_bender_titanium.name=Rotational Energy Bender (Titanium)
+gt6addition.machine.ru_bender_tungstensteel.name=Rotational Energy Bender (Tungsten Steel)
+gt6addition.machine.ru_wiremill_bronze.name=Rotational Energy Wiremill (Bronze)
+gt6addition.machine.ru_wiremill_steel.name=Rotational Energy Wiremill (Steel)
+gt6addition.machine.ru_wiremill_stainlesssteel.name=Rotational Energy Wiremill (Stainless Steel)
+gt6addition.machine.ru_wiremill_titanium.name=Rotational Energy Wiremill (Titanium)
+gt6addition.machine.ru_wiremill_tungstensteel.name=Rotational Energy Wiremill (Tungsten Steel)
+gt6addition.machine.lead_steam_turbine.name=Steam Turbine (Lead)
+gt6addition.machine.bronze_steam_turbine.name=Steam Turbine (Bronze)
+gt6addition.machine.steel_steam_turbine.name=Steam Turbine (Steel)
+gt6addition.machine.invar_steam_turbine.name=Steam Turbine (Invar)
+gt6addition.machine.chrome_steam_turbine.name=Steam Turbine (Chrome)
+gt6addition.machine.titanium_steam_turbine.name=Steam Turbine (Titanium)
+gt6addition.machine.tungsten_steam_turbine.name=Steam Turbine (Tungsten)
+gt6addition.machine.tungstensteel_steam_turbine.name=Steam Turbine (Tungsten Steel)
+#
+gt6addition.hu.generator.info.1=§bRecipe: §fFurnace fuel (Burn time:Total HU output = 1:25)
 gt6addition.hu.generator.info.2=§6Efficiency: §f%s
-gt6addition.hu.generator.info.3=§4Efficiency: §f%s §4HU§f/t
+gt6addition.hu.generator.info.3=§4Output: §f%s §4HU§f/t
 gt6addition.hu.generator.info.4=§6Requires air in front to work
 gt6addition.hu.generator.info.5=§6Right-click front to store items and ignite
 gt6addition.hu.generator.info.6=§6Stops when ash storage is full
 gt6addition.hu.generator.info.7=§bRecipe: §fCombustible fuel (Internal combustion engine, gas turbine fuel)
-
 gt6addition.universal.tooltip.voltage_in=§aInput Energy: §f%,d %s（%s§f）
 gt6addition.universal.tooltip.energy_storage_capacity=§cNo Energy Storage
 gt6addition.universal.tooltip.fluid_storage_capacity=§9Fluid Capacity: §f%,d L
 gt6addition.tricorder.workable_stored_energy=Stored Energy: %s
+gt6addition.accept_facing=Acceptable RU direction:%s
+gt6addition.up=Up/
+gt6addition.down=Down/
+gt6addition.left=Left/
+gt6addition.right=Right/
+gt6addition.front=Front/
+gt6addition.back=Back/
+gt6addition.ru.generator.info.1=§6Efficiency: §f%s
+gt6addition.ru.generator.info.2=§4Energy Output: §f%s §4RU§f/t
+gt6addition.ru.generator.info.3=§6Steam to RU ratio 2:1
+gt6addition.ru.generator.info.4=§6Efficiency will lose more efficiency
+gt6addition.ru.generator.info.5=§6Distilled water will be output from the side

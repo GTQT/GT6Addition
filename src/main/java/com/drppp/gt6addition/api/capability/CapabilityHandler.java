@@ -16,8 +16,10 @@ import net.minecraftforge.fml.common.Mod;
 public class CapabilityHandler {
     @CapabilityInject(IHeatEnergy.class)
     public static Capability<IHeatEnergy> CAPABILITY_HEAT_ENERGY= null;
-    public static Capability<IHeatEnergy> CAPABILITY_ROTATION_ENERGY= null;
-    public static Capability<IHeatEnergy> CAPABILITY_KINETIC_ENERGY= null;
+    @CapabilityInject(IRotationEnergy.class)
+    public static Capability<IRotationEnergy> CAPABILITY_ROTATION_ENERGY= null;
+    @CapabilityInject(IKineticEnergy.class)
+    public static Capability<IKineticEnergy> CAPABILITY_KINETIC_ENERGY= null;
 
     public static <T> void registerCapabilityWithNoDefault(Class<T> capabilityClass) {
         CapabilityManager.INSTANCE.register(capabilityClass, new Capability.IStorage<T>() {

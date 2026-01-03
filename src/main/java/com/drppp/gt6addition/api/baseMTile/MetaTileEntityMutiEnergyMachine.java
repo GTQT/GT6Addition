@@ -1030,8 +1030,30 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
         if (I18n.hasKey(mainKey)) {
             tooltip.add(1, mainKey);
         }
+        tooltip.add( I18n.format("gt6addition.accept_facing",getAcceptFacingString()));
     }
-
+    private String getAcceptFacingString()
+    {
+        StringBuilder res= new StringBuilder();
+        for (var s: acceptFacing)
+        {
+            switch (s){
+                case UP : res.append(I18n.format("gt6addition.up"));
+                    break;
+                case DOWN : res.append(I18n.format("gt6addition.down"));
+                    break;
+                case LEFT : res.append(I18n.format("gt6addition.left"));
+                    break;
+                case RIGHT : res.append(I18n.format("gt6addition.right"));
+                    break;
+                case FRONT : res.append(I18n.format("gt6addition.front"));
+                    break;
+                case BACK : res.append(I18n.format("gt6addition.back"));
+                    break;
+            }
+        }
+        return res.toString().substring(0,res.length()-1);
+    }
     @Override
     public boolean needsSneakToRotate() {
         return true;

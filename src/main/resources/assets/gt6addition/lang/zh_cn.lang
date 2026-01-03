@@ -40,11 +40,18 @@ gt6addition.machine.ru_wiremill_steel.name=旋转能线材轧机(钢)
 gt6addition.machine.ru_wiremill_stainlesssteel.name=旋转能线材轧机(不锈钢)
 gt6addition.machine.ru_wiremill_titanium.name=旋转能线材轧机(钛)
 gt6addition.machine.ru_wiremill_tungstensteel.name=旋转能线材轧机(钨钢)
-
+gt6addition.machine.lead_steam_turbine.name=蒸汽涡轮机(铅)
+gt6addition.machine.bronze_steam_turbine.name=蒸汽涡轮机(青铜)
+gt6addition.machine.steel_steam_turbine.name=蒸汽涡轮机(钢)
+gt6addition.machine.invar_steam_turbine.name=蒸汽涡轮机(殷钢)
+gt6addition.machine.chrome_steam_turbine.name=蒸汽涡轮机(铬)
+gt6addition.machine.titanium_steam_turbine.name=蒸汽涡轮机(钛)
+gt6addition.machine.tungsten_steam_turbine.name=蒸汽涡轮机(钨)
+gt6addition.machine.tungstensteel_steam_turbine.name=蒸汽涡轮机(钨钢)
 #
 gt6addition.hu.generator.info.1=§b配方: §f熔炉燃料(燃烧时间:总HU输出 = 1:25)
 gt6addition.hu.generator.info.2=§6效率: §f%s
-gt6addition.hu.generator.info.3=§4效率: §f%s §4HU§f/t
+gt6addition.hu.generator.info.3=§4输出: §f%s §4HU§f/t
 gt6addition.hu.generator.info.4=§6需要正面为空气才能工作
 gt6addition.hu.generator.info.5=§6正面右键交互存储物品和打火
 gt6addition.hu.generator.info.6=§6灰烬存满后会停机
@@ -53,3 +60,15 @@ gt6addition.universal.tooltip.voltage_in=§a输入能量：§f%,d %s（%s§f）
 gt6addition.universal.tooltip.energy_storage_capacity=§c无能量缓存
 gt6addition.universal.tooltip.fluid_storage_capacity=§9流体容量：§f%,d L
 gt6addition.tricorder.workable_stored_energy=能量缓存：%s
+gt6addition.accept_facing=可接受RU方向:%s
+gt6addition.up=上/
+gt6addition.down=下/
+gt6addition.left=左/
+gt6addition.right=右/
+gt6addition.front=前/
+gt6addition.back=后/
+gt6addition.ru.generator.info.1=§6效率: §f%s
+gt6addition.ru.generator.info.2=§4能量输出: §f%s §4RU§f/t
+gt6addition.ru.generator.info.3=§6蒸汽转换RU比例2:1
+gt6addition.ru.generator.info.4=§6效率会损耗更多效率
+gt6addition.ru.generator.info.5=§6侧面会输出蒸馏水
