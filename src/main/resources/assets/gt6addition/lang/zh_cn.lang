@@ -48,6 +48,11 @@ gt6addition.machine.chrome_steam_turbine.name=蒸汽涡轮机(铬)
 gt6addition.machine.titanium_steam_turbine.name=蒸汽涡轮机(钛)
 gt6addition.machine.tungsten_steam_turbine.name=蒸汽涡轮机(钨)
 gt6addition.machine.tungstensteel_steam_turbine.name=蒸汽涡轮机(钨钢)
+gt6addition.machine.electric_motor.lv.name=电动机(钢)
+gt6addition.machine.electric_motor.mv.name=电动机(铝)
+gt6addition.machine.electric_motor.hv.name=电动机(不锈钢)
+gt6addition.machine.electric_motor.ev.name=电动机(钛)
+gt6addition.machine.electric_motor.iv.name=电动机(钨钢)
 #
 gt6addition.hu.generator.info.1=§b配方: §f熔炉燃料(燃烧时间:总HU输出 = 1:25)
 gt6addition.hu.generator.info.2=§6效率: §f%s
@@ -68,7 +73,12 @@ gt6addition.right=右/
 gt6addition.front=前/
 gt6addition.back=后/
 gt6addition.ru.generator.info.1=§6效率: §f%s
-gt6addition.ru.generator.info.2=§4能量输出: §f%s §4RU§f/t
-gt6addition.ru.generator.info.3=§6蒸汽转换RU比例2:1
+gt6addition.ru.generator.info.2=§4能量输出: §f%s §4RU§f/t(正面输出 §6%s§4RU§f/t-%s§4RU§f/t)
+gt6addition.ru.generator.info.3=§6蒸汽转换RU比例2:1(背后输入)
 gt6addition.ru.generator.info.4=§6效率会损耗更多效率
 gt6addition.ru.generator.info.5=§6侧面会输出蒸馏水
+gt6addition.ru.em_generator.info.1=§6效率: §f%s
+gt6addition.ru.em_generator.info.2=§4能量输出: §f%s §4RU§f/t(正面输出 §6%s§4RU§f/t-%s§4RU§f/t)
+gt6addition.ru.em_generator.info.3=§6EU转换RU比例2:1(其他方向输入)
+gt6addition.ru.em_generator.info.4=§6效率会损耗更多效率
+gt6addition.ru.em_generator.info.5=§6机器可以接收2A电流

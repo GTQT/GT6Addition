@@ -232,9 +232,9 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity {
                     this.currentItemBurnTime = TileEntityFurnace.getItemBurnTime(getItemInventory().getStackInSlot(0)) * 25;
                     this.burnSpeed = (int) (this.outPutHu / this.efficiency);
                     importItems.extractItem(0, 1, false);
-                    ItemStack item = exportItems.insertItem(0, CraftingGetItemUtils.getItemStack("<gregtech:meta_dust:275>"), true);
+                    ItemStack item = exportItems.insertItem(0, CraftingGetItemUtils.getItemStackFromCrt("<gregtech:meta_dust:275>",0), true);
                     if (item.isEmpty()) {
-                        exportItems.insertItem(0, CraftingGetItemUtils.getItemStack("<gregtech:meta_dust:275>"), false);
+                        exportItems.insertItem(0, CraftingGetItemUtils.getItemStackFromCrt("<gregtech:meta_dust:275>",0), false);
                     } else {
                         setActive(false);
                         this.hu.setHuEnergy(0);

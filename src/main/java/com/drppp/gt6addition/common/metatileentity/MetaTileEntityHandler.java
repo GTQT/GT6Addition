@@ -7,7 +7,9 @@ import com.drppp.gt6addition.api.utils.MachineEnergyAcceptFacing;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamber;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamberLiquid;
+import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityElectricMotor;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntitySteamTurbine;
+import gregtech.api.GTValues;
 import gregtech.api.recipes.RecipeMaps;
 import net.minecraft.util.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +33,7 @@ public class MetaTileEntityHandler {
 
     //蒸汽涡轮机 SU->RU    电动机EU->RU   燃油引擎 燃料->RU
     public static MetaTileEntitySteamTurbine[] STEAM_TURBINES = new MetaTileEntitySteamTurbine[8];
+    public static MetaTileEntityElectricMotor[] ELECTRIC_MOTOR = new MetaTileEntityElectricMotor[5];
     static int startID = 0;
 
     public static int getID() {
@@ -53,7 +56,13 @@ public class MetaTileEntityHandler {
         for (int i = 0; i < STEAM_TURBINES.length; i++) {
             int[] color = {0x251945, 0x815024, 0x4F4F4E, 0x87875C, 0xA39393, 0x896495, 0x1D1D1D, 0x3C3C61};
             int[] output = {16, 24, 32, 16, 112, 96, 128, 128};
-            STEAM_TURBINES[i] = registerMetaTileEntity(getID(), new MetaTileEntitySteamTurbine(getmyId(names[i] + "_steam_turbine"), color[i], 0.66, output[i]));
+            int[] out_inventry = {8000, 8000, 8000, (int)(8000*1.5), 8000*2, 8000*2, 8000*2, 8000*2};
+            STEAM_TURBINES[i] = registerMetaTileEntity(getID(), new MetaTileEntitySteamTurbine(getmyId(names[i] + "_steam_turbine"), color[i], 0.66, output[i],out_inventry[i]));
+        }
+        //电动机  钢 铝 不锈钢 钛 钨钢
+        int[] electric_motor_color = {0x000000, 0x4F4F4E, 0x8bd4d2, 0x90a5b6, 0x896495,0x3C3C61};
+        for (int i = 1; i <= 5; i++) {
+            ELECTRIC_MOTOR[i] = registerMetaTileEntity(getID(),new MetaTileEntityElectricMotor(getmyId("electric_motor."+ GTValues.VN[i]),i,electric_motor_color[i],0.8,(int)GTValues.V[i]));
         }
         //卷板
         String[] level_names = { "bronze", "steel", "stainlesssteel",  "titanium", "tungstensteel"};

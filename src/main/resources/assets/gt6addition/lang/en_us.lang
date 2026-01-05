@@ -48,6 +48,11 @@ gt6addition.machine.chrome_steam_turbine.name=Steam Turbine (Chrome)
 gt6addition.machine.titanium_steam_turbine.name=Steam Turbine (Titanium)
 gt6addition.machine.tungsten_steam_turbine.name=Steam Turbine (Tungsten)
 gt6addition.machine.tungstensteel_steam_turbine.name=Steam Turbine (Tungsten Steel)
+gt6addition.machine.electric_motor.lv.name=Electric Motor(Steel)
+gt6addition.machine.electric_motor.mv.name=Electric Motor(Al)
+gt6addition.machine.electric_motor.hv.name=Electric Motor(Stainless Steel)
+gt6addition.machine.electric_motor.ev.name=Electric Motor(Titanium)
+gt6addition.machine.electric_motor.iv.name=Electric Motor(Tungsten Steel)
 #
 gt6addition.hu.generator.info.1=§bRecipe: §fFurnace fuel (Burn time:Total HU output = 1:25)
 gt6addition.hu.generator.info.2=§6Efficiency: §f%s
@@ -72,3 +77,8 @@ gt6addition.ru.generator.info.2=§4Energy Output: §f%s §4RU§f/t
 gt6addition.ru.generator.info.3=§6Steam to RU ratio 2:1
 gt6addition.ru.generator.info.4=§6Efficiency will lose more efficiency
 gt6addition.ru.generator.info.5=§6Distilled water will be output from the side
+gt6addition.ru.em_generator.info.1=§6Efficiency: §f%s
+gt6addition.ru.em_generator.info.2=§4Energy Output: §f%s §4RU§f/t (Front Output §6%s§4RU§f/t - %s§4RU§f/t)
+gt6addition.ru.em_generator.info.3=§6EU to RU ratio 2:1 (Other side input)
+gt6addition.ru.em_generator.info.4=§6Efficiency will lose more efficiency
+gt6addition.ru.em_generator.info.5=§6Machine can receive 2A current
