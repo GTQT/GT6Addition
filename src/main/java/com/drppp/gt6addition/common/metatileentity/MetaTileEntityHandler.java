@@ -59,11 +59,14 @@ public class MetaTileEntityHandler {
             int[] out_inventry = {8000, 8000, 8000, (int)(8000*1.5), 8000*2, 8000*2, 8000*2, 8000*2};
             STEAM_TURBINES[i] = registerMetaTileEntity(getID(), new MetaTileEntitySteamTurbine(getmyId(names[i] + "_steam_turbine"), color[i], 0.66, output[i],out_inventry[i]));
         }
+        /*
         //电动机  钢 铝 不锈钢 钛 钨钢
         int[] electric_motor_color = {0x000000, 0x4F4F4E, 0x8bd4d2, 0x90a5b6, 0x896495,0x3C3C61};
         for (int i = 1; i <= 5; i++) {
             ELECTRIC_MOTOR[i] = registerMetaTileEntity(getID(),new MetaTileEntityElectricMotor(getmyId("electric_motor."+ GTValues.VN[i]),i,electric_motor_color[i],0.8,(int)GTValues.V[i]));
         }
+
+         */
         //卷板
         String[] level_names = { "bronze", "steel", "stainlesssteel",  "titanium", "tungstensteel"};
         for (int i = 0; i < 5; i++) {

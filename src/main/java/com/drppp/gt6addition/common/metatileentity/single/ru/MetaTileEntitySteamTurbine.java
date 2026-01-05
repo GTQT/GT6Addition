@@ -1,31 +1,21 @@
 package com.drppp.gt6addition.common.metatileentity.single.ru;
 
 
-import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
-import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
 import com.drppp.gt6addition.api.capability.impl.RotationEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IRotationEnergy;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
-import com.drppp.gt6addition.common.metatileentity.single.hu.LiquidBurringInfo;
-import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamberLiquid;
 import gregtech.api.capability.GregtechDataCodes;
-import gregtech.api.capability.impl.FluidHandlerProxy;
-import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.capability.impl.GhostCircuitItemStackHandler;
-import gregtech.api.capability.impl.ItemHandlerProxy;
+import gregtech.api.capability.impl.*;
 import gregtech.api.gui.ModularUI;
-import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
-import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.ICubeRenderer;
-import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import lombok.var;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -35,12 +25,12 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.*;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fml.relauncher.Side;
@@ -51,45 +41,54 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Random;
 
 public class MetaTileEntitySteamTurbine extends MetaTileEntity {
     public final int color;
     public final double efficiency;
     public final int outPutRu;//最少输出一半  最多输出两倍
-    public  int minSteamUse;//最少输出一半  最多输出两倍
-    public  int maxSteamUse;//最少输出一半  最多输出两倍
-    public final int out_inventory;
     protected final ICubeRenderer rendererBASE = Gt6AdditionTextures.RU_STEAM_TURBINE;
-    private final Random random = new Random();
+    public int minSteamUse;//最少输出一半  最多输出两倍
+    public int maxSteamUse;//最少输出一半  最多输出两倍
     public boolean isActive;
+    protected int tank_size;
     IRotationEnergy ru = new RotationEnergyHandler();
 
-    public MetaTileEntitySteamTurbine(ResourceLocation metaTileEntityId, int color, double efficiency, int outPutRu,int out_inventory) {
+    protected FluidTank steamFluidTank;
+    protected FluidTank waterFluidTank;
+
+
+    public MetaTileEntitySteamTurbine(ResourceLocation metaTileEntityId, int color, double efficiency, int outPutRu, int tank_size) {
         super(metaTileEntityId);
         this.color = color;
         this.efficiency = efficiency;
         this.outPutRu = outPutRu;
-        this.out_inventory = out_inventory;
-        this.minSteamUse = (int)(this.outPutRu/this.efficiency);
-        this.maxSteamUse = (int)(this.outPutRu*2/this.efficiency);
+        this.tank_size = tank_size;
+        this.minSteamUse = (int) (this.outPutRu / this.efficiency);
+        this.maxSteamUse = (int) (this.outPutRu * 2 / this.efficiency);
+        this.initializeInventory();
     }
 
-    @Override
-    protected FluidTankList createImportFluidHandler() {
-        return new FluidTankList(false,new FliterFluidTank(out_inventory));
-    }
-
-    @Override
-    protected FluidTankList createExportFluidHandler() {
-        return new FluidTankList(false,new FluidTank(out_inventory));
-    }
     @Override
     protected void initializeInventory() {
         this.importFluids = this.createImportFluidHandler();
         this.exportFluids = this.createExportFluidHandler();
         this.fluidInventory = new FluidHandlerProxy(this.importFluids, this.exportFluids);
     }
+    
+    @Override
+    protected FluidTankList createImportFluidHandler() {
+        this.steamFluidTank = new FilteredFluidHandler(tank_size).setFilter(CommonFluidFilters.STEAM);
+        return new FluidTankList(false, steamFluidTank);
+        
+
+    }
+
+    @Override
+    protected FluidTankList createExportFluidHandler() {
+        this.waterFluidTank = new FluidTank(tank_size);
+        return new FluidTankList(false, waterFluidTank);
+    }
+
     @Override
     public boolean isActive() {
         return isActive;
@@ -109,7 +108,7 @@ public class MetaTileEntitySteamTurbine extends MetaTileEntity {
 
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity iGregTechTileEntity) {
-        return new MetaTileEntitySteamTurbine(this.metaTileEntityId, this.color, this.efficiency, this.outPutRu,this.out_inventory);
+        return new MetaTileEntitySteamTurbine(this.metaTileEntityId, this.color, this.efficiency, this.outPutRu, this.tank_size);
     }
 
     @Override
@@ -172,17 +171,14 @@ public class MetaTileEntitySteamTurbine extends MetaTileEntity {
 
     @Override
     public boolean isValidFrontFacing(EnumFacing facing) {
-        if (this.hasFrontFacing() && this.getFrontFacing() == facing) {
-            return false;
-        }
-        return true;
+        return !this.hasFrontFacing() || this.getFrontFacing() != facing;
     }
 
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, @NotNull List<String> tooltip, boolean advanced) {
         super.addInformation(stack, world, tooltip, advanced);
         tooltip.add(I18n.format("gt6addition.ru.generator.info.1", this.efficiency * 100 + "%"));
-        tooltip.add(I18n.format("gt6addition.ru.generator.info.2", this.outPutRu,this.outPutRu/2,this.outPutRu*2));
+        tooltip.add(I18n.format("gt6addition.ru.generator.info.2", this.outPutRu, this.outPutRu / 2, this.outPutRu * 2));
         tooltip.add(I18n.format("gt6addition.ru.generator.info.3"));
         tooltip.add(I18n.format("gt6addition.ru.generator.info.4"));
         tooltip.add(I18n.format("gt6addition.ru.generator.info.5"));
@@ -191,14 +187,11 @@ public class MetaTileEntitySteamTurbine extends MetaTileEntity {
     @Override
     public void update() {
         super.update();
-        if (!getWorld().isRemote)
-        {
-            if(this.importFluids.getTankAt(0).getFluidAmount()<this.minSteamUse || this.exportFluids.getTankAt(0).getFluidAmount()>=this.out_inventory)
-            {
+        if (!getWorld().isRemote) {
+            if (this.steamFluidTank.getFluidAmount() < this.minSteamUse || this.waterFluidTank.getFluidAmount() >= this.tank_size) {
                 clearOut();
                 return;
-            }
-            else
+            } else
                 setActive(true);
             //如果朝上 让上面的实体旋转
             if (this.isActive && this.frontFacing == EnumFacing.UP) {
@@ -224,23 +217,25 @@ public class MetaTileEntitySteamTurbine extends MetaTileEntity {
                     entity.prevRotationYaw = newYaw; // 确保旋转平滑
                 }
             }
-            if(this.importFluids.getTankAt(0).getFluidAmount()>=this.maxSteamUse)
-            {
-                this.importFluids.drain(this.maxSteamUse,false);
-                this.ru.setRuEnergy(this.outPutRu*2);
-            }else
-            {
+            if (this.steamFluidTank.getFluidAmount() >= this.maxSteamUse) {
+                this.importFluids.drain(this.maxSteamUse, false);
+                this.ru.setRuEnergy(this.outPutRu * 2);
+            } else {
                 //消耗所有蒸汽 计算产出
-                var amount = this.importFluids.getTankAt(0).getFluidAmount();
-                this.importFluids.drain(amount,false);
-                this.ru.setRuEnergy((int)(amount*this.efficiency/2));
+                var amount = this.steamFluidTank.getFluidAmount();
+                this.importFluids.drain(amount, false);
+                this.ru.setRuEnergy((int) (amount * this.efficiency / 2));
+            }
+
+            if (getOffsetTimer() % 5 == 0) {
+                pushFluidsIntoNearbyHandlers(this.frontFacing.getOpposite());
             }
         }
     }
 
     private void clearOut() {
         this.ru.setRuEnergy(0);
-        if(this.isActive)
+        if (this.isActive)
             setActive(false);
     }
 
@@ -254,29 +249,23 @@ public class MetaTileEntitySteamTurbine extends MetaTileEntity {
         return super.hasCapability(capability, facing);
     }
 
+
+    /*
     @Override
     public <T> T getCapability(Capability<T> capability, EnumFacing side) {
         if (capability == CapabilityHandler.CAPABILITY_ROTATION_ENERGY && side == this.frontFacing)
             return CapabilityHandler.CAPABILITY_ROTATION_ENERGY.cast(ru);
-        else if(capability== CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && side==this.frontFacing.getOpposite())
-            return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(this.importFluids);
-        else if(capability== CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && side!=this.frontFacing && side!=this.frontFacing.getOpposite())
-            return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(this.exportFluids);
+
+        else if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY)
+        {
+            if(side == this.frontFacing.getOpposite())
+                return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(this.getFluidInventory());
+            else return null;
+        }
         return super.getCapability(capability, side);
     }
 
 
-    private class FliterFluidTank extends  FluidTank{
+     */
 
-        public FliterFluidTank(int capacity) {
-            super(capacity);
-        }
-        @Override
-        public boolean canFillFluidType(FluidStack fluid) {
-            if(!fluid.isFluidEqual(Materials.Steam.getFluid(1000)))
-                return false;
-            return super.canFillFluidType(fluid);
-        }
-
-    }
 }
