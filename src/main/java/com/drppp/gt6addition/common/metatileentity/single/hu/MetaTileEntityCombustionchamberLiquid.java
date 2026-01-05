@@ -11,6 +11,8 @@ import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
 import com.drppp.gt6addition.api.utils.CraftingGetItemUtils;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.capability.GregtechDataCodes;
+import gregtech.api.capability.IHeatable;
+import gregtech.api.capability.impl.FluidHandlerProxy;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -21,6 +23,8 @@ import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
+import gregtech.common.pipelike.heat.tile.TileEntityHeatConductor;
+import lombok.var;
 import org.jetbrains.annotations.NotNull;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
@@ -61,7 +65,8 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
     public boolean isActive;
     public boolean isDense;
     IHeatEnergy hu = new HeatEnergyHandler();
-
+    protected FluidTank inputFluidTank;
+    protected FluidTank outputFluidTank;
     public MetaTileEntityCombustionchamberLiquid(ResourceLocation metaTileEntityId, int color, double efficiency, int outPutHu, boolean isDense) {
         super(metaTileEntityId);
         this.color = color;
@@ -69,16 +74,25 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
         this.outPutHu = outPutHu;
         this.isDense = isDense;
         this.burnSpeed = (int) (this.outPutHu / this.efficiency * 0.6);
+        this.initializeInventory();
     }
-
+    @Override
+    protected void initializeInventory() {
+        super.initializeInventory();
+        this.importFluids = this.createImportFluidHandler();
+        this.exportFluids = this.createExportFluidHandler();
+        this.fluidInventory = new FluidHandlerProxy(this.importFluids, this.exportFluids);
+    }
     @Override
     protected FluidTankList createImportFluidHandler() {
-        return new FluidTankList(false,new FliterFluidTank(1000));
+        this.inputFluidTank = new FliterFluidTank(1000);
+        return new FluidTankList(false, this.inputFluidTank);
     }
 
     @Override
     protected FluidTankList createExportFluidHandler() {
-        return new FluidTankList(false,new FluidTank(1000));
+        this.outputFluidTank = new FluidTank(1000);
+        return new FluidTankList(false,  this.outputFluidTank);
     }
 
     @Override
@@ -234,15 +248,22 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
                     if(mlHu>this.burnSpeed)
                     {
                         this.currentItemBurnTime = mlHu;
-                        this.importFluids.getTankAt(0).drain(1,true);
-                        this.exportFluids.getTankAt(0).fill(Materials.CarbonDioxide.getFluid(1), true);
+                        this.inputFluidTank.drain(1,true);
+                        this.outputFluidTank.fill(Materials.CarbonDioxide.getFluid(1), true);
                     }else {
                         int amount = this.burnSpeed/mlHu + this.burnSpeed%mlHu;
                         this.currentItemBurnTime = mlHu *amount;
-                        this.importFluids.getTankAt(0).drain(amount,true);
-                        this.exportFluids.getTankAt(0).fill(Materials.CarbonDioxide.getFluid(amount),true);
+                        this.inputFluidTank.drain(amount,true);
+                        this.outputFluidTank.fill(Materials.CarbonDioxide.getFluid(amount),true);
                     }
 
+                }
+                var te = getWorld().getTileEntity(getPos().up());
+                if(te!=null && te instanceof TileEntityHeatConductor)
+                {
+                    TileEntityHeatConductor heat = (TileEntityHeatConductor)te;
+                    if(heat.isConnected(EnumFacing.DOWN))
+                        heat.applyHeat(this.hu.getHeat());
                 }
 //                if (GTUtility.getMetaTileEntity(getWorld(), this.getPos().offset(EnumFacing.UP)) instanceof MetaTileEntityHeatHatch hatch) {
 //                    hatch.addHeat((int)(this.hu.getHeat() * 2.2), this.isDense ? 7 : 5);
@@ -269,7 +290,7 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
     }
     private FluidStack getSelfFluid()
     {
-        return this.importFluids.getTankAt(0).getFluid();
+        return this.inputFluidTank.getFluid();
     }
     @Override
     public boolean onRightClick(EntityPlayer playerIn, EnumHand hand, EnumFacing facing, CuboidRayTraceResult hitResult)
@@ -278,7 +299,7 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
             attackPlayer(playerIn);
         if (!getWorld().isRemote && !playerIn.isSneaking() && facing == getFrontFacing())
         {
-            ItemStack filleditem = CraftingGetItemUtils.getItemStack("<forge:bucketfilled>");
+            ItemStack filleditem = CraftingGetItemUtils.getItemStackFromCrt("<forge:bucketfilled>",0);
             if (!playerIn.getHeldItem(hand).isEmpty() && LiquidBurringInfo.ContainsFuel(playerIn.getHeldItem(hand)) && playerIn.getHeldItem(hand).getItem()!=filleditem.getItem())
             {
                 net.minecraftforge.fluids.capability.IFluidHandlerItem item = playerIn.getHeldItem(hand).getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,null);
@@ -299,15 +320,15 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
                 if(  playerIn.getHeldItem(hand).getItem()!=filleditem.getItem() && playerIn.getHeldItem(hand).hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,null))
                 {
                     net.minecraftforge.fluids.capability.IFluidHandlerItem cap = playerIn.getHeldItem(hand).getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,null);
-                    if (this.exportFluids.getTankAt(0).getFluid()!=null && this.exportFluids.getTankAt(0).getFluidAmount()>0)
+                    if (this.outputFluidTank.getFluid()!=null && outputFluidTank.getFluidAmount()>0)
                     {
                         int fluidInserted = cap.fill(getSelfFluid(), true);
-                        this.exportFluids.getTankAt(0).drain(fluidInserted,true);
+                        outputFluidTank.drain(fluidInserted,true);
                     }
-                    else if (this.importFluids.getTankAt(0).getFluid()!=null && this.importFluids.getTankAt(0).getFluidAmount()>0)
+                    else if (this.inputFluidTank.getFluid()!=null && this.inputFluidTank.getFluidAmount()>0)
                     {
                         int fluidInserted = cap.fill(getSelfFluid(), true);
-                        this.importFluids.getTankAt(0).drain(fluidInserted,true);
+                        this.inputFluidTank.drain(fluidInserted,true);
                     }
                 }
                 return true;
@@ -317,9 +338,9 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
     }
     public boolean canActive()
     {
-        if(this.importFluids.getTankAt(0).getFluidAmount()==0)
+        if(this.inputFluidTank.getFluidAmount()==0)
             return false;
-        return this.importFluids.getTankAt(0).getFluidAmount() * LiquidBurringInfo.getMlHu(this.importFluids.getTankAt(0).getFluid()) >= this.outPutHu;
+        return this.inputFluidTank.getFluidAmount() * LiquidBurringInfo.getMlHu(this.inputFluidTank.getFluid()) >= this.outPutHu;
     }
     @Override
     public boolean hasCapability(@NotNull Capability<?> capability, @Nullable EnumFacing facing) {

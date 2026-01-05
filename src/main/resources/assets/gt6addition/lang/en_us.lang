@@ -53,6 +53,11 @@ gt6addition.machine.electric_motor.mv.name=Electric Motor(Al)
 gt6addition.machine.electric_motor.hv.name=Electric Motor(Stainless Steel)
 gt6addition.machine.electric_motor.ev.name=Electric Motor(Titanium)
 gt6addition.machine.electric_motor.iv.name=Electric Motor(Tungsten Steel)
+gt6addition.machine.diesel_engine.lv.name=Diesel Engine (Steel)
+gt6addition.machine.diesel_engine.mv.name=Diesel Engine (Aluminium)
+gt6addition.machine.diesel_engine.hv.name=Diesel Engine (Stainless Steel)
+gt6addition.machine.diesel_engine.ev.name=Diesel Engine (Titanium)
+gt6addition.machine.diesel_engine.iv.name=Diesel Engine (Tungsten Steel)
 #
 gt6addition.hu.generator.info.1=§bRecipe: §fFurnace fuel (Burn time:Total HU output = 1:25)
 gt6addition.hu.generator.info.2=§6Efficiency: §f%s
@@ -81,4 +86,9 @@ gt6addition.ru.em_generator.info.1=§6Efficiency: §f%s
 gt6addition.ru.em_generator.info.2=§4Energy Output: §f%s §4RU§f/t (Front Output §6%s§4RU§f/t - %s§4RU§f/t)
 gt6addition.ru.em_generator.info.3=§6EU to RU ratio 2:1 (Other side input)
 gt6addition.ru.em_generator.info.4=§6Efficiency will lose more efficiency
-gt6addition.ru.em_generator.info.5=§6Machine can receive 2A current
+gt6addition.ru.em_generator.info.5=§6Machine can receive 4A current
+gt6addition.ru.de_generator.info.1=§6This machine does not calculate efficiency
+gt6addition.ru.de_generator.info.2=§4Energy Output: §f%s §4RU§f/t (Front Output)
+gt6addition.ru.de_generator.info.3=§6Fuel converts to RU (Side input)
+gt6addition.ru.de_generator.info.4=§6Exhaust output from back
+gt6addition.ru.de_generator.info.5=§6Do not block the back

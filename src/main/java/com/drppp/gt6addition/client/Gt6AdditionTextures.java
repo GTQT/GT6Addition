@@ -16,6 +16,7 @@ public class Gt6AdditionTextures {
     public static OrientedOverlayRenderer RU_WIREMILL;
     public static OrientedOverlayRenderer RU_STEAM_TURBINE;
     public static OrientedOverlayRenderer RU_ELECTRIC_MOTOR;
+    public static OrientedOverlayRenderer RU_DIESEL_ENGINE;
     public static void init()
     {
         HU_BASE_BURRING_BOX= new OrientedOverlayRenderer("machines/hu_base_burring_box");
@@ -31,5 +32,6 @@ public class Gt6AdditionTextures {
         MACHINE_BASES[5] = new SimpleSidedCubeRenderer("base/tungsten_steel");
         RU_STEAM_TURBINE = new OrientedOverlayRenderer("machines/ru_machines/steam_turbine");
         RU_ELECTRIC_MOTOR = new OrientedOverlayRenderer("machines/ru_machines/electric_motor");
+        RU_DIESEL_ENGINE = new OrientedOverlayRenderer("machines/ru_machines/diesel_engine");
     }
 }

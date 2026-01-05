@@ -53,6 +53,11 @@ gt6addition.machine.electric_motor.mv.name=电动机(铝)
 gt6addition.machine.electric_motor.hv.name=电动机(不锈钢)
 gt6addition.machine.electric_motor.ev.name=电动机(钛)
 gt6addition.machine.electric_motor.iv.name=电动机(钨钢)
+gt6addition.machine.diesel_engine.lv.name=燃油引擎(钢)
+gt6addition.machine.diesel_engine.mv.name=燃油引擎(铝)
+gt6addition.machine.diesel_engine.hv.name=燃油引擎(不锈钢)
+gt6addition.machine.diesel_engine.ev.name=燃油引擎(钛)
+gt6addition.machine.diesel_engine.iv.name=燃油引擎(钨钢)
 #
 gt6addition.hu.generator.info.1=§b配方: §f熔炉燃料(燃烧时间:总HU输出 = 1:25)
 gt6addition.hu.generator.info.2=§6效率: §f%s
@@ -81,4 +86,9 @@ gt6addition.ru.em_generator.info.1=§6效率: §f%s
 gt6addition.ru.em_generator.info.2=§4能量输出: §f%s §4RU§f/t(正面输出 §6%s§4RU§f/t-%s§4RU§f/t)
 gt6addition.ru.em_generator.info.3=§6EU转换RU比例2:1(其他方向输入)
 gt6addition.ru.em_generator.info.4=§6效率会损耗更多效率
-gt6addition.ru.em_generator.info.5=§6机器可以接收2A电流
+gt6addition.ru.em_generator.info.5=§6机器可以接收4A电流
+gt6addition.ru.de_generator.info.1=§6该机器不计算效率
+gt6addition.ru.de_generator.info.2=§4能量输出: §f%s §4RU§f/t(正面输出)
+gt6addition.ru.de_generator.info.3=§6燃料转换RU(侧面输入)
+gt6addition.ru.de_generator.info.4=§6背后输出废气
+gt6addition.ru.de_generator.info.5=§6请勿堵塞后背

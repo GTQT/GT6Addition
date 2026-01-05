@@ -93,7 +93,7 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
                 if(te.hasCapability(CapabilityHandler.CAPABILITY_HEAT_ENERGY,facing.getOpposite()))
                 {
                     IHeatEnergy energy = te.getCapability(CapabilityHandler.CAPABILITY_HEAT_ENERGY,facing.getOpposite());
-                    this.huEnergy.setHuEnergy(Math.min(energy.getHeat(), (int)GTValues.V[this.tire])*2);
+                    this.huEnergy.setHuEnergy(Math.min(energy.getHeat(), (int)GTValues.V[this.tire]*2));
                     return true;
                 }
                 return false;
@@ -101,7 +101,7 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
                 if(te.hasCapability(CapabilityHandler.CAPABILITY_ROTATION_ENERGY,facing.getOpposite()))
                 {
                     IRotationEnergy energy = te.getCapability(CapabilityHandler.CAPABILITY_ROTATION_ENERGY,facing.getOpposite());
-                    this.ruEnergy.setRuEnergy(Math.min(energy.getEnergyOutput(),(int)GTValues.V[this.tire])*2);
+                    this.ruEnergy.setRuEnergy(Math.min(energy.getEnergyOutput(),(int)GTValues.V[this.tire]*2));
                     return true;
                 }
                 return false;
@@ -109,7 +109,7 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
                 if(te.hasCapability(CapabilityHandler.CAPABILITY_KINETIC_ENERGY,facing.getOpposite()))
                 {
                     IKineticEnergy energy = te.getCapability(CapabilityHandler.CAPABILITY_KINETIC_ENERGY,facing.getOpposite());
-                    this.kuEnergy.setKineticEnergy(Math.min(energy.getKinetic(), (int)GTValues.V[this.tire])*2);
+                    this.kuEnergy.setKineticEnergy(Math.min(energy.getKinetic(), (int)GTValues.V[this.tire]*2));
                     return true;
                 }
                 return false;

@@ -4,6 +4,7 @@ package com.drppp.gt6addition;
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
+import com.drppp.gt6addition.common.metatileentity.single.hu.LiquidBurringInfo;
 import com.drppp.gt6addition.intergations.top.TopInit;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -34,6 +35,7 @@ public class CommonProxy {
 
     public void postInit(FMLPostInitializationEvent event) {
         // 服务端和客户端共同的后初始化逻辑
+        LiquidBurringInfo.init();
     }
 
     // 其他需要在服务端和客户端都执行的方法

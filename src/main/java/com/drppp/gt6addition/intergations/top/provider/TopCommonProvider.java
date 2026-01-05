@@ -2,6 +2,7 @@ package com.drppp.gt6addition.intergations.top.provider;
 
 
 import com.drppp.gt6addition.Tags;
+import com.drppp.gt6addition.api.top.IEnergyOutShow;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamber;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamberLiquid;
 import gregtech.api.util.GTUtility;
@@ -36,7 +37,7 @@ public class TopCommonProvider implements IProbeInfoProvider {
             iProbeInfo.text(TextFormatting.BOLD + "缓存物品:" + TextFormatting.GREEN + (item.isEmpty() ? "无" : item.getDisplayName() + "*" + item.getCount()));
             iProbeInfo.text(TextFormatting.BOLD + "灰烬栏状态:" + TextFormatting.GREEN + (itemout.isEmpty() ? "无" : itemout.getCount() + "/64"));
         }
-        if (GTUtility.getMetaTileEntity(world, iProbeHitData.getPos()) instanceof MetaTileEntityCombustionchamberLiquid ) {
+        else if (GTUtility.getMetaTileEntity(world, iProbeHitData.getPos()) instanceof MetaTileEntityCombustionchamberLiquid ) {
             MetaTileEntityCombustionchamberLiquid s = (MetaTileEntityCombustionchamberLiquid)GTUtility.getMetaTileEntity(world, iProbeHitData.getPos());
             var fludi = s.getImportFluids().getTankAt(0).getFluid();
             var itemout = s.getExportFluids().getTankAt(0).getFluid();
@@ -47,6 +48,12 @@ public class TopCommonProvider implements IProbeInfoProvider {
             iProbeInfo.text(TextFormatting.BOLD + "HU输出:" + TextFormatting.GREEN + s.outPutHu);
             iProbeInfo.text(TextFormatting.BOLD + "缓存流体:" + TextFormatting.GREEN + (fludi==null ? "无" : fludi.getLocalizedName() + "*" + fludi.amount +"/1000"));
             iProbeInfo.text(TextFormatting.BOLD + "输出流体:" + TextFormatting.GREEN + (itemout==null ? "无" : itemout.getLocalizedName() + "*" + itemout.amount+"/1000"));
+        }
+        if(GTUtility.getMetaTileEntity(world, iProbeHitData.getPos()) instanceof IEnergyOutShow)
+        {
+            IEnergyOutShow ens =  (IEnergyOutShow)GTUtility.getMetaTileEntity(world, iProbeHitData.getPos());
+            iProbeInfo.text(TextFormatting.BOLD + "能量类型:" + TextFormatting.GREEN + ens.getEnergyName());
+            iProbeInfo.text(TextFormatting.BOLD + "能量输出:" + TextFormatting.GREEN + ens.getEnergyOut()+ens.getEnergyName()+"/t");
         }
     }
 

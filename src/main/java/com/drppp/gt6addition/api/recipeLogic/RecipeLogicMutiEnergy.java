@@ -1,16 +1,23 @@
 package com.drppp.gt6addition.api.recipeLogic;
 
 import com.drppp.gt6addition.api.baseMTile.IMutiEnergyProxy;
+import gregtech.api.GTValues;
 import gregtech.api.capability.impl.AbstractRecipeLogic;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.logic.OCParams;
+import gregtech.api.recipes.logic.OCResult;
+import gregtech.api.recipes.properties.RecipePropertyStorage;
+import org.jetbrains.annotations.NotNull;
+
+import static gregtech.api.recipes.logic.OverclockingLogic.subTickNonParallelOC;
 
 public class RecipeLogicMutiEnergy extends AbstractRecipeLogic {
     IMutiEnergyProxy mutiEnergyProxy;
     public RecipeLogicMutiEnergy(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, IMutiEnergyProxy mutiEnergyProxy) {
         super(tileEntity, recipeMap);
         this.mutiEnergyProxy = mutiEnergyProxy;
-        this.setParallelLimit(1);
+        setMaximumOverclockVoltage(getMaxVoltage());
     }
 
     public RecipeLogicMutiEnergy(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, boolean hasPerfectOC, IMutiEnergyProxy mutiEnergyProxy) {
@@ -22,21 +29,21 @@ public class RecipeLogicMutiEnergy extends AbstractRecipeLogic {
     protected long getEnergyInputPerSecond() {
         if(mutiEnergyProxy==null)
             return 0;
-        return mutiEnergyProxy.getEnergy();
+        return mutiEnergyProxy.getEnergy()*GTValues.V[this.mutiEnergyProxy.getTire()];
     }
 
     @Override
     protected long getEnergyStored() {
         if(mutiEnergyProxy==null)
             return 0;
-        return mutiEnergyProxy.getEnergy();
+        return mutiEnergyProxy.getEnergy()*GTValues.V[this.mutiEnergyProxy.getTire()];
     }
 
     @Override
     protected long getEnergyCapacity() {
         if(mutiEnergyProxy==null)
             return 0;
-        return mutiEnergyProxy.getEnergy();
+        return mutiEnergyProxy.getEnergy()*GTValues.V[this.mutiEnergyProxy.getTire()];
     }
 
     @Override
@@ -51,15 +58,14 @@ public class RecipeLogicMutiEnergy extends AbstractRecipeLogic {
     protected boolean hasEnoughPower(long eut, int duration) {
         long recipeEUt = eut;
         if (recipeEUt >= 0) {
-            return this.getEnergyStored() >= recipeEUt;
-        } else {
-            return this.getEnergyStored() - recipeEUt <= this.getEnergyCapacity();
+            return this.mutiEnergyProxy.getEnergy() >= recipeEUt;
         }
+        return false;
     }
 
     @Override
     public long getMaxVoltage() {
-        return mutiEnergyProxy.getTire();
+        return  GTValues.V[mutiEnergyProxy.getTire()];
     }
 
     @Override
@@ -87,6 +93,11 @@ public class RecipeLogicMutiEnergy extends AbstractRecipeLogic {
         }
 
     }
+    @Override
+    protected void modifyOverclockPre(@NotNull OCParams ocParams, @NotNull RecipePropertyStorage storage) {
+
+    }
+
     @Override
     public int getMaxProgress() {
         return super.getMaxProgress();

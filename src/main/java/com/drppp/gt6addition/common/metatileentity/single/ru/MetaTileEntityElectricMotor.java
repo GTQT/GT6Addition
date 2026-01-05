@@ -7,6 +7,7 @@ import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
 import com.drppp.gt6addition.api.capability.impl.RotationEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IRotationEnergy;
+import com.drppp.gt6addition.api.top.IEnergyOutShow;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.gui.ModularUI;
@@ -40,7 +41,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Random;
 
-public class MetaTileEntityElectricMotor extends TieredMetaTileEntity {
+public class MetaTileEntityElectricMotor extends TieredMetaTileEntity implements IEnergyOutShow {
     public final int color;
     public final double efficiency;
     public final int outPutRu;//最少输出一半  最多输出两倍
@@ -75,7 +76,7 @@ public class MetaTileEntityElectricMotor extends TieredMetaTileEntity {
         }
     }
     protected long getMaxInputOutputAmperage() {
-        return 2L;
+        return 4L;
     }
     @Override
     protected ModularUI createUI(EntityPlayer entityPlayer) {
@@ -166,6 +167,19 @@ public class MetaTileEntityElectricMotor extends TieredMetaTileEntity {
             }
             else
                 setActive(true);
+            if(this.energyContainer.getEnergyStored()>=this.maxSteamUse)
+            {
+                this.importFluids.drain(this.maxSteamUse,false);
+                this.ru.setRuEnergy(this.outPutRu*2);
+            }else
+            {
+                //消耗所有EU 计算产出
+                var amount = this.energyContainer.getEnergyStored();
+                this.energyContainer.removeEnergy(this.energyContainer.getEnergyStored());
+                this.ru.setRuEnergy((int)(amount*this.efficiency/2));
+            }
+        }else
+        {
             //如果朝上 让上面的实体旋转
             if (this.isActive && this.frontFacing == EnumFacing.UP) {
                 // 获取方块正上方位置
@@ -190,17 +204,6 @@ public class MetaTileEntityElectricMotor extends TieredMetaTileEntity {
                     entity.prevRotationYaw = newYaw; // 确保旋转平滑
                 }
             }
-            if(this.energyContainer.getEnergyStored()>=this.maxSteamUse)
-            {
-                this.importFluids.drain(this.maxSteamUse,false);
-                this.ru.setRuEnergy(this.outPutRu*2);
-            }else
-            {
-                //消耗所有EU 计算产出
-                var amount = this.energyContainer.getEnergyStored();
-                this.energyContainer.removeEnergy(this.energyContainer.getEnergyStored());
-                this.ru.setRuEnergy((int)(amount*this.efficiency/2));
-            }
         }
     }
 
@@ -222,5 +225,15 @@ public class MetaTileEntityElectricMotor extends TieredMetaTileEntity {
         if (capability == CapabilityHandler.CAPABILITY_ROTATION_ENERGY && side == this.frontFacing)
             return CapabilityHandler.CAPABILITY_ROTATION_ENERGY.cast(ru);
         return super.getCapability(capability, side);
+    }
+
+    @Override
+    public String getEnergyName() {
+        return "RU";
+    }
+
+    @Override
+    public int getEnergyOut() {
+        return this.ru.getEnergyOutput();
     }
 }

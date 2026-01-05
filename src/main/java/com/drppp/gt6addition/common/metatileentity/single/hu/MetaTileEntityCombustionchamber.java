@@ -11,7 +11,9 @@ import com.drppp.gt6addition.api.capability.impl.HeatEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
 import com.drppp.gt6addition.api.utils.CraftingGetItemUtils;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
+import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.GregtechDataCodes;
+import gregtech.api.capability.IHeatable;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -20,6 +22,9 @@ import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
+import gregtech.common.pipelike.heat.net.HeatNetHandler;
+import gregtech.common.pipelike.heat.tile.TileEntityHeatConductor;
+import lombok.var;
 import org.jetbrains.annotations.NotNull;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
@@ -61,7 +66,6 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity {
     public boolean isActive;
     public boolean isDense;
     IHeatEnergy hu = new HeatEnergyHandler();
-
     public MetaTileEntityCombustionchamber(ResourceLocation metaTileEntityId, int color, double efficiency, int outPutHu, boolean isDense) {
         super(metaTileEntityId);
         this.color = color;
@@ -241,6 +245,13 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity {
                     }
                 } else if (this.currentItemHasBurnedTime >= this.currentItemBurnTime && importItems.getStackInSlot(0).isEmpty()) {
                     clearOut();
+                }
+                var te = getWorld().getTileEntity(getPos().up());
+                if(te!=null && te instanceof TileEntityHeatConductor)
+                {
+                    TileEntityHeatConductor heat = (TileEntityHeatConductor)te;
+                    if(heat.isConnected(EnumFacing.DOWN))
+                        heat.applyHeat(this.hu.getHeat());
                 }
 //                if (GTUtility.getMetaTileEntity(getWorld(), this.getPos().offset(EnumFacing.UP)) instanceof MetaTileEntityHeatHatch hatch) {
 //                    hatch.addHeat(this.hu.getHeat() * 2, this.isDense ? 7 : 5);
