@@ -17,6 +17,13 @@ public class Gt6AdditionTextures {
     public static OrientedOverlayRenderer RU_STEAM_TURBINE;
     public static OrientedOverlayRenderer RU_ELECTRIC_MOTOR;
     public static OrientedOverlayRenderer RU_DIESEL_ENGINE;
+    public static OrientedOverlayRenderer RU_LATHE;
+    public static OrientedOverlayRenderer RU_CUTTING_SAW;
+    public static OrientedOverlayRenderer RU_CENTRIFUGE;
+    public static OrientedOverlayRenderer RU_LOOM;
+    public static OrientedOverlayRenderer RU_ORE_WASHER;
+    public static OrientedOverlayRenderer RU_MIXER;
+    public static OrientedOverlayRenderer HU_OVEN;
     public static void init()
     {
         HU_BASE_BURRING_BOX= new OrientedOverlayRenderer("machines/hu_base_burring_box");
@@ -33,5 +40,12 @@ public class Gt6AdditionTextures {
         RU_STEAM_TURBINE = new OrientedOverlayRenderer("machines/ru_machines/steam_turbine");
         RU_ELECTRIC_MOTOR = new OrientedOverlayRenderer("machines/ru_machines/electric_motor");
         RU_DIESEL_ENGINE = new OrientedOverlayRenderer("machines/ru_machines/diesel_engine");
+        RU_LATHE = new OrientedOverlayRenderer("machines/ru_machines/lathe");
+        RU_CUTTING_SAW = new OrientedOverlayRenderer("machines/ru_machines/cutting_saw");
+        RU_CENTRIFUGE = new OrientedOverlayRenderer("machines/ru_machines/centrifuge");
+        RU_LOOM = new OrientedOverlayRenderer("machines/ru_machines/loom");
+        RU_ORE_WASHER = new OrientedOverlayRenderer("machines/ru_machines/orewasher");
+        RU_MIXER = new OrientedOverlayRenderer("machines/ru_machines/mixer");
+        HU_OVEN = new OrientedOverlayRenderer("machines/hu_machines/oven");
     }
 }

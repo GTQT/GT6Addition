@@ -86,23 +86,23 @@ import static gregtech.api.capability.GregtechDataCodes.UPDATE_OUTPUT_FACING;
 public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMetaTileEntity
         implements IActiveOutputSide, IGhostSlotConfigurable {
 
-    private static final int FONT_HEIGHT = 9; // Minecraft's FontRenderer FONT_HEIGHT value
+    public static final int FONT_HEIGHT = 9; // Minecraft's FontRenderer FONT_HEIGHT value
     @Nullable // particle run every tick when the machine is active
-    protected final IMachineParticleEffect tickingParticle;
+    public final IMachineParticleEffect tickingParticle;
     @Nullable // particle run in randomDisplayTick() when the machine is active
-    protected final IMachineParticleEffect randomParticle;
-    private final boolean hasFrontFacing;
+    public final IMachineParticleEffect randomParticle;
+    public final boolean hasFrontFacing;
     @Nullable
     protected GhostCircuitItemStackHandler circuitInventory;
     protected IItemHandler outputItemInventory;
     protected IFluidHandler outputFluidInventory;
-    private EnumFacing outputFacingItems;
-    private EnumFacing outputFacingFluids;
-    private boolean autoOutputItems;
-    private boolean autoOutputFluids;
-    private boolean allowInputFromOutputSideItems = false;
-    private boolean allowInputFromOutputSideFluids = false;
-    private IItemHandlerModifiable actualImportItems;
+    public EnumFacing outputFacingItems;
+    public EnumFacing outputFacingFluids;
+    public boolean autoOutputItems;
+    public boolean autoOutputFluids;
+    public boolean allowInputFromOutputSideItems = false;
+    public boolean allowInputFromOutputSideFluids = false;
+    public IItemHandlerModifiable actualImportItems;
 
     public MetaTileEntityMutiEnergyMachine(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
                                        ICubeRenderer renderer, int tier, boolean hasFrontFacing, String type ,MachineEnergyAcceptFacing[] acceptFacing) {

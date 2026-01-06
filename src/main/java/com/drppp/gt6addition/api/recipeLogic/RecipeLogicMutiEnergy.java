@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import static gregtech.api.recipes.logic.OverclockingLogic.subTickNonParallelOC;
 
 public class RecipeLogicMutiEnergy extends AbstractRecipeLogic {
-    IMutiEnergyProxy mutiEnergyProxy;
+    public IMutiEnergyProxy mutiEnergyProxy;
     public RecipeLogicMutiEnergy(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, IMutiEnergyProxy mutiEnergyProxy) {
         super(tileEntity, recipeMap);
         this.mutiEnergyProxy = mutiEnergyProxy;

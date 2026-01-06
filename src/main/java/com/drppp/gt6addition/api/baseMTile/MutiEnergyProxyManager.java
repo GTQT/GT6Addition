@@ -9,6 +9,7 @@ import com.drppp.gt6addition.api.capability.interfaces.IKineticEnergy;
 import com.drppp.gt6addition.api.capability.interfaces.IRotationEnergy;
 import com.drppp.gt6addition.api.utils.EnergyTypeList;
 import gregtech.api.GTValues;
+import gregtech.common.pipelike.heat.tile.TileEntityHeatConductor;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 
@@ -95,6 +96,14 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
                     IHeatEnergy energy = te.getCapability(CapabilityHandler.CAPABILITY_HEAT_ENERGY,facing.getOpposite());
                     this.huEnergy.setHuEnergy(Math.min(energy.getHeat(), (int)GTValues.V[this.tire]*2));
                     return true;
+                } else  if(te!=null && te instanceof TileEntityHeatConductor)
+                {
+                    TileEntityHeatConductor heat = (TileEntityHeatConductor)te;
+                    if(heat.isConnected(facing.getOpposite()))
+                    {
+                        this.huEnergy.setHuEnergy(heat.getNodeData().getHeatTransfer());
+                    }
+
                 }
                 return false;
             case EnergyTypeList.RU:
