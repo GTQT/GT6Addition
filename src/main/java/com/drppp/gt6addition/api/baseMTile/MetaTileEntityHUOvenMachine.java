@@ -40,6 +40,9 @@ public class MetaTileEntityHUOvenMachine extends MetaTileEntityHUMachine{
             if(this.mutiEnergyProxy.getEnergy()/256 >1)
             {
                 this.setParallelLimit(this.mutiEnergyProxy.getEnergy()/256);
+            }else
+            {
+                this.setParallelLimit(1);
             }
             return Math.max(256/this.mutiEnergyProxy.getEnergy(),1);
         }

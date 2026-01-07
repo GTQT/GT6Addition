@@ -6,23 +6,21 @@ import gregtech.api.capability.impl.AbstractRecipeLogic;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.logic.OCParams;
-import gregtech.api.recipes.logic.OCResult;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
 import org.jetbrains.annotations.NotNull;
 
-import static gregtech.api.recipes.logic.OverclockingLogic.subTickNonParallelOC;
-
 public class RecipeLogicMutiEnergy extends AbstractRecipeLogic {
     public IMutiEnergyProxy mutiEnergyProxy;
+    public RecipeLogicMutiEnergy(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, IMutiEnergyProxy mutiEnergyProxy,int parallel) {
+        super(tileEntity, recipeMap);
+        this.mutiEnergyProxy = mutiEnergyProxy;
+        setMaximumOverclockVoltage(getMaxVoltage());
+        this.setParallelLimit(parallel);
+    }
     public RecipeLogicMutiEnergy(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, IMutiEnergyProxy mutiEnergyProxy) {
         super(tileEntity, recipeMap);
         this.mutiEnergyProxy = mutiEnergyProxy;
         setMaximumOverclockVoltage(getMaxVoltage());
-    }
-
-    public RecipeLogicMutiEnergy(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, boolean hasPerfectOC, IMutiEnergyProxy mutiEnergyProxy) {
-        super(tileEntity, recipeMap, hasPerfectOC);
-        this.mutiEnergyProxy = mutiEnergyProxy;
         this.setParallelLimit(1);
     }
     @Override

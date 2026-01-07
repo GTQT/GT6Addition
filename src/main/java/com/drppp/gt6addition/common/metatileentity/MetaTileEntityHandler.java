@@ -1,6 +1,7 @@
 package com.drppp.gt6addition.common.metatileentity;
 
 import com.drppp.gt6addition.Tags;
+import com.drppp.gt6addition.api.baseMTile.MetaTileEntityHUMachine;
 import com.drppp.gt6addition.api.baseMTile.MetaTileEntityHUOvenMachine;
 import com.drppp.gt6addition.api.baseMTile.MetaTileEntityMutiEnergyMachine;
 import com.drppp.gt6addition.api.utils.EnergyTypeList;
@@ -8,6 +9,7 @@ import com.drppp.gt6addition.api.utils.MachineEnergyAcceptFacing;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamber;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamberLiquid;
+import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityRotationEngine;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityDieselEngine;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityElectricMotor;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntitySteamTurbine;
@@ -35,18 +37,28 @@ public class MetaTileEntityHandler {
     public static MetaTileEntityMutiEnergyMachine[] ORE_WASHER_RU= new MetaTileEntityMutiEnergyMachine[5];
     public static MetaTileEntityMutiEnergyMachine[] MIXER_RU= new MetaTileEntityMutiEnergyMachine[5];
     //KU机器 青铜、钢、不锈钢、钛、钨钢
-    //压缩机 冲压机床 筛选 破碎机(新配方)
+    //压缩机 冲压机床 筛选 锻造
 
     //KU 蒸汽动力引擎、电力动力引擎、旋转动能转换器 2:1
-
+    public static MetaTileEntityRotationEngine[] RU_KU_ENGINE = new MetaTileEntityRotationEngine[5];
+    public static MetaTileEntityMutiEnergyMachine[] COMPRESSOR_KU= new MetaTileEntityMutiEnergyMachine[5];
+    public static MetaTileEntityMutiEnergyMachine[] FORMING_PRESS_KU= new MetaTileEntityMutiEnergyMachine[5];
+    public static MetaTileEntityMutiEnergyMachine[] HAMMER_KU= new MetaTileEntityMutiEnergyMachine[5];
+    public static MetaTileEntityMutiEnergyMachine[] SIFTER_KU= new MetaTileEntityMutiEnergyMachine[5];
     //HU机器 钢、因瓦、钛、碳化钨
-    //熔炉  蒸馏室  压模 过胶机 高压釜(结晶)  焙烧  发酵
+    //熔炉  蒸馏室  压模 过胶机   焙烧  发酵
     public static MetaTileEntityHUOvenMachine[] OVEN_HU = new MetaTileEntityHUOvenMachine[4];
+    public static MetaTileEntityHUMachine[] DISTILLERY_HU = new MetaTileEntityHUMachine[4];
+    public static MetaTileEntityHUMachine[] EXTRUDER_HU = new MetaTileEntityHUMachine[4];
+    public static MetaTileEntityHUMachine[] LAMINATOR_HU = new MetaTileEntityHUMachine[4];
+    public static MetaTileEntityHUMachine[] ROASTER_HU = new MetaTileEntityHUMachine[4];
+    public static MetaTileEntityHUMachine[] FERMENTER_HU = new MetaTileEntityHUMachine[4];
 
     //蒸汽涡轮机 SU->RU    电动机EU->RU   燃油引擎 燃料->RU
     public static MetaTileEntitySteamTurbine[] STEAM_TURBINES = new MetaTileEntitySteamTurbine[8];
     public static MetaTileEntityElectricMotor[] ELECTRIC_MOTOR = new MetaTileEntityElectricMotor[5];
     public static MetaTileEntityDieselEngine[] DIESEL_ENGINE = new MetaTileEntityDieselEngine[5];
+
     static int startID = 0;
 
     public static int getID() {
@@ -81,9 +93,14 @@ public class MetaTileEntityHandler {
         for (int i = 1; i <= 5; i++) {
             DIESEL_ENGINE[i-1] = registerMetaTileEntity(getID(),new MetaTileEntityDieselEngine(getmyId("diesel_engine."+ GTValues.VN[i]),electric_motor_color[i],GTValues.VH[i]*3));
         }
-
-        //卷板
         String[] level_names = { "bronze", "steel", "stainlesssteel",  "titanium", "tungstensteel"};
+        //旋转动能引擎 RU->KU
+        int[] ru_ku_engine_color = {0x000000, 0x815024, 0x4F4F4E, 0x90a5b6, 0x896495,0x3C3C61};
+        for (int i = 1; i <= 5; i++) {
+            RU_KU_ENGINE[i-1] = registerMetaTileEntity(getID(),new MetaTileEntityRotationEngine(getmyId("ru_ku_engine."+ GTValues.VN[i]),ru_ku_engine_color[i],(int)GTValues.V[i]));
+        }
+        //卷板
+
         for (int i = 0; i < 5; i++) {
             METAL_BENDER_RU[i] =  registerMetaTileEntity(getID(), new MetaTileEntityMutiEnergyMachine(getmyId("ru_bender_"+level_names[i]), RecipeMaps.BENDER_RECIPES, Gt6AdditionTextures.RU_BENDER, 1+i, true, EnergyTypeList.RU,new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.LEFT, MachineEnergyAcceptFacing.RIGHT}));
         }
@@ -115,10 +132,47 @@ public class MetaTileEntityHandler {
         for (int i = 0; i < 5; i++) {
             MIXER_RU[i] =  registerMetaTileEntity(getID(), new MetaTileEntityMutiEnergyMachine(getmyId("ru_mixer_"+level_names[i]), RecipeMaps.MIXER_RECIPES, Gt6AdditionTextures.RU_MIXER, 1+i, true, EnergyTypeList.RU,new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}));
         }
+        //压缩机
+        for (int i = 0; i < 5; i++) {
+            COMPRESSOR_KU[i] =  registerMetaTileEntity(getID(), new MetaTileEntityMutiEnergyMachine(getmyId("ku_compressor_"+level_names[i]), RecipeMaps.COMPRESSOR_RECIPES, Gt6AdditionTextures.KU_COMPRESSOR, 1+i, true, EnergyTypeList.KU,new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.LEFT, MachineEnergyAcceptFacing.RIGHT},(i+1)*4));
+        }
+        //冲压机床
+        for (int i = 0; i < 5; i++) {
+            FORMING_PRESS_KU[i] =  registerMetaTileEntity(getID(), new MetaTileEntityMutiEnergyMachine(getmyId("ku_forming_press_"+level_names[i]), RecipeMaps.FORMING_PRESS_RECIPES, Gt6AdditionTextures.KU_FORMING_PRESS, 1+i, true, EnergyTypeList.KU,new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.UP},(i+1)*4));
+        }
+        //锻造
+        for (int i = 0; i < 5; i++) {
+            HAMMER_KU[i] =  registerMetaTileEntity(getID(), new MetaTileEntityMutiEnergyMachine(getmyId("ku_hammer_"+level_names[i]), RecipeMaps.FORGE_HAMMER_RECIPES, Gt6AdditionTextures.KU_HAMMER, 1+i, true, EnergyTypeList.KU,new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.LEFT, MachineEnergyAcceptFacing.RIGHT},(i+1)*4));
+        }
+        //筛选
+        for (int i = 0; i < 5; i++) {
+            SIFTER_KU[i] =  registerMetaTileEntity(getID(), new MetaTileEntityMutiEnergyMachine(getmyId("ku_sifter_"+level_names[i]), RecipeMaps.SIFTER_RECIPES, Gt6AdditionTextures.KU_SIFTER, 1+i, true, EnergyTypeList.KU,new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.BACK},(i+1)*4));
+        }
         String[] huName = { "steel", "invar",  "titanium", "tungstencarbide"};
         int[] huColor = { 0x4F4F4E, 0x87875C, 0x896495,0x4F4F4F};
+        //熔炉
         for (int i = 1; i <=4 ; i++) {
             OVEN_HU[i-1] = registerMetaTileEntity(getID(),new MetaTileEntityHUOvenMachine(getmyId("hu_oven_"+huName[i-1]),RecipeMaps.FURNACE_RECIPES,Gt6AdditionTextures.HU_OVEN,i,false,EnergyTypeList.HU,new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN},huColor[i-1]));
+        }
+        //蒸馏
+        for (int i = 1; i <=4 ; i++) {
+            DISTILLERY_HU[i-1] = registerMetaTileEntity(getID(),new MetaTileEntityHUMachine(getmyId("hu_distillery_"+huName[i-1]),RecipeMaps.DISTILLERY_RECIPES,Gt6AdditionTextures.HU_DISTILLERY,i,false,EnergyTypeList.HU,new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN},huColor[i-1],8));
+        }
+        //压模
+        for (int i = 1; i <=4 ; i++) {
+            EXTRUDER_HU[i-1] = registerMetaTileEntity(getID(),new MetaTileEntityHUMachine(getmyId("hu_extruder_"+huName[i-1]),RecipeMaps.EXTRUDER_RECIPES,Gt6AdditionTextures.HU_EXTRUDER,i,false,EnergyTypeList.HU,new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN},huColor[i-1]));
+        }
+        //过胶机
+        for (int i = 1; i <=4 ; i++) {
+            LAMINATOR_HU[i-1] = registerMetaTileEntity(getID(),new MetaTileEntityHUMachine(getmyId("hu_laminator_"+huName[i-1]),RecipeMaps.LAMINATOR_RECIPES,Gt6AdditionTextures.HU_LAMINATOR,i,false,EnergyTypeList.HU,new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN},huColor[i-1]));
+        }
+        //焙烧
+        for (int i = 1; i <=4 ; i++) {
+            ROASTER_HU[i-1] = registerMetaTileEntity(getID(),new MetaTileEntityHUMachine(getmyId("hu_roaster_"+huName[i-1]),RecipeMaps.ROASTER_RECIPES,Gt6AdditionTextures.HU_ROASTER,i,false,EnergyTypeList.HU,new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN},huColor[i-1]));
+        }
+        //发酵
+        for (int i = 1; i <=4 ; i++) {
+            FERMENTER_HU[i-1] = registerMetaTileEntity(getID(),new MetaTileEntityHUMachine(getmyId("hu_fermenter_"+huName[i-1]),RecipeMaps.FERMENTING_RECIPES,Gt6AdditionTextures.HU_FERMENTER,i,false,EnergyTypeList.HU,new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN},huColor[i-1]));
         }
     }
     public static @NotNull ResourceLocation getmyId(@NotNull String path) {

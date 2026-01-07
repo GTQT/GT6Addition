@@ -1,10 +1,14 @@
 package com.drppp.gt6addition.client;
 
+import com.cleanroommc.modularui.drawable.UITexture;
 import gregtech.client.renderer.texture.cube.OrientedOverlayRenderer;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 
+import static com.cleanroommc.modularui.drawable.UITexture.fullImage;
+
 public class Gt6AdditionTextures {
+    public static final UITexture GREGTECH6_LOGO = fullImage("gregtech","textures/gui/icon/gregtech6.png");
     public static OrientedOverlayRenderer HU_BASE_BURRING_BOX;
     public static OrientedOverlayRenderer HU_BASE_BURRING_BOX_LIQUID;
     public static SimpleOverlayRenderer HU_BURRING_BOX_SIDE_OVERLAY;
@@ -17,6 +21,7 @@ public class Gt6AdditionTextures {
     public static OrientedOverlayRenderer RU_STEAM_TURBINE;
     public static OrientedOverlayRenderer RU_ELECTRIC_MOTOR;
     public static OrientedOverlayRenderer RU_DIESEL_ENGINE;
+    public static OrientedOverlayRenderer RU_KU_ENGINE;
     public static OrientedOverlayRenderer RU_LATHE;
     public static OrientedOverlayRenderer RU_CUTTING_SAW;
     public static OrientedOverlayRenderer RU_CENTRIFUGE;
@@ -24,6 +29,15 @@ public class Gt6AdditionTextures {
     public static OrientedOverlayRenderer RU_ORE_WASHER;
     public static OrientedOverlayRenderer RU_MIXER;
     public static OrientedOverlayRenderer HU_OVEN;
+    public static OrientedOverlayRenderer HU_DISTILLERY;
+    public static OrientedOverlayRenderer HU_LAMINATOR;
+    public static OrientedOverlayRenderer HU_ROASTER;
+    public static OrientedOverlayRenderer HU_FERMENTER;
+    public static OrientedOverlayRenderer HU_EXTRUDER;
+    public static OrientedOverlayRenderer KU_COMPRESSOR;
+    public static OrientedOverlayRenderer KU_HAMMER;
+    public static OrientedOverlayRenderer KU_SIFTER;
+    public static OrientedOverlayRenderer KU_FORMING_PRESS;
     public static void init()
     {
         HU_BASE_BURRING_BOX= new OrientedOverlayRenderer("machines/hu_base_burring_box");
@@ -40,6 +54,7 @@ public class Gt6AdditionTextures {
         RU_STEAM_TURBINE = new OrientedOverlayRenderer("machines/ru_machines/steam_turbine");
         RU_ELECTRIC_MOTOR = new OrientedOverlayRenderer("machines/ru_machines/electric_motor");
         RU_DIESEL_ENGINE = new OrientedOverlayRenderer("machines/ru_machines/diesel_engine");
+        RU_KU_ENGINE = new OrientedOverlayRenderer("machines/ku_machines/ru_ku_engine");
         RU_LATHE = new OrientedOverlayRenderer("machines/ru_machines/lathe");
         RU_CUTTING_SAW = new OrientedOverlayRenderer("machines/ru_machines/cutting_saw");
         RU_CENTRIFUGE = new OrientedOverlayRenderer("machines/ru_machines/centrifuge");
@@ -47,5 +62,14 @@ public class Gt6AdditionTextures {
         RU_ORE_WASHER = new OrientedOverlayRenderer("machines/ru_machines/orewasher");
         RU_MIXER = new OrientedOverlayRenderer("machines/ru_machines/mixer");
         HU_OVEN = new OrientedOverlayRenderer("machines/hu_machines/oven");
+        HU_DISTILLERY = new OrientedOverlayRenderer("machines/hu_machines/distillery");
+        HU_LAMINATOR = new OrientedOverlayRenderer("machines/hu_machines/laminator");
+        HU_ROASTER = new OrientedOverlayRenderer("machines/hu_machines/roaster");
+        HU_FERMENTER = new OrientedOverlayRenderer("machines/hu_machines/fermenter");
+        HU_EXTRUDER = new OrientedOverlayRenderer("machines/hu_machines/extruder");
+        KU_COMPRESSOR = new OrientedOverlayRenderer("machines/ku_machines/compressor");
+        KU_HAMMER = new OrientedOverlayRenderer("machines/ku_machines/hammer");
+        KU_SIFTER = new OrientedOverlayRenderer("machines/ku_machines/sifter");
+        KU_FORMING_PRESS = new OrientedOverlayRenderer("machines/ku_machines/forming_press");
     }
 }

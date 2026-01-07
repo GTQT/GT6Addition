@@ -13,13 +13,12 @@ import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
-import com.cleanroommc.modularui.value.sync.SyncHandlers;
 import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
 import com.cleanroommc.modularui.widgets.layout.Flow;
-import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.drppp.gt6addition.api.utils.MachineEnergyAcceptFacing;
+import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IActiveOutputSide;
@@ -32,7 +31,6 @@ import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.gui.widgets.*;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.MetaTileEntity;
-import gregtech.api.metatileentity.WorkableTieredMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
@@ -78,7 +76,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static gregtech.api.capability.GregtechDataCodes.*;
 import static gregtech.api.capability.GregtechDataCodes.UPDATE_AUTO_OUTPUT_FLUIDS;
 import static gregtech.api.capability.GregtechDataCodes.UPDATE_AUTO_OUTPUT_ITEMS;
 import static gregtech.api.capability.GregtechDataCodes.UPDATE_OUTPUT_FACING;
@@ -108,13 +105,20 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
                                        ICubeRenderer renderer, int tier, boolean hasFrontFacing, String type ,MachineEnergyAcceptFacing[] acceptFacing) {
         this(metaTileEntityId, recipeMap, renderer, tier, hasFrontFacing, GTUtility.defaultTankSizeFunction,type,acceptFacing);
     }
-
+    public MetaTileEntityMutiEnergyMachine(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
+                                           ICubeRenderer renderer, int tier, boolean hasFrontFacing, String type ,MachineEnergyAcceptFacing[] acceptFacing,int parallel) {
+        this(metaTileEntityId, recipeMap, renderer, tier, hasFrontFacing, GTUtility.defaultTankSizeFunction,type,acceptFacing,parallel);
+    }
     public MetaTileEntityMutiEnergyMachine(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
                                        ICubeRenderer renderer, int tier, boolean hasFrontFacing,
                                        Function<Integer, Integer> tankScalingFunction, String type,MachineEnergyAcceptFacing[] acceptFacing) {
         this(metaTileEntityId, recipeMap, renderer, tier, hasFrontFacing, tankScalingFunction, null, null,  type,acceptFacing);
     }
-
+    public MetaTileEntityMutiEnergyMachine(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
+                                           ICubeRenderer renderer, int tier, boolean hasFrontFacing,
+                                           Function<Integer, Integer> tankScalingFunction, String type,MachineEnergyAcceptFacing[] acceptFacing,int parallel) {
+        this(metaTileEntityId, recipeMap, renderer, tier, hasFrontFacing, tankScalingFunction, null, null,  type,acceptFacing,parallel);
+    }
     public MetaTileEntityMutiEnergyMachine(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
                                        ICubeRenderer renderer, int tier, boolean hasFrontFacing,
                                        Function<Integer, Integer> tankScalingFunction,
@@ -126,11 +130,21 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
         this.tickingParticle = tickingParticle;
         this.randomParticle = randomParticle;
     }
-
+    public MetaTileEntityMutiEnergyMachine(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
+                                           ICubeRenderer renderer, int tier, boolean hasFrontFacing,
+                                           Function<Integer, Integer> tankScalingFunction,
+                                           @Nullable IMachineParticleEffect tickingParticle,
+                                           @Nullable IMachineParticleEffect randomParticle, String type,MachineEnergyAcceptFacing[] acceptFacing,int parallel) {
+        super(metaTileEntityId, recipeMap, renderer, tier, tankScalingFunction,type,acceptFacing,parallel);
+        this.hasFrontFacing = hasFrontFacing;
+        //this.chargerInventory = new GTItemStackHandler(this, 1);
+        this.tickingParticle = tickingParticle;
+        this.randomParticle = randomParticle;
+    }
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
         return new MetaTileEntityMutiEnergyMachine(metaTileEntityId, workable.getRecipeMap(), renderer, getTier(),
-                hasFrontFacing, getTankScalingFunction(), tickingParticle, randomParticle,this.EnergyType,this.acceptFacing);
+                hasFrontFacing, getTankScalingFunction(), tickingParticle, randomParticle,this.EnergyType,this.acceptFacing,this.parallel);
     }
 
     @Override
@@ -658,7 +672,7 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
             panel.child(new Widget<>()
                     .size(17)
                     .pos(152, 63 + yOffset)
-                    .background(GTGuiTextures.getLogo(getUITheme())));
+                    .background(Gt6AdditionTextures.GREGTECH6_LOGO));
 
             if (hasGhostCircuitInventory() && circuitInventory != null) {
                 panel.child(new gregtech.api.mui.widget.GhostCircuitSlotWidget()

@@ -54,28 +54,51 @@ public abstract class WorkableTieredMutiEnergyMetaTileEntity extends TieredMutiE
 
     @Nullable
     private ICleanroomProvider cleanroom;
-
+    public int parallel=1;
     public WorkableTieredMutiEnergyMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
                                         ICubeRenderer renderer, int tier,
                                         Function<Integer, Integer> tankScalingFunction,String energyType,MachineEnergyAcceptFacing[] acceptFacing) {
         this(metaTileEntityId, recipeMap, renderer, tier, tankScalingFunction, true,energyType,acceptFacing);
     }
+    public WorkableTieredMutiEnergyMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
+                                                  ICubeRenderer renderer, int tier,
+                                                  Function<Integer, Integer> tankScalingFunction,String energyType,MachineEnergyAcceptFacing[] acceptFacing,int parallel) {
 
+        this(metaTileEntityId, recipeMap, renderer, tier, tankScalingFunction, true,energyType,acceptFacing,parallel);
+    }
     public WorkableTieredMutiEnergyMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
                                                   ICubeRenderer renderer, int tier,
                                                   Function<Integer, Integer> tankScalingFunction, boolean handlesRecipeOutputs, String energyType, MachineEnergyAcceptFacing[] acceptFacing) {
         super(metaTileEntityId, tier,energyType,acceptFacing);
         this.renderer = renderer;
         this.handlesRecipeOutputs = handlesRecipeOutputs;
+        this.parallel=1;
         this.workable = createWorkable(recipeMap);
         this.recipeMap = recipeMap;
         this.tankScalingFunction = tankScalingFunction;
         initializeInventory();
         reinitializeEnergyContainer();
     }
-
+    public WorkableTieredMutiEnergyMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
+                                                  ICubeRenderer renderer, int tier,
+                                                  Function<Integer, Integer> tankScalingFunction, boolean handlesRecipeOutputs, String energyType, MachineEnergyAcceptFacing[] acceptFacing,int parallel) {
+        super(metaTileEntityId, tier,energyType,acceptFacing);
+        this.renderer = renderer;
+        this.handlesRecipeOutputs = handlesRecipeOutputs;
+        this.parallel = parallel;
+        this.workable = createWorkable(recipeMap);
+        this.recipeMap = recipeMap;
+        this.tankScalingFunction = tankScalingFunction;
+        initializeInventory();
+        reinitializeEnergyContainer();
+    }
     protected AbstractRecipeLogic createWorkable(RecipeMap<?> recipeMap) {
-        return new RecipeLogicMutiEnergy(this, recipeMap, this.mutiEnergyProxy);
+        return new RecipeLogicMutiEnergy(this, recipeMap, this.mutiEnergyProxy,getMaxParallel());
+    }
+
+    private int getMaxParallel()
+    {
+        return this.parallel;
     }
 
     @Override
