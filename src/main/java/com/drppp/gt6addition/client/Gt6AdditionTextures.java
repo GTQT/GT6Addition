@@ -38,6 +38,9 @@ public class Gt6AdditionTextures {
     public static OrientedOverlayRenderer KU_HAMMER;
     public static OrientedOverlayRenderer KU_SIFTER;
     public static OrientedOverlayRenderer KU_FORMING_PRESS;
+    public static OrientedOverlayRenderer MU_ELECTROMAGNET;
+    public static OrientedOverlayRenderer MU_POLARIZER;
+    public static OrientedOverlayRenderer MU_SEPARATOR;
     public static void init()
     {
         HU_BASE_BURRING_BOX= new OrientedOverlayRenderer("machines/hu_base_burring_box");
@@ -71,5 +74,8 @@ public class Gt6AdditionTextures {
         KU_HAMMER = new OrientedOverlayRenderer("machines/ku_machines/hammer");
         KU_SIFTER = new OrientedOverlayRenderer("machines/ku_machines/sifter");
         KU_FORMING_PRESS = new OrientedOverlayRenderer("machines/ku_machines/forming_press");
+        MU_ELECTROMAGNET = new OrientedOverlayRenderer("machines/mu_machines/electromagnet");
+        MU_POLARIZER = new OrientedOverlayRenderer("machines/mu_machines/polarizer");
+        MU_SEPARATOR = new OrientedOverlayRenderer("machines/mu_machines/separator");
     }
 }

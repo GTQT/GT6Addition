@@ -2,6 +2,7 @@
 package com.drppp.gt6addition;
 
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
+import com.drppp.gt6addition.api.utils.MaterialColorUtil;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
 import com.drppp.gt6addition.common.metatileentity.single.hu.LiquidBurringInfo;
@@ -22,6 +23,7 @@ public class CommonProxy {
     public void preInit(FMLPreInitializationEvent event) {
         // 服务端和客户端共同的预初始化逻辑
         GT6AdditionMain.LOGGER.info("CommonProxy preInit");
+        MaterialColorUtil.init();
         CapabilityHandler.init();
         Gt6AdditionTextures.init();
         MetaTileEntityHandler.InitMte();

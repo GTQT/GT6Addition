@@ -137,7 +137,21 @@ gt6addition.machine.ku_sifter_steel.name=Kinetic Energy Sifter (Steel)
 gt6addition.machine.ku_sifter_stainlesssteel.name=Kinetic Energy Sifter (Stainless Steel)
 gt6addition.machine.ku_sifter_titanium.name=Kinetic Energy Sifter (Titanium)
 gt6addition.machine.ku_sifter_tungstensteel.name=Kinetic Energy Sifter (Tungsten Steel)
-#
+gt6addition.machine.electromagnet.lv.name=Electromagnet (Galvanized Steel)
+gt6addition.machine.electromagnet.mv.name=Electromagnet (Aluminium)
+gt6addition.machine.electromagnet.hv.name=Electromagnet (Stainless Steel)
+gt6addition.machine.electromagnet.ev.name=Electromagnet (Titanium)
+gt6addition.machine.electromagnet.iv.name=Electromagnet (Tungsten Steel)
+gt6addition.machine.mu_polarizer.lv.name=Magnetic Polarizer (Galvanized Steel)
+gt6addition.machine.mu_polarizer.mv.name=Magnetic Polarizer (Aluminium)
+gt6addition.machine.mu_polarizer.hv.name=Magnetic Polarizer (Stainless Steel)
+gt6addition.machine.mu_polarizer.ev.name=Magnetic Polarizer (Titanium)
+gt6addition.machine.mu_polarizer.iv.name=Magnetic Polarizer (Tungsten Steel)
+gt6addition.machine.mu_separator.lv.name=Magnetic Separator (Galvanized Steel)
+gt6addition.machine.mu_separator.mv.name=Magnetic Separator (Aluminium)
+gt6addition.machine.mu_separator.hv.name=Magnetic Separator (Stainless Steel)
+gt6addition.machine.mu_separator.ev.name=Magnetic Separator (Titanium)
+gt6addition.machine.mu_separator.iv.name=Magnetic Separator (Tungsten Steel)#
 gt6addition.hu.generator.info.1=§bRecipe: §fFurnace fuel (Burn time:Total HU output = 1:25)
 gt6addition.hu.generator.info.2=§6Efficiency: §f%s
 gt6addition.hu.generator.info.3=§4Output: §f%s §4HU§f/t
@@ -176,5 +190,10 @@ gt6addition.ku.re_generator.info.2=§4Energy Output: §f%s §4KU§f/t (Output Ra
 gt6addition.ku.re_generator.info.3=§4Other side input RU (1:1 conversion)
 gt6addition.ku.re_generator.info.4=§4This machine outputs KU from head and tail (equally distributed)
 gt6addition.ku.re_generator.info.5=§6Multi-direction RU combination
+gt6addition.mu.em_generator.info.1=§6Efficiency: §f%s
+gt6addition.mu.em_generator.info.2=§4Energy Output: §f%s §4MU§f/t (Front Output §6%s§4MU§f/t - %s§4MU§f/t)
+gt6addition.mu.em_generator.info.3=§6EU to MU ratio 1:1 (Other side input)
+gt6addition.mu.em_generator.info.4=§6Efficiency will lose more energy
+gt6addition.mu.em_generator.info.5=§6Machine can receive 4A current
 #top info
 gt6addition.top.work.status=Work Status:

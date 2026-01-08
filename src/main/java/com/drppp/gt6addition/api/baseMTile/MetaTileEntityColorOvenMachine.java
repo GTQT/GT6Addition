@@ -9,15 +9,15 @@ import gregtech.api.recipes.RecipeMap;
 import gregtech.client.renderer.ICubeRenderer;
 import net.minecraft.util.ResourceLocation;
 
-public class MetaTileEntityHUOvenMachine extends MetaTileEntityHUMachine{
+public class MetaTileEntityColorOvenMachine extends MetaTileEntityColorMachine {
 
-    public MetaTileEntityHUOvenMachine(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap, ICubeRenderer renderer, int tier, boolean hasFrontFacing, String type, MachineEnergyAcceptFacing[] acceptFacing, int color) {
+    public MetaTileEntityColorOvenMachine(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap, ICubeRenderer renderer, int tier, boolean hasFrontFacing, String type, MachineEnergyAcceptFacing[] acceptFacing, int color) {
         super(metaTileEntityId, recipeMap, renderer, tier, hasFrontFacing, type, acceptFacing, color);
     }
 
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
-        return new MetaTileEntityHUOvenMachine(metaTileEntityId, workable.getRecipeMap(), renderer, getTier(),
+        return new MetaTileEntityColorOvenMachine(metaTileEntityId, workable.getRecipeMap(), renderer, getTier(),
                 this.hasFrontFacing,this.EnergyType,this.acceptFacing,this.color);
     }
 
@@ -26,7 +26,7 @@ public class MetaTileEntityHUOvenMachine extends MetaTileEntityHUMachine{
         return new RecipeLogicOven(this, recipeMap, this.mutiEnergyProxy);
     }
 
-    private class RecipeLogicOven extends RecipeLogicMutiEnergy
+    private static class RecipeLogicOven extends RecipeLogicMutiEnergy
     {
 
         public RecipeLogicOven(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, IMutiEnergyProxy mutiEnergyProxy) {

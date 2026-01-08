@@ -1,12 +1,8 @@
 package com.drppp.gt6addition.api.baseMTile;
 
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
-import com.drppp.gt6addition.api.capability.impl.HeatEnergyHandler;
-import com.drppp.gt6addition.api.capability.impl.KineticEnergyHandler;
-import com.drppp.gt6addition.api.capability.impl.RotationEnergyHandler;
-import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
-import com.drppp.gt6addition.api.capability.interfaces.IKineticEnergy;
-import com.drppp.gt6addition.api.capability.interfaces.IRotationEnergy;
+import com.drppp.gt6addition.api.capability.impl.*;
+import com.drppp.gt6addition.api.capability.interfaces.*;
 import com.drppp.gt6addition.api.utils.EnergyTypeList;
 import gregtech.api.GTValues;
 import gregtech.common.pipelike.heat.tile.TileEntityHeatConductor;
@@ -18,6 +14,8 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
     public IHeatEnergy huEnergy;
     public IRotationEnergy ruEnergy;
     public IKineticEnergy kuEnergy;
+    public IColdEnergy cuEnergy;
+    public IMagnetEnergy muEnergy;
     public int tire;
     public MutiEnergyProxyManager(String EnergyType,int tire)
     {
@@ -32,6 +30,12 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
         }else if(this.EnergyType.equals(EnergyTypeList.KU))
         {
             this.kuEnergy = new KineticEnergyHandler();
+        }else if(this.EnergyType.equals(EnergyTypeList.CU))
+        {
+            this.cuEnergy = new ColdEnergyHandler();
+        }else if(this.EnergyType.equals(EnergyTypeList.MU))
+        {
+            this.muEnergy = new MagnetEnergyHandler();
         }
     }
 
@@ -50,6 +54,10 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
                 return this.ruEnergy.getEnergyOutput();
             case EnergyTypeList.KU:
                 return this.kuEnergy.getKinetic();
+            case EnergyTypeList.CU:
+                return this.cuEnergy.getCold();
+            case EnergyTypeList.MU:
+                return this.muEnergy.getMagnet();
         }
         return 0;
     }
@@ -67,6 +75,12 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
             case EnergyTypeList.KU:
                  this.kuEnergy.setKineticEnergy(energy);
                 break;
+            case EnergyTypeList.CU:
+                this.cuEnergy.setCuEnergy(energy);
+                break;
+            case EnergyTypeList.MU:
+                this.muEnergy.setMuEnergy(energy);
+                break;
         }
     }
 
@@ -82,6 +96,12 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
                 break;
             case EnergyTypeList.KU:
                 this.kuEnergy.changeKineticEnergy(energy);
+                break;
+            case EnergyTypeList.CU:
+                this.cuEnergy.changeCuEnergy(energy);
+                break;
+            case EnergyTypeList.MU:
+                this.muEnergy.changeMuEnergy(energy);
                 break;
         }
     }
@@ -119,6 +139,22 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
                 {
                     IKineticEnergy energy = te.getCapability(CapabilityHandler.CAPABILITY_KINETIC_ENERGY,facing.getOpposite());
                     this.kuEnergy.setKineticEnergy(Math.min(energy.getKinetic(), (int)GTValues.V[this.tire]*2));
+                    return true;
+                }
+                return false;
+            case EnergyTypeList.CU:
+                if(te.hasCapability(CapabilityHandler.CAPABILITY_COLD_ENERGY,facing.getOpposite()))
+                {
+                    IColdEnergy  energy = te.getCapability(CapabilityHandler.CAPABILITY_COLD_ENERGY,facing.getOpposite());
+                    this.cuEnergy.setCuEnergy(Math.min(energy.getCold(), (int)GTValues.V[this.tire]*2));
+                    return true;
+                }
+                return false;
+            case EnergyTypeList.MU:
+                if(te.hasCapability(CapabilityHandler.CAPABILITY_MAGNET_ENERGY,facing.getOpposite()))
+                {
+                    IMagnetEnergy energy = te.getCapability(CapabilityHandler.CAPABILITY_MAGNET_ENERGY,facing.getOpposite());
+                    this.muEnergy.setMuEnergy(Math.min(energy.getMagnet(), (int)GTValues.V[this.tire]*2));
                     return true;
                 }
                 return false;

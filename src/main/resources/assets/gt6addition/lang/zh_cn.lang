@@ -137,6 +137,21 @@ gt6addition.machine.ku_sifter_steel.name=动能筛选机(钢)
 gt6addition.machine.ku_sifter_stainlesssteel.name=动能筛选机(不锈钢)
 gt6addition.machine.ku_sifter_titanium.name=动能筛选机(钛)
 gt6addition.machine.ku_sifter_tungstensteel.name=动能筛选机(钨钢)
+gt6addition.machine.electromagnet.lv.name=电磁铁(镀锌钢)
+gt6addition.machine.electromagnet.mv.name=电磁铁(铝)
+gt6addition.machine.electromagnet.hv.name=电磁铁(不锈钢)
+gt6addition.machine.electromagnet.ev.name=电磁铁(钛)
+gt6addition.machine.electromagnet.iv.name=电磁铁(钨钢)
+gt6addition.machine.mu_polarizer.lv.name=电磁偏振器(镀锌钢)
+gt6addition.machine.mu_polarizer.mv.name=电磁偏振器(铝)
+gt6addition.machine.mu_polarizer.hv.name=电磁偏振器(不锈钢)
+gt6addition.machine.mu_polarizer.ev.name=电磁偏振器(钛)
+gt6addition.machine.mu_polarizer.iv.name=电磁偏振器(钨钢)
+gt6addition.machine.mu_separator.lv.name=磁选机(镀锌钢)
+gt6addition.machine.mu_separator.mv.name=磁选机(铝)
+gt6addition.machine.mu_separator.hv.name=磁选机(不锈钢)
+gt6addition.machine.mu_separator.ev.name=磁选机(钛)
+gt6addition.machine.mu_separator.iv.name=磁选机(钨钢)
 #
 gt6addition.hu.generator.info.1=§b配方: §f熔炉燃料(燃烧时间:总HU输出 = 1:25)
 gt6addition.hu.generator.info.2=§6效率: §f%s
@@ -176,5 +191,10 @@ gt6addition.ku.re_generator.info.2=§4能量输出: §f%s §4KU§f/t(输出范�
 gt6addition.ku.re_generator.info.3=§4其他方向输入RU(1:1转换)
 gt6addition.ku.re_generator.info.4=§4该机器头部、尾部输出KU(均分)
 gt6addition.ku.re_generator.info.5=§6多方向RU和合并
+gt6addition.mu.em_generator.info.1=§6效率: §f%s
+gt6addition.mu.em_generator.info.2=§4能量输出: §f%s §4MU§f/t(正饭面输出 §6%s§4MU§f/t-%s§4MU§f/t)
+gt6addition.mu.em_generator.info.3=§6EU转换MU比例 1:1 (其他方向输入)
+gt6addition.mu.em_generator.info.4=§6效率会损耗更多能量
+gt6addition.mu.em_generator.info.5=§6机器可以接收4A电流
 #top info
 gt6addition.top.work.status=工作状态:

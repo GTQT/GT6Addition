@@ -2,9 +2,7 @@ package com.drppp.gt6addition.api.capability;
 
 import com.drppp.gt6addition.Tags;
 import com.drppp.gt6addition.api.capability.impl.*;
-import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
-import com.drppp.gt6addition.api.capability.interfaces.IKineticEnergy;
-import com.drppp.gt6addition.api.capability.interfaces.IRotationEnergy;
+import com.drppp.gt6addition.api.capability.interfaces.*;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
@@ -20,6 +18,10 @@ public class CapabilityHandler {
     public static Capability<IRotationEnergy> CAPABILITY_ROTATION_ENERGY= null;
     @CapabilityInject(IKineticEnergy.class)
     public static Capability<IKineticEnergy> CAPABILITY_KINETIC_ENERGY= null;
+    @CapabilityInject(IColdEnergy.class)
+    public static Capability<IColdEnergy> CAPABILITY_COLD_ENERGY= null;
+    @CapabilityInject(IMagnetEnergy.class)
+    public static Capability<IMagnetEnergy> CAPABILITY_MAGNET_ENERGY= null;
 
     public static <T> void registerCapabilityWithNoDefault(Class<T> capabilityClass) {
         CapabilityManager.INSTANCE.register(capabilityClass, new Capability.IStorage<T>() {
@@ -40,5 +42,7 @@ public class CapabilityHandler {
         CapabilityManager.INSTANCE.register(IHeatEnergy.class,new HeatEnergyStore(),  HeatEnergyHandler::new);
         CapabilityManager.INSTANCE.register(IRotationEnergy.class,new RotationEnergyStore(),  RotationEnergyHandler::new);
         CapabilityManager.INSTANCE.register(IKineticEnergy.class,new KineticEnergyStore(),  KineticEnergyHandler::new);
+        CapabilityManager.INSTANCE.register(IColdEnergy.class,new ColdEnergyStore(),  ColdEnergyHandler::new);
+        CapabilityManager.INSTANCE.register(IMagnetEnergy.class,new MagnetEnergyStore(),  MagnetEnergyHandler::new);
     }
 }
