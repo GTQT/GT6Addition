@@ -151,7 +151,13 @@ gt6addition.machine.mu_separator.lv.name=Magnetic Separator (Galvanized Steel)
 gt6addition.machine.mu_separator.mv.name=Magnetic Separator (Aluminium)
 gt6addition.machine.mu_separator.hv.name=Magnetic Separator (Stainless Steel)
 gt6addition.machine.mu_separator.ev.name=Magnetic Separator (Titanium)
-gt6addition.machine.mu_separator.iv.name=Magnetic Separator (Tungsten Steel)#
+gt6addition.machine.mu_separator.iv.name=Magnetic Separator (Tungsten Steel)
+gt6addition.machine.thermoelectric_cooler.lv.name=Thermoelectric Cooler (Galvanized Steel)
+gt6addition.machine.thermoelectric_cooler.mv.name=Thermoelectric Cooler (Aluminium)
+gt6addition.machine.thermoelectric_cooler.hv.name=Thermoelectric Cooler (Stainless Steel)
+gt6addition.machine.thermoelectric_cooler.ev.name=Thermoelectric Cooler (Titanium)
+gt6addition.machine.thermoelectric_cooler.iv.name=Thermoelectric Cooler (Tungsten Steel)
+#
 gt6addition.hu.generator.info.1=§bRecipe: §fFurnace fuel (Burn time:Total HU output = 1:25)
 gt6addition.hu.generator.info.2=§6Efficiency: §f%s
 gt6addition.hu.generator.info.3=§4Output: §f%s §4HU§f/t
@@ -195,5 +201,10 @@ gt6addition.mu.em_generator.info.2=§4Energy Output: §f%s §4MU§f/t (Front Out
 gt6addition.mu.em_generator.info.3=§6EU to MU ratio 1:1 (Other side input)
 gt6addition.mu.em_generator.info.4=§6Efficiency will lose more energy
 gt6addition.mu.em_generator.info.5=§6Machine can receive 4A current
+gt6addition.cu.tc_generator.info.1=§6Efficiency: §f%s
+gt6addition.cu.tc_generator.info.2=§4Energy Output: §f%s §4CU§f/t & §4HU§f/t (Front outputs CU, back outputs HU §6%s§4CU§f/t - %s§4CU§f/t)
+gt6addition.cu.tc_generator.info.3=§6EU input from sides
+gt6addition.cu.tc_generator.info.4=§6Efficiency will lose more energy
+gt6addition.cu.tc_generator.info.5=§6Machine can receive 4A current
 #top info
 gt6addition.top.work.status=Work Status:

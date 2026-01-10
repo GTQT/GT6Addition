@@ -41,6 +41,7 @@ public class Gt6AdditionTextures {
     public static OrientedOverlayRenderer MU_ELECTROMAGNET;
     public static OrientedOverlayRenderer MU_POLARIZER;
     public static OrientedOverlayRenderer MU_SEPARATOR;
+    public static OrientedOverlayRenderer CU_THERMOELECTRIC_COOLER ;
     public static void init()
     {
         HU_BASE_BURRING_BOX= new OrientedOverlayRenderer("machines/hu_base_burring_box");
@@ -77,5 +78,6 @@ public class Gt6AdditionTextures {
         MU_ELECTROMAGNET = new OrientedOverlayRenderer("machines/mu_machines/electromagnet");
         MU_POLARIZER = new OrientedOverlayRenderer("machines/mu_machines/polarizer");
         MU_SEPARATOR = new OrientedOverlayRenderer("machines/mu_machines/separator");
+        CU_THERMOELECTRIC_COOLER = new OrientedOverlayRenderer("machines/cu_machines/thermoelectric_cooler");
     }
 }

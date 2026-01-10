@@ -166,7 +166,7 @@ public class MetaTileEntityElectromagnet extends TieredMetaTileEntity implements
                 setActive(true);
             if(this.energyContainer.getEnergyStored()>=this.maxSteamUse)
             {
-                this.importFluids.drain(this.maxSteamUse,false);
+                this.energyContainer.removeEnergy(this.maxSteamUse);
                 this.mu.setMuEnergy(this.outPutRu*2);
             }else
             {

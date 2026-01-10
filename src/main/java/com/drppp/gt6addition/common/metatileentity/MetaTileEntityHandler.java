@@ -8,6 +8,7 @@ import com.drppp.gt6addition.api.utils.EnergyTypeList;
 import com.drppp.gt6addition.api.utils.MachineEnergyAcceptFacing;
 import com.drppp.gt6addition.api.utils.MaterialColorUtil;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
+import com.drppp.gt6addition.common.metatileentity.single.cu.MetaTileEntityThermoelectricCooler;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamber;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamberLiquid;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityRotationEngine;
@@ -68,10 +69,12 @@ public class MetaTileEntityHandler {
     public static MetaTileEntityColorMachine[] SEPARATOR = new MetaTileEntityColorMachine[5];
 
     //CU产出机器 半导体制冷器
-
+    public static MetaTileEntityThermoelectricCooler[] THERMOELECTRIC_COOLER = new MetaTileEntityThermoelectricCooler[5];
     //CU机器 冷冻机(新配方 用于速冻水)   低温搅拌机(速产凛冰)
 
-    //大机器  GT6焦炉 16并行  基岩钻机
+    //LU产出机器  CO2激光器
+    //LU机器 激光蚀刻 激光焊接(新)
+    //大机器  基岩钻机
     static int startID = 0;
 
     public static int getID() {
@@ -93,7 +96,7 @@ public class MetaTileEntityHandler {
         }
         for (int i = 0; i < STEAM_TURBINES.length; i++) {
             int[] color = {0x251945, 0x815024, 0x4F4F4E, 0x87875C, 0xA39393, 0x896495, 0x1D1D1D, 0x3C3C61};
-            int[] output = {16, 24, 32, 16, 112, 96, 128, 128};
+            int[] output = {8, 16, 64, 64, 96, 256, 384, 512};
             int[] out_inventry = {8000, 8000, 8000, (int)(8000*1.5), 8000*2, 8000*2, 8000*2, 8000*2};
             STEAM_TURBINES[i] = registerMetaTileEntity(getID(), new MetaTileEntitySteamTurbine(getMyId(names[i] + "_steam_turbine"), color[i], 0.66, output[i],out_inventry[i]));
         }
@@ -116,6 +119,10 @@ public class MetaTileEntityHandler {
         int[] mu_color = {getColor(MaterialColorUtil.MaterialName.galvanized_steel),getColor(MaterialColorUtil.MaterialName.aluminum),getColor(MaterialColorUtil.MaterialName.stain_steel),getColor(MaterialColorUtil.MaterialName.titanium),getColor(MaterialColorUtil.MaterialName.tungsten_steel)};
         for (int i = 0; i < 5; i++) {
             ELECTROMAGNET[i]=registerMetaTileEntity(getID(),new MetaTileEntityElectromagnet(getMyId("electromagnet."+ GTValues.VN[i+1]),i+1,mu_color[i],0.9,(int)GTValues.V[i+1]));
+        }
+        //半导体
+        for (int i = 0; i < 5; i++) {
+            THERMOELECTRIC_COOLER[i]=registerMetaTileEntity(getID(),new MetaTileEntityThermoelectricCooler(getMyId("thermoelectric_cooler."+ GTValues.VN[i+1]),i+1,mu_color[i],0.5,(int)GTValues.VH[i+1]));
         }
         //卷板
         for (int i = 0; i < 5; i++) {

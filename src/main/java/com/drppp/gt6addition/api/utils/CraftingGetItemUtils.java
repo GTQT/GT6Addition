@@ -11,7 +11,7 @@ public class CraftingGetItemUtils {
     }
 
     public static ItemStack getItemStack(String itemstr, int num) {
-        ItemStack item = getItemStack(itemstr, 0);
+        ItemStack item = getItemStackFromCrt(itemstr, 0);
         item.setCount(num);
         return item;
     }

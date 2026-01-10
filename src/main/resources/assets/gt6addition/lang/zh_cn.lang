@@ -152,6 +152,11 @@ gt6addition.machine.mu_separator.mv.name=磁选机(铝)
 gt6addition.machine.mu_separator.hv.name=磁选机(不锈钢)
 gt6addition.machine.mu_separator.ev.name=磁选机(钛)
 gt6addition.machine.mu_separator.iv.name=磁选机(钨钢)
+gt6addition.machine.thermoelectric_cooler.lv.name=半导体制冷器(镀锌钢)
+gt6addition.machine.thermoelectric_cooler.mv.name=半导体制冷器(铝)
+gt6addition.machine.thermoelectric_cooler.hv.name=半导体制冷器(不锈钢)
+gt6addition.machine.thermoelectric_cooler.ev.name=半导体制冷器(钛)
+gt6addition.machine.thermoelectric_cooler.iv.name=半导体制冷器(钨钢)
 #
 gt6addition.hu.generator.info.1=§b配方: §f熔炉燃料(燃烧时间:总HU输出 = 1:25)
 gt6addition.hu.generator.info.2=§6效率: §f%s
@@ -196,5 +201,11 @@ gt6addition.mu.em_generator.info.2=§4能量输出: §f%s §4MU§f/t(正饭面�
 gt6addition.mu.em_generator.info.3=§6EU转换MU比例 1:1 (其他方向输入)
 gt6addition.mu.em_generator.info.4=§6效率会损耗更多能量
 gt6addition.mu.em_generator.info.5=§6机器可以接收4A电流
+gt6addition.cu.tc_generator.info.1=§6效率: §f%s
+gt6addition.cu.tc_generator.info.2=§4能量输出: §f%s §4CU§f/t & §4HU§f/t(正面输出CU 背面输出HU §6%s§4CU§f/t-%s§4CU§f/t)
+gt6addition.cu.tc_generator.info.3=§6侧面输入EU
+gt6addition.cu.tc_generator.info.4=§6效率会损耗更多能量
+gt6addition.cu.tc_generator.info.5=§6机器可以接收4A电流
+
 #top info
 gt6addition.top.work.status=工作状态:

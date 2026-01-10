@@ -45,8 +45,8 @@ public class MetaTileEntityElectricMotor extends TieredMetaTileEntity implements
     public final int color;
     public final double efficiency;
     public final int outPutRu;//最少输出一半  最多输出两倍
-    public  int minSteamUse;//最少输出一半  最多输出两倍
-    public  int maxSteamUse;//最少输出一半  最多输出两倍
+    public  int minEuUse;//最少输出一半  最多输出两倍
+    public  int maxEuUse;//最少输出一半  最多输出两倍
     protected final ICubeRenderer rendererBASE = Gt6AdditionTextures.RU_ELECTRIC_MOTOR;
     private final Random random = new Random();
     public boolean isActive;
@@ -56,8 +56,8 @@ public class MetaTileEntityElectricMotor extends TieredMetaTileEntity implements
         this.color = color;
         this.efficiency = efficiency;
         this.outPutRu = outPutRu;
-        this.minSteamUse = (int)(this.outPutRu/this.efficiency);
-        this.maxSteamUse = (int)(this.outPutRu*2/this.efficiency);
+        this.minEuUse = (int)(this.outPutRu/this.efficiency);
+        this.maxEuUse = (int)(this.outPutRu*2/this.efficiency);
     }
     @Override
     public boolean isActive() {
@@ -160,16 +160,16 @@ public class MetaTileEntityElectricMotor extends TieredMetaTileEntity implements
         super.update();
         if(!getWorld().isRemote)
         {
-            if(this.energyContainer.getEnergyStored()<this.minSteamUse)
+            if(this.energyContainer.getEnergyStored()<this.minEuUse)
             {
                 clearOut();
                 return;
             }
             else
                 setActive(true);
-            if(this.energyContainer.getEnergyStored()>=this.maxSteamUse)
+            if(this.energyContainer.getEnergyStored()>=this.maxEuUse)
             {
-                this.importFluids.drain(this.maxSteamUse,false);
+                this.energyContainer.removeEnergy(this.maxEuUse);
                 this.ru.setRuEnergy(this.outPutRu*2);
             }else
             {
