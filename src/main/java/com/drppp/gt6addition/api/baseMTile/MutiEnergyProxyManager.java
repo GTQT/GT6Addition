@@ -5,9 +5,13 @@ import com.drppp.gt6addition.api.capability.impl.*;
 import com.drppp.gt6addition.api.capability.interfaces.*;
 import com.drppp.gt6addition.api.utils.EnergyTypeList;
 import gregtech.api.GTValues;
+import gregtech.api.capability.IHeatable;
+import gregtech.common.pipelike.heat.net.HeatNetHandler;
 import gregtech.common.pipelike.heat.tile.TileEntityHeatConductor;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+
+import static gregtech.api.capability.GregtechCapabilities.CAPABILITY_HEAT_CONTAINER;
 
 public class MutiEnergyProxyManager implements IMutiEnergyProxy{
     public String EnergyType="null";
@@ -16,6 +20,7 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
     public IKineticEnergy kuEnergy;
     public IColdEnergy cuEnergy;
     public IMagnetEnergy muEnergy;
+    public IHeatable huable;
     public int tire;
     public MutiEnergyProxyManager(String EnergyType,int tire)
     {
@@ -89,20 +94,24 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
         switch (this.EnergyType)
         {
             case EnergyTypeList.HU:
-                this.huEnergy.changeHuEnergy(energy);
+                if(this.huable!=null)
+                {
+                    this.huable.changeHeat(-energy);
+                }
+                //this.huEnergy.changeHuEnergy(energy);
                 break;
-            case EnergyTypeList.RU:
-                this.ruEnergy.changeRuEnergy(energy);
-                break;
-            case EnergyTypeList.KU:
-                this.kuEnergy.changeKineticEnergy(energy);
-                break;
-            case EnergyTypeList.CU:
-                this.cuEnergy.changeCuEnergy(energy);
-                break;
-            case EnergyTypeList.MU:
-                this.muEnergy.changeMuEnergy(energy);
-                break;
+//            case EnergyTypeList.RU:
+//                this.ruEnergy.changeRuEnergy(energy);
+//                break;
+//            case EnergyTypeList.KU:
+//                this.kuEnergy.changeKineticEnergy(energy);
+//                break;
+//            case EnergyTypeList.CU:
+//                this.cuEnergy.changeCuEnergy(energy);
+//                break;
+//            case EnergyTypeList.MU:
+//                this.muEnergy.changeMuEnergy(energy);
+//                break;
         }
     }
 
@@ -111,10 +120,11 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
         switch (this.EnergyType)
         {
             case EnergyTypeList.HU:
-                if(te.hasCapability(CapabilityHandler.CAPABILITY_HEAT_ENERGY,facing.getOpposite()))
+                if(te.hasCapability(CAPABILITY_HEAT_CONTAINER,facing.getOpposite()))
                 {
-                    IHeatEnergy energy = te.getCapability(CapabilityHandler.CAPABILITY_HEAT_ENERGY,facing.getOpposite());
-                    this.huEnergy.setHuEnergy(Math.min(energy.getHeat(), (int)GTValues.V[this.tire]*2));
+                    IHeatable energy = te.getCapability(CAPABILITY_HEAT_CONTAINER,facing.getOpposite());
+                    this.huEnergy.setHuEnergy(Math.min((int)energy.getHeatStored(), (int)GTValues.V[this.tire]*2));
+                    this.huable = energy;
                     return true;
                 } else  if(te!=null && te instanceof TileEntityHeatConductor)
                 {

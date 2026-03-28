@@ -995,14 +995,14 @@ appliedenergistics2:facade:0, 线缆伪装板 - 兰波顿电容（§dLuV§r）
 appliedenergistics2:facade:0, 线缆伪装板 - 兰波顿电容（§cZPM§r）
 appliedenergistics2:facade:0, 线缆伪装板 - 空电容（Tier III）
 appliedenergistics2:facade:0, 线缆伪装板 - 兰波顿电容（§3UV§r）
-appliedenergistics2:facade:0, 线缆伪装板 - tile.battery_block.quantum_uhv.name
-appliedenergistics2:facade:0, 线缆伪装板 - tile.battery_block.empty_tier_iv.name
-appliedenergistics2:facade:0, 线缆伪装板 - tile.battery_block.spacetime_uev.name
-appliedenergistics2:facade:0, 线缆伪装板 - tile.battery_block.graviton_uiv.name
-appliedenergistics2:facade:0, 线缆伪装板 - tile.battery_block.empty_tier_v.name
-appliedenergistics2:facade:0, 线缆伪装板 - tile.battery_block.chronos_uxv.name
-appliedenergistics2:facade:0, 线缆伪装板 - tile.battery_block.cosmic_opv.name
-appliedenergistics2:facade:0, 线缆伪装板 - tile.battery_block.ultimate_max.name
+appliedenergistics2:facade:0, 线缆伪装板 - 量子真空电容（§4UHV§r）
+appliedenergistics2:facade:0, 线缆伪装板 - 空电容（Tier IV）
+appliedenergistics2:facade:0, 线缆伪装板 - 引力奇点电容（§6UEV§r）
+appliedenergistics2:facade:0, 线缆伪装板 - 时空晶体电容（§2UIV§r）
+appliedenergistics2:facade:0, 线缆伪装板 - 空电容（Tier V）
+appliedenergistics2:facade:0, 线缆伪装板 - 超光速粒子电容（§eUXV§r）
+appliedenergistics2:facade:0, 线缆伪装板 - 宇宙弦电容（§aOpV§r）
+appliedenergistics2:facade:0, 线缆伪装板 - 创世电容（§c§lMAX§r）
 appliedenergistics2:facade:0, 线缆伪装板 - 青铜管道外壳
 appliedenergistics2:facade:0, 线缆伪装板 - 钢管道外壳
 appliedenergistics2:facade:0, 线缆伪装板 - 钛管道外壳
@@ -1493,6 +1493,11 @@ appliedenergistics2:facade:0, 线缆伪装板 - 黑色无框灯
 appliedenergistics2:facade:0, 线缆伪装板 - 黑色无框灯
 appliedenergistics2:facade:0, 线缆伪装板 - 黑色无框灯
 appliedenergistics2:facade:0, 线缆伪装板 - 黑色无框灯
+appliedenergistics2:facade:0, 线缆伪装板 - 镀锌钢块
+appliedenergistics2:facade:0, 线缆伪装板 - 褐煤块
+appliedenergistics2:facade:0, 线缆伪装板 - 生橡胶沉淀块
+appliedenergistics2:facade:0, 线缆伪装板 - 乳胶块
+appliedenergistics2:facade:0, 线缆伪装板 - 树脂块
 appliedenergistics2:facade:0, 线缆伪装板 - 锕块
 appliedenergistics2:facade:0, 线缆伪装板 - 铝块
 appliedenergistics2:facade:0, 线缆伪装板 - 镅块
@@ -1713,6 +1718,9 @@ appliedenergistics2:facade:0, 线缆伪装板 - 红色合金块
 appliedenergistics2:facade:0, 线缆伪装板 - 高速钢-E块
 appliedenergistics2:facade:0, 线缆伪装板 - 高速钢-S块
 appliedenergistics2:facade:0, 线缆伪装板 - 蓝色合金块
+appliedenergistics2:facade:0, 线缆伪装板 - 镀锌钢框架
+appliedenergistics2:facade:0, 线缆伪装板 - 蜡封木板框架
+appliedenergistics2:facade:0, 线缆伪装板 - 生橡胶沉淀框架
 appliedenergistics2:facade:0, 线缆伪装板 - 锕框架
 appliedenergistics2:facade:0, 线缆伪装板 - 铝框架
 appliedenergistics2:facade:0, 线缆伪装板 - 镅框架
@@ -1893,6 +1901,14 @@ appliedenergistics2:facade:0, 线缆伪装板 - 红色合金框架
 appliedenergistics2:facade:0, 线缆伪装板 - 高速钢-E框架
 appliedenergistics2:facade:0, 线缆伪装板 - 高速钢-S框架
 appliedenergistics2:facade:0, 线缆伪装板 - 蓝色合金框架
+appliedenergistics2:facade:0, 线缆伪装板 - 褐煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩褐煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石褐煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子褐煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙褐煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩褐煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩褐煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩褐煤矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 锕矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩锕矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 末地石锕矿石
@@ -3573,6 +3589,19 @@ appliedenergistics2:facade:0, 线缆伪装板 - 红沙玄武岩矿砂矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩玄武岩矿砂矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩玄武岩矿砂矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 安山岩玄武岩矿砂矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 镀锌瓷瓦砖
+appliedenergistics2:facade:0, 线缆伪装板 - 储罐外壁
+appliedenergistics2:facade:0, 线缆伪装板 - 加固防腐木缸壁
+appliedenergistics2:facade:0, 线缆伪装板 - 加固防腐木框架
+appliedenergistics2:facade:0, 线缆伪装板 - 封蜡木缸壁
+appliedenergistics2:facade:0, 线缆伪装板 - 封蜡木框架
+appliedenergistics2:facade:0, 线缆伪装板 - 太阳能集热管
+appliedenergistics2:facade:0, 线缆伪装板 - 低压锅炉
+appliedenergistics2:facade:0, 线缆伪装板 - 高压锅炉
+appliedenergistics2:facade:0, 线缆伪装板 - 固体燃烧室
+appliedenergistics2:facade:0, 线缆伪装板 - 液体燃烧室
+appliedenergistics2:facade:0, 线缆伪装板 - 砂壤土
+appliedenergistics2:facade:0, 线缆伪装板 - 蛇形铜管方块
 appliedenergistics2:facade:0, 线缆伪装板 - ME流体离散器
 appliedenergistics2:crystal_seed:0, 赛特斯石英种子
 appliedenergistics2:crystal_seed:600, 下界石英种子
@@ -3863,61 +3892,241 @@ gregtech:combination_wrench, item.gt.tool.combination_wrench.name.name
 gregtech:universal_spade, item.gt.tool.universal_spade.name.name
 gregtech:flint_and_steel, item.gt.tool.flint_and_steel.name.name
 gregtech:universal_tool, item.gt.tool.universal_tool.name.name
-gt6addition:mte:1, 固体燃烧室(铅)
-gt6addition:mte:2, 致密固体燃烧室(铅)
-gt6addition:mte:3, 流体燃烧室(铅)
-gt6addition:mte:4, 致密流体燃烧室(铅)
-gt6addition:mte:5, 固体燃烧室(青铜)
-gt6addition:mte:6, 致密固体燃烧室(青铜)
-gt6addition:mte:7, 流体燃烧室(青铜)
-gt6addition:mte:8, 致密流体燃烧室(青铜)
-gt6addition:mte:9, 固体燃烧室(钢)
-gt6addition:mte:10, 致密固体燃烧室(钢)
-gt6addition:mte:11, 流体燃烧室(钢)
-gt6addition:mte:12, 致密流体燃烧室(钢)
-gt6addition:mte:13, 固体燃烧室(殷钢)
-gt6addition:mte:14, 致密固体燃烧室(殷钢)
-gt6addition:mte:15, 流体燃烧室(殷钢)
-gt6addition:mte:16, 致密流体燃烧室(殷钢)
-gt6addition:mte:17, 固体燃烧室(铬)
-gt6addition:mte:18, 致密固体燃烧室(铬)
-gt6addition:mte:19, 流体燃烧室(铬)
-gt6addition:mte:20, 致密流体燃烧室(铬)
-gt6addition:mte:21, 固体燃烧室(钛)
-gt6addition:mte:22, 致密固体燃烧室(钛)
-gt6addition:mte:23, 流体燃烧室(钛)
-gt6addition:mte:24, 致密流体燃烧室(钛)
-gt6addition:mte:25, 固体燃烧室(钨)
-gt6addition:mte:26, 致密固体燃烧室(钨)
-gt6addition:mte:27, 流体燃烧室(钨)
-gt6addition:mte:28, 致密流体燃烧室(钨)
-gt6addition:mte:29, 固体燃烧室(钨钢)
-gt6addition:mte:30, 致密固体燃烧室(钨钢)
-gt6addition:mte:31, 流体燃烧室(钨钢)
-gt6addition:mte:32, 致密流体燃烧室(钨钢)
-gt6addition:mte:33, 蒸汽涡轮机(铅)
-gt6addition:mte:34, 蒸汽涡轮机(青铜)
-gt6addition:mte:35, 蒸汽涡轮机(钢)
-gt6addition:mte:36, 蒸汽涡轮机(殷钢)
-gt6addition:mte:37, 蒸汽涡轮机(铬)
-gt6addition:mte:38, 蒸汽涡轮机(钛)
-gt6addition:mte:39, 蒸汽涡轮机(钨)
-gt6addition:mte:40, 蒸汽涡轮机(钨钢)
-gt6addition:mte:41, 电动机(钢)
-gt6addition:mte:42, 电动机(铝)
-gt6addition:mte:43, 电动机(不锈钢)
-gt6addition:mte:44, 电动机(钛)
-gt6addition:mte:45, 电动机(钨钢)
-gt6addition:mte:46, 旋转能卷板机(青铜)
-gt6addition:mte:47, 旋转能卷板机(钢)
-gt6addition:mte:48, 旋转能卷板机(不锈钢)
-gt6addition:mte:49, 旋转能卷板机(钛)
-gt6addition:mte:50, 旋转能卷板机(钨钢)
-gt6addition:mte:51, 旋转能线材轧机(青铜)
-gt6addition:mte:52, 旋转能线材轧机(钢)
-gt6addition:mte:53, 旋转能线材轧机(不锈钢)
-gt6addition:mte:54, 旋转能线材轧机(钛)
-gt6addition:mte:55, 旋转能线材轧机(钨钢)
+gtsteam:mte:1, 合金窑
+gtsteam:mte:2, 合金窑输入仓
+gtsteam:mte:3, 合金窑输出仓
+gtsteam:mte:6, 工业级土高炉
+gtsteam:mte:7, 工业级焦炉
+gtsteam:mte:8, 凝固缸
+gtsteam:mte:10, 大型蒸汽压缩机
+gtsteam:mte:11, 大型蒸汽提取机
+gtsteam:mte:12, 蒸汽合金炉
+gtsteam:mte:13, 蒸汽洗矿厂
+gtsteam:mte:14, 蒸汽锻造锤
+gtsteam:mte:15, 蒸汽离心机
+gtsteam:mte:16, 蒸汽搅拌机
+gtsteam:mte:17, 蒸汽线材轧机
+gtsteam:mte:18, 蒸汽卷板机
+gtsteam:mte:19, 蒸汽筛选机
+gtsteam:mte:20, 蒸汽车床
+gtsteam:mte:21, 蒸汽酿造器
+gtsteam:mte:22, 蒸汽熔岩炉
+gtsteam:mte:25, 可扩展存储筒仓
+gtsteam:mte:30, 太阳能锅炉
+gtsteam:mte:40, 热辐射器
+gtsteam:mte:45, 大型流体储罐
+gtsteam:mte:50, 蒸汽水泵
+gtsteam:mte:60, 超维度蒸汽锻炉
+gtsteam:mte:61, 武德之眼
+gtsteam:mte:70, 热力熔炉
+gtsteam:mte:71, 热力合金炉
+gtsteam:mte:72, 热力焦炉
+gtsteam:mte:73, 热力蒸馏塔
+gtsteam:mte:74, 热力裂化炉
+gtsteam:mte:75, 热力酿造池
+gtsteam:mte:76, 热力发酵池
+gtsteam:mte:77, 热力蒸发池
+gtsteam:mte:78, 热力化学反应釜
+gtsteam:mte:79, 热力离心机
+gtsteam:mte:80, 热力熔岩炉
+gtsteam:mte:81, 热力电子加工台
+gtsteam:mte:90, 热力流体钻
+gtsteam:mte:100, 简易电炉
+gtsteam:mte:101, 简易粉碎机
+gtsteam:mte:102, 简易合金炉
+gtsteam:mte:103, 简易卷板机
+gtsteam:mte:104, 简易酿造室
+gtsteam:mte:105, 简易离心机
+gtsteam:mte:106, 简易化学浸洗机
+gtsteam:mte:107, 简易压缩机
+gtsteam:mte:108, 简易切割机
+gtsteam:mte:109, 简易提取机
+gtsteam:mte:110, 简易发酵槽
+gtsteam:mte:111, 简易锻造锤
+gtsteam:mte:112, 简易车床
+gtsteam:mte:113, 简易搅拌机
+gtsteam:mte:114, 简易洗矿厂
+gtsteam:mte:115, 简易打包机
+gtsteam:mte:116, 简易筛选机
+gtsteam:mte:117, 热能离心机
+gtsteam:mte:118, 简易线材轧机
+gtsteam:mte:120, 简易蒸汽涡轮
+gtsteam:mte:121, 简易燃气涡轮
+gtsteam:mte:122, 简易内燃发电机
+gtsteam:mte:123, 简易半流质发电机
+gtsteam:mte:200, 锡固体燃烧室
+gtsteam:mte:201, 青铜固体燃烧室
+gtsteam:mte:202, 钢固体燃烧室
+gtsteam:mte:203, 殷钢固体燃烧室
+gtsteam:mte:204, 铬固体燃烧室
+gtsteam:mte:205, 钛固体燃烧室
+gtsteam:mte:210, 锡致密固体燃烧室
+gtsteam:mte:211, 青铜致密固体燃烧室
+gtsteam:mte:212, 钢致密固体燃烧室
+gtsteam:mte:213, 殷钢致密固体燃烧室
+gtsteam:mte:214, 铬致密固体燃烧室
+gtsteam:mte:215, 钛致密固体燃烧室
+gtsteam:mte:220, 锡流体燃烧室
+gtsteam:mte:221, 青铜流体燃烧室
+gtsteam:mte:222, 钢流体燃烧室
+gtsteam:mte:223, 殷钢流体燃烧室
+gtsteam:mte:224, 铬流体燃烧室
+gtsteam:mte:225, 钛流体燃烧室
+gtsteam:mte:230, 锡致密流体燃烧室
+gtsteam:mte:231, 青铜致密流体燃烧室
+gtsteam:mte:232, 钢致密流体燃烧室
+gtsteam:mte:233, 殷钢致密流体燃烧室
+gtsteam:mte:234, 铬致密流体燃烧室
+gtsteam:mte:235, 钛致密流体燃烧室
+gtsteam:mte:240, 锡太阳能加热器
+gtsteam:mte:241, 青铜太阳能加热器
+gtsteam:mte:242, 钢太阳能加热器
+gtsteam:mte:243, 殷钢太阳能加热器
+gtsteam:mte:244, 铬太阳能加热器
+gtsteam:mte:245, 钛太阳能加热器
+gtsteam:mte:250, 锡致密太阳能加热器
+gtsteam:mte:251, 青铜致密太阳能加热器
+gtsteam:mte:252, 钢致密太阳能加热器
+gtsteam:mte:253, 殷钢致密太阳能加热器
+gtsteam:mte:254, 铬致密太阳能加热器
+gtsteam:mte:255, 钛致密太阳能加热器
+gtsteam:mte:300, 低压固体锅炉
+gtsteam:mte:301, 高压固体锅炉
+gtsteam:mte:302, 低压流体锅炉
+gtsteam:mte:303, 高压流体锅炉
+gtsteam:mte:310, 热力蒸汽锅炉
+gtsteam:mte:500, 基础乳胶收集器
+gtsteam:mte:501, 进阶乳胶收集器
+gtsteam:mte:502, 进阶乳胶收集器 II
+gtsteam:mte:503, 进阶乳胶收集器 III
+gtsteam:mte:504, 进阶乳胶收集器 IV
+gt6addition:mte:1, 蒸汽涡轮机(铅)
+gt6addition:mte:2, 蒸汽涡轮机(青铜)
+gt6addition:mte:3, 蒸汽涡轮机(钢)
+gt6addition:mte:4, 蒸汽涡轮机(殷钢)
+gt6addition:mte:5, 蒸汽涡轮机(铬)
+gt6addition:mte:6, 蒸汽涡轮机(钛)
+gt6addition:mte:7, 蒸汽涡轮机(钨)
+gt6addition:mte:8, 蒸汽涡轮机(钨钢)
+gt6addition:mte:9, 电动机(钢)
+gt6addition:mte:10, 电动机(铝)
+gt6addition:mte:11, 电动机(不锈钢)
+gt6addition:mte:12, 电动机(钛)
+gt6addition:mte:13, 电动机(钨钢)
+gt6addition:mte:14, 燃油引擎(钢)
+gt6addition:mte:15, 燃油引擎(铝)
+gt6addition:mte:16, 燃油引擎(不锈钢)
+gt6addition:mte:17, 燃油引擎(钛)
+gt6addition:mte:18, 燃油引擎(钨钢)
+gt6addition:mte:19, 旋转动能引擎(青铜)
+gt6addition:mte:20, 旋转动能引擎(钢)
+gt6addition:mte:21, 旋转动能引擎(不锈钢)
+gt6addition:mte:22, 旋转动能引擎(钛)
+gt6addition:mte:23, 旋转动能引擎(钨钢)
+gt6addition:mte:24, 电磁铁(镀锌钢)
+gt6addition:mte:25, 电磁铁(铝)
+gt6addition:mte:26, 电磁铁(不锈钢)
+gt6addition:mte:27, 电磁铁(钛)
+gt6addition:mte:28, 电磁铁(钨钢)
+gt6addition:mte:29, 半导体制冷器(镀锌钢)
+gt6addition:mte:30, 半导体制冷器(铝)
+gt6addition:mte:31, 半导体制冷器(不锈钢)
+gt6addition:mte:32, 半导体制冷器(钛)
+gt6addition:mte:33, 半导体制冷器(钨钢)
+gt6addition:mte:34, 旋转能卷板机(青铜)
+gt6addition:mte:35, 旋转能卷板机(钢)
+gt6addition:mte:36, 旋转能卷板机(不锈钢)
+gt6addition:mte:37, 旋转能卷板机(钛)
+gt6addition:mte:38, 旋转能卷板机(钨钢)
+gt6addition:mte:39, 旋转能线材轧机(青铜)
+gt6addition:mte:40, 旋转能线材轧机(钢)
+gt6addition:mte:41, 旋转能线材轧机(不锈钢)
+gt6addition:mte:42, 旋转能线材轧机(钛)
+gt6addition:mte:43, 旋转能线材轧机(钨钢)
+gt6addition:mte:44, 旋转能车床(青铜)
+gt6addition:mte:45, 旋转能车床(钢)
+gt6addition:mte:46, 旋转能车床(不锈钢)
+gt6addition:mte:47, 旋转能车床(钛)
+gt6addition:mte:48, 旋转能车床(钨钢)
+gt6addition:mte:49, 旋转能圆锯(青铜)
+gt6addition:mte:50, 旋转能圆锯(钢)
+gt6addition:mte:51, 旋转能圆锯(不锈钢)
+gt6addition:mte:52, 旋转能圆锯(钛)
+gt6addition:mte:53, 旋转能圆锯(钨钢)
+gt6addition:mte:54, 旋转能离心机(青铜)
+gt6addition:mte:55, 旋转能离心机(钢)
+gt6addition:mte:56, 旋转能离心机(不锈钢)
+gt6addition:mte:57, 旋转能离心机(钛)
+gt6addition:mte:58, 旋转能离心机(钨钢)
+gt6addition:mte:59, 旋转能织布机(青铜)
+gt6addition:mte:60, 旋转能织布机(钢)
+gt6addition:mte:61, 旋转能织布机(不锈钢)
+gt6addition:mte:62, 旋转能织布机(钛)
+gt6addition:mte:63, 旋转能织布机(钨钢)
+gt6addition:mte:64, 旋转能洗矿厂(青铜)
+gt6addition:mte:65, 旋转能洗矿厂(钢)
+gt6addition:mte:66, 旋转能洗矿厂(不锈钢)
+gt6addition:mte:67, 旋转能洗矿厂(钛)
+gt6addition:mte:68, 旋转能洗矿厂(钨钢)
+gt6addition:mte:69, 旋转能搅拌机(青铜)
+gt6addition:mte:70, 旋转能搅拌机(钢)
+gt6addition:mte:71, 旋转能搅拌机(不锈钢)
+gt6addition:mte:72, 旋转能搅拌机(钛)
+gt6addition:mte:73, 旋转能搅拌机(钨钢)
+gt6addition:mte:74, 动能压缩机(青铜)
+gt6addition:mte:75, 动能压缩机(钢)
+gt6addition:mte:76, 动能压缩机(不锈钢)
+gt6addition:mte:77, 动能压缩机(钛)
+gt6addition:mte:78, 动能压缩机(钨钢)
+gt6addition:mte:79, 动能冲压机床(青铜)
+gt6addition:mte:80, 动能冲压机床(钢)
+gt6addition:mte:81, 动能冲压机床(不锈钢)
+gt6addition:mte:82, 动能冲压机床(钛)
+gt6addition:mte:83, 动能冲压机床(钨钢)
+gt6addition:mte:84, 动能锻造锤(青铜)
+gt6addition:mte:85, 动能锻造锤(钢)
+gt6addition:mte:86, 动能锻造锤(不锈钢)
+gt6addition:mte:87, 动能锻造锤(钛)
+gt6addition:mte:88, 动能锻造锤(钨钢)
+gt6addition:mte:89, 动能筛选机(青铜)
+gt6addition:mte:90, 动能筛选机(钢)
+gt6addition:mte:91, 动能筛选机(不锈钢)
+gt6addition:mte:92, 动能筛选机(钛)
+gt6addition:mte:93, 动能筛选机(钨钢)
+gt6addition:mte:94, 热力熔炉(钢)
+gt6addition:mte:95, 热力熔炉(殷钢)
+gt6addition:mte:96, 热力熔炉(钛)
+gt6addition:mte:97, 热力熔炉(碳化钨)
+gt6addition:mte:98, 热力蒸馏室(钢)
+gt6addition:mte:99, 热力蒸馏室(殷钢)
+gt6addition:mte:100, 热力蒸馏室(钛)
+gt6addition:mte:101, 热力蒸馏室(碳化钨)
+gt6addition:mte:102, 热力压模机(钢)
+gt6addition:mte:103, 热力压模机(殷钢)
+gt6addition:mte:104, 热力压模机(钛)
+gt6addition:mte:105, 热力压模机(碳化钨)
+gt6addition:mte:106, 热力过胶机(钢)
+gt6addition:mte:107, 热力过胶机(殷钢)
+gt6addition:mte:108, 热力过胶机(钛)
+gt6addition:mte:109, 热力过胶机(碳化钨)
+gt6addition:mte:110, 热力焙烧炉(钢)
+gt6addition:mte:111, 热力焙烧炉(殷钢)
+gt6addition:mte:112, 热力焙烧炉(钛)
+gt6addition:mte:113, 热力焙烧炉(碳化钨)
+gt6addition:mte:114, 热力发酵室(钢)
+gt6addition:mte:115, 热力发酵室(殷钢)
+gt6addition:mte:116, 热力发酵室(钛)
+gt6addition:mte:117, 热力发酵室(碳化钨)
+gt6addition:mte:118, 电磁偏振器(镀锌钢)
+gt6addition:mte:119, 电磁偏振器(铝)
+gt6addition:mte:120, 电磁偏振器(不锈钢)
+gt6addition:mte:121, 电磁偏振器(钛)
+gt6addition:mte:122, 电磁偏振器(钨钢)
+gt6addition:mte:123, 磁选机(镀锌钢)
+gt6addition:mte:124, 磁选机(铝)
+gt6addition:mte:125, 磁选机(不锈钢)
+gt6addition:mte:126, 磁选机(钛)
+gt6addition:mte:127, 磁选机(钨钢)
 gregtech:mte:0, 上锁的保险柜
 gregtech:mte:1, 小型蒸汽固体燃料锅炉
 gregtech:mte:2, 高压蒸汽固体燃料锅炉
@@ -4780,6 +4989,7 @@ gregtech:mte:1040, 网络交换机
 gregtech:mte:1041, 蓄能变电站
 gregtech:mte:1042, 有源变压器
 gregtech:mte:1050, 工业合金炉
+gregtech:mte:1059, 土高炉仓
 gregtech:mte:1060, 锯木机
 gregtech:mte:1150, §8ULV§r输入总线
 gregtech:mte:1151, §7LV§r输入总线
@@ -5521,19 +5731,19 @@ gregtech:mte:2639, §aUEV§r巨型样板总成
 gregtech:mte:2640, §2UIV§r巨型样板总成
 gregtech:mte:2641, §eUXV§r巨型样板总成
 gregtech:mte:2642, §9OpV§r巨型样板总成
-gregtech:mte:2645, §7LV§r Huge Dual Ore Prefix Pattern Hatch
-gregtech:mte:2646, §bMV§r Huge Dual Ore Prefix Pattern Hatch
-gregtech:mte:2647, §6HV§r Huge Dual Ore Prefix Pattern Hatch
-gregtech:mte:2648, §5EV§r Huge Dual Ore Prefix Pattern Hatch
-gregtech:mte:2649, §1IV§r Huge Dual Ore Prefix Pattern Hatch
-gregtech:mte:2650, §dLuV§r Huge Dual Ore Prefix Pattern Hatch
-gregtech:mte:2651, §cZPM§r Huge Dual Ore Prefix Pattern Hatch
-gregtech:mte:2652, §3UV§r Huge Dual Ore Prefix Pattern Hatch
-gregtech:mte:2653, §4UHV§r Huge Dual Ore Prefix Pattern Hatch
-gregtech:mte:2654, §aUEV§r Huge Dual Ore Prefix Pattern Hatch
-gregtech:mte:2655, §2UIV§r Huge Dual Ore Prefix Pattern Hatch
-gregtech:mte:2656, §eUXV§r Huge Dual Ore Prefix Pattern Hatch
-gregtech:mte:2657, §9OpV§r Huge Dual Ore Prefix Pattern Hatch
+gregtech:mte:2645, §7LV§r巨型矿辞前缀样板总成
+gregtech:mte:2646, §bMV§r巨型矿辞前缀样板总成
+gregtech:mte:2647, §6HV§r巨型矿辞前缀样板总成
+gregtech:mte:2648, §5EV§r巨型矿辞前缀样板总成
+gregtech:mte:2649, §1IV§r巨型矿辞前缀样板总成
+gregtech:mte:2650, §dLuV§r巨型矿辞前缀样板总成
+gregtech:mte:2651, §cZPM§r巨型矿辞前缀样板总成
+gregtech:mte:2652, §3UV§r巨型矿辞前缀样板总成
+gregtech:mte:2653, §4UHV§r巨型矿辞前缀样板总成
+gregtech:mte:2654, §aUEV§r巨型矿辞前缀样板总成
+gregtech:mte:2655, §2UIV§r巨型矿辞前缀样板总成
+gregtech:mte:2656, §eUXV§r巨型矿辞前缀样板总成
+gregtech:mte:2657, §9OpV§r巨型矿辞前缀样板总成
 gregtech:mte:2660, §7LV§r巨型回环总成
 gregtech:mte:2661, §bMV§r巨型回环总成
 gregtech:mte:2662, §6HV§r巨型回环总成
@@ -5551,7 +5761,8 @@ gregtech:mte:2700, ME输入总成
 gregtech:mte:2701, ME输出总成
 gregtech:mte:2702, ME代理样板总成
 gregtech:mte:2703, 巨型ME代理样板总成
-gregtech:mte:2704, 巨型ME矿辞前缀样板总成
+gregtech:mte:2704, ME矿辞前缀代理样板总成
+gregtech:mte:2705, 巨型ME矿辞前缀代理样板总成
 gregtech:mte:2750, ME矿辞输入总线
 gregtech:mte:2751, ME样板管理器
 gregtech:mte:2800, §8ULV§r巨型输入总线
@@ -5582,20 +5793,20 @@ gregtech:mte:2825, §aUEV§r巨型输出总线
 gregtech:mte:2826, §2UIV§r巨型输出总线
 gregtech:mte:2827, §eUXV§r巨型输出总线
 gregtech:mte:2828, §9OpV§r巨型输出总线
-gregtech:mte:2830, gregtech.machine.mould_item_bus.ulv.name
-gregtech:mte:2831, gregtech.machine.mould_item_bus.lv.name
-gregtech:mte:2832, gregtech.machine.mould_item_bus.mv.name
-gregtech:mte:2833, gregtech.machine.mould_item_bus.hv.name
-gregtech:mte:2834, gregtech.machine.mould_item_bus.ev.name
-gregtech:mte:2835, gregtech.machine.mould_item_bus.iv.name
-gregtech:mte:2836, gregtech.machine.mould_item_bus.luv.name
-gregtech:mte:2837, gregtech.machine.mould_item_bus.zpm.name
-gregtech:mte:2838, gregtech.machine.mould_item_bus.uv.name
-gregtech:mte:2839, gregtech.machine.mould_item_bus.uhv.name
-gregtech:mte:2840, gregtech.machine.mould_item_bus.uev.name
-gregtech:mte:2841, gregtech.machine.mould_item_bus.uiv.name
-gregtech:mte:2842, gregtech.machine.mould_item_bus.uxv.name
-gregtech:mte:2843, gregtech.machine.mould_item_bus.opv.name
+gregtech:mte:2830, §8ULV§r模具仓
+gregtech:mte:2831, §7LV§r模具仓
+gregtech:mte:2832, §bMV§r模具仓
+gregtech:mte:2833, §6HV§r模具仓
+gregtech:mte:2834, §5EV§r模具仓
+gregtech:mte:2835, §1IV§r模具仓
+gregtech:mte:2836, §dLuV§r模具仓
+gregtech:mte:2837, §cZPM§r模具仓
+gregtech:mte:2838, §3UV§r模具仓
+gregtech:mte:2839, §4UHV§r模具仓
+gregtech:mte:2840, §aUEV§r模具仓
+gregtech:mte:2841, §2UIV§r模具仓
+gregtech:mte:2842, §eUXV§r模具仓
+gregtech:mte:2843, §9OpV§r模具仓
 gregtech:mte:2860, 线程控制仓(LV)
 gregtech:mte:2861, 线程控制仓(MV)
 gregtech:mte:2862, 线程控制仓(HV)
@@ -5619,34 +5830,61 @@ gregtech:mte:2880, §dLuV§r ME消声仓
 gregtech:mte:2881, §cZPM§r ME消声仓
 gregtech:mte:2882, §3UV§r ME消声仓
 gregtech:mte:2883, §4UHV§r ME消声仓
-gregtech:mte:2890, §7LV§r 除尘器
-gregtech:mte:2891, §bMV§r 除尘器
-gregtech:mte:2892, §6HV§r 除尘器
-gregtech:mte:2893, §5EV§r 除尘器
-gregtech:mte:2894, §1IV§r 除尘器
-gregtech:mte:2895, §dLuV§r 除尘器
-gregtech:mte:2896, §cZPM§r 除尘器
-gregtech:mte:2897, §3UV§r 除尘器
-gregtech:mte:2898, §4UHV§r 除尘器
-gregtech:mte:2899, §aUEV§r 除尘器
-gregtech:mte:2900, §2UIV§r 除尘器
-gregtech:mte:2901, §eUXV§r 除尘器
-gregtech:mte:2902, §9OpV§r 除尘器
-gregtech:mte:3500, gregtech.machine.wireless_controller.ulv.name
-gregtech:mte:3501, gregtech.machine.wireless_controller.lv.name
-gregtech:mte:3502, gregtech.machine.wireless_controller.mv.name
-gregtech:mte:3503, gregtech.machine.wireless_controller.hv.name
-gregtech:mte:3504, gregtech.machine.wireless_controller.ev.name
-gregtech:mte:3505, gregtech.machine.wireless_controller.iv.name
-gregtech:mte:3506, gregtech.machine.wireless_controller.luv.name
-gregtech:mte:3507, gregtech.machine.wireless_controller.zpm.name
-gregtech:mte:3508, gregtech.machine.wireless_controller.uv.name
-gregtech:mte:3509, gregtech.machine.wireless_controller.uhv.name
-gregtech:mte:3510, gregtech.machine.wireless_controller.uev.name
-gregtech:mte:3511, gregtech.machine.wireless_controller.uiv.name
-gregtech:mte:3512, gregtech.machine.wireless_controller.uxv.name
-gregtech:mte:3513, gregtech.machine.wireless_controller.opv.name
-gregtech:mte:3514, gregtech.machine.wireless_controller.max.name
+gregtech:mte:2884, §aUEV§r ME消声仓
+gregtech:mte:2890, §8ULV§r 除尘器
+gregtech:mte:2891, §7LV§r 除尘器
+gregtech:mte:2892, §bMV§r 除尘器
+gregtech:mte:2893, §6HV§r 除尘器
+gregtech:mte:2894, §5EV§r 除尘器
+gregtech:mte:2895, §1IV§r 除尘器
+gregtech:mte:2896, §dLuV§r 除尘器
+gregtech:mte:2897, §cZPM§r 除尘器
+gregtech:mte:2898, §3UV§r 除尘器
+gregtech:mte:2899, §4UHV§r 除尘器
+gregtech:mte:2900, §aUEV§r 除尘器
+gregtech:mte:2901, §2UIV§r 除尘器
+gregtech:mte:2902, §eUXV§r 除尘器
+gregtech:mte:2903, §9OpV§r 除尘器
+gregtech:mte:2910, §8ULV§r 热阱仓
+gregtech:mte:2911, §7LV§r 热阱仓
+gregtech:mte:2912, §bMV§r 热阱仓
+gregtech:mte:2913, §6HV§r 热阱仓
+gregtech:mte:2914, §5EV§r 热阱仓
+gregtech:mte:2915, §8ULV§r 热源仓
+gregtech:mte:2916, §7LV§r 热源仓
+gregtech:mte:2917, §bMV§r 热源仓
+gregtech:mte:2918, §6HV§r 热源仓
+gregtech:mte:2919, §5EV§r 热源仓
+gregtech:mte:2920, §8ULV§r 电加热器
+gregtech:mte:2921, §7LV§r 电加热器
+gregtech:mte:2922, §bMV§r 电加热器
+gregtech:mte:2923, §6HV§r 电加热器
+gregtech:mte:2924, §5EV§r 电加热器
+gregtech:mte:2945, 基础巨型缓存器
+gregtech:mte:2946, 进阶巨型缓存器
+gregtech:mte:2947, 进阶巨型缓存器 II
+gregtech:mte:2948, 进阶巨型缓存器 III
+gregtech:mte:2949, 精英巨型缓存器
+gregtech:mte:2980, 无线能源管理器（§8ULV§r）
+gregtech:mte:2981, 无线能源管理器（§7LV§r）
+gregtech:mte:2982, 无线能源管理器（§bMV§r）
+gregtech:mte:2983, 无线能源管理器（§6HV§r）
+gregtech:mte:2984, 无线能源管理器（§5EV§r）
+gregtech:mte:2985, 无线能源管理器（§1IV§r）
+gregtech:mte:2986, 无线能源管理器（§dLuV§r）
+gregtech:mte:2987, 无线能源管理器（§cZPM§r）
+gregtech:mte:2988, 无线能源管理器（§3UV§r）
+gregtech:mte:2989, 无线能源管理器（§4UHV§r）
+gregtech:mte:2990, 无线能源管理器（§aUEV§r）
+gregtech:mte:2991, 无线能源管理器（§2UIV§r）
+gregtech:mte:2992, 无线能源管理器（§eUXV§r）
+gregtech:mte:2993, 无线能源管理器（§9OpV§r）
+gregtech:mte:2994, 无线能源管理器（§c§lMAX§r）
+gregtech:mte:5000, 物料分配器
+gregtech:mte:5001, 大型变压器
+gtsteam:fluid_pipe_small:4, 小型蜡封木板流体管道
+gtsteam:fluid_pipe_normal:4, 蜡封木板流体管道
+gtsteam:fluid_pipe_large:4, 大型蜡封木板流体管道
 gregtech:wire_single:2, 1x铝导线
 gregtech:wire_single:252, 1x退火铜导线
 gregtech:wire_single:2011, 1x黑钢导线
@@ -6042,16 +6280,16 @@ gregtech:cable_hex:115, 16x钨线缆
 gregtech:cable_hex:2013, 16x钨钢线缆
 gregtech:cable_hex:334, 16x钒镓合金线缆
 gregtech:cable_hex:338, 16x钇钡铜氧化物线缆
-gregtech:heat_conductor_1x:25, 1x铜热导管道
-gregtech:heat_conductor_2x:25, 2x铜热导管道
-gregtech:heat_conductor_4x:25, 4x铜热导管道
-gregtech:heat_conductor_8x:25, 8x铜热导管道
-gregtech:heat_conductor_16x:25, 16x铜热导管道
-gregtech:insulated_heat_conductor_1x:25, 1x铜隔热热导管道
-gregtech:insulated_heat_conductor_2x:25, 2x铜隔热热导管道
-gregtech:insulated_heat_conductor_4x:25, 4x铜隔热热导管道
-gregtech:insulated_heat_conductor_8x:25, 8x铜隔热热导管道
-gregtech:insulated_heat_conductor_16x:25, 16x铜隔热热导管道
+gregtech:heat_conductor_single:25, 1x铜热导管道
+gregtech:heat_conductor_double:25, 2x铜热导管道
+gregtech:heat_conductor_quadruple:25, 4x铜热导管道
+gregtech:heat_conductor_octal:25, 8x铜热导管道
+gregtech:heat_conductor_hex:25, 16x铜热导管道
+gregtech:insulated_heat_conductor_single:25, 1x铜隔热热导管道
+gregtech:insulated_heat_conductor_double:25, 2x铜隔热热导管道
+gregtech:insulated_heat_conductor_quadruple:25, 4x铜隔热热导管道
+gregtech:insulated_heat_conductor_octal:25, 8x铜隔热热导管道
+gregtech:insulated_heat_conductor_hex:25, 16x铜隔热热导管道
 gregtech:fluid_pipe_tiny:2, 微型铝流体管道
 gregtech:fluid_pipe_tiny:260, 微型青铜流体管道
 gregtech:fluid_pipe_tiny:22, 微型铬流体管道
@@ -6425,14 +6663,14 @@ gregtech:battery_block:4, 兰波顿电容（§dLuV§r）
 gregtech:battery_block:5, 兰波顿电容（§cZPM§r）
 gregtech:battery_block:6, 空电容（Tier III）
 gregtech:battery_block:7, 兰波顿电容（§3UV§r）
-gregtech:battery_block:8, tile.battery_block.quantum_uhv.name
-gregtech:battery_block:9, tile.battery_block.empty_tier_iv.name
-gregtech:battery_block:10, tile.battery_block.spacetime_uev.name
-gregtech:battery_block:11, tile.battery_block.graviton_uiv.name
-gregtech:battery_block:12, tile.battery_block.empty_tier_v.name
-gregtech:battery_block:13, tile.battery_block.chronos_uxv.name
-gregtech:battery_block:14, tile.battery_block.cosmic_opv.name
-gregtech:battery_block:15, tile.battery_block.ultimate_max.name
+gregtech:battery_block:8, 量子真空电容（§4UHV§r）
+gregtech:battery_block:9, 空电容（Tier IV）
+gregtech:battery_block:10, 引力奇点电容（§6UEV§r）
+gregtech:battery_block:11, 时空晶体电容（§2UIV§r）
+gregtech:battery_block:12, 空电容（Tier V）
+gregtech:battery_block:13, 超光速粒子电容（§eUXV§r）
+gregtech:battery_block:14, 宇宙弦电容（§aOpV§r）
+gregtech:battery_block:15, 创世电容（§c§lMAX§r）
 gregtech:boiler_casing:0, 青铜管道外壳
 gregtech:boiler_casing:1, 钢管道外壳
 gregtech:boiler_casing:2, 钛管道外壳
@@ -6936,6 +7174,11 @@ gregtech:rubber_leaves, 橡胶树叶
 gregtech:rubber_sapling, 橡胶树苗
 gregtech:powderbarrel, 火药桶
 gregtech:itnt, 工业TNT
+gtsteam:meta_block_compressed_0:1, 镀锌钢块
+gtsteam:meta_block_compressed_0:2, 褐煤块
+gtsteam:meta_block_compressed_12:10, 生橡胶沉淀块
+gtsteam:meta_block_compressed_12:11, 乳胶块
+gtsteam:meta_block_compressed_12:12, 树脂块
 gregtech:meta_block_compressed_0:1, 锕块
 gregtech:meta_block_compressed_0:2, 铝块
 gregtech:meta_block_compressed_0:3, 镅块
@@ -7156,6 +7399,9 @@ gregtech:meta_block_compressed_157:5, 红色合金块
 gregtech:meta_block_compressed_157:7, 高速钢-E块
 gregtech:meta_block_compressed_157:8, 高速钢-S块
 gregtech:meta_block_compressed_157:15, 蓝色合金块
+gtsteam:meta_block_frame_0:1, 镀锌钢框架
+gtsteam:meta_block_frame_0:4, 蜡封木板框架
+gtsteam:meta_block_frame_12:10, 生橡胶沉淀框架
 gregtech:meta_block_frame_0:1, 锕框架
 gregtech:meta_block_frame_0:2, 铝框架
 gregtech:meta_block_frame_0:3, 镅框架
@@ -7336,6 +7582,14 @@ gregtech:meta_block_frame_157:5, 红色合金框架
 gregtech:meta_block_frame_157:7, 高速钢-E框架
 gregtech:meta_block_frame_157:8, 高速钢-S框架
 gregtech:meta_block_frame_157:15, 蓝色合金框架
+gregtech:ore_lignite_0:0, 褐煤矿石
+gregtech:ore_lignite_0:1, 地狱岩褐煤矿石
+gregtech:ore_lignite_0:2, 末地石褐煤矿石
+gregtech:ore_lignite_0:3, 沙子褐煤矿石
+gregtech:ore_lignite_0:4, 红沙褐煤矿石
+gregtech:ore_lignite_0:5, 花岗岩褐煤矿石
+gregtech:ore_lignite_0:6, 闪长岩褐煤矿石
+gregtech:ore_lignite_0:7, 安山岩褐煤矿石
 gregtech:ore_actinium_0:0, 锕矿石
 gregtech:ore_actinium_0:1, 地狱岩锕矿石
 gregtech:ore_actinium_0:2, 末地石锕矿石
@@ -9016,6 +9270,23 @@ gregtech:ore_basaltic_mineral_sand_0:4, 红沙玄武岩矿砂矿石
 gregtech:ore_basaltic_mineral_sand_0:5, 花岗岩玄武岩矿砂矿石
 gregtech:ore_basaltic_mineral_sand_0:6, 闪长岩玄武岩矿砂矿石
 gregtech:ore_basaltic_mineral_sand_0:7, 安山岩玄武岩矿砂矿石
+gtsteam:multiblock_casing0:0, 镀锌瓷瓦砖
+gtsteam:multiblock_casing0:1, 储罐外壁
+gtsteam:multiblock_casing0:2, 加固防腐木缸壁
+gtsteam:multiblock_casing0:3, 加固防腐木框架
+gtsteam:multiblock_casing0:4, 封蜡木缸壁
+gtsteam:multiblock_casing0:5, 封蜡木框架
+gtsteam:multiblock_casing1:0, 太阳能集热管
+gtsteam:multiblock_casing1:1, 低压锅炉
+gtsteam:multiblock_casing1:2, 高压锅炉
+gtsteam:firebox_casing0:0, 固体燃烧室
+gtsteam:firebox_casing0:1, 液体燃烧室
+gtsteam:evaporation_bed:0, 砂壤土
+gtsteam:serpentine:0, 蛇形铜管方块
+gtsteam:storage_upgrade_tier_1, 基础存储升级
+gtsteam:storage_upgrade_tier_2, 高级存储升级
+gtsteam:storage_upgrade_tier_3, 精英存储升级
+gtsteam:void_upgrade, 虚空存储升级
 theoneprobe:probe, 检测器No.1
 theoneprobe:creativeprobe, 创造模式检测器
 theoneprobe:probenote, The One Probe Read Me

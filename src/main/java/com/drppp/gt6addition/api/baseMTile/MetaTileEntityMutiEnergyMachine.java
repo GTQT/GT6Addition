@@ -608,13 +608,13 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
             BaseFilterContainer filter = getFilterContainerFromCover(cover);
 
             if (filter != null && filter.hasFilter()) {
-                flowRow.child(filter.initUILeisure(guiData, guiSyncManager));
+                flowRow.child(filter.initUILeisure(guiData, guiSyncManager,s));
                 s++;
             }
             else if(cover instanceof CoverStorage)
             {
                 CoverStorage coverStorage = (CoverStorage) cover;
-                flowRow.child(coverStorage.initUILeisure(guiData, guiSyncManager));
+                flowRow.child(coverStorage.initUILeisure(guiData, guiSyncManager,s));
                 s++;
             }
         }

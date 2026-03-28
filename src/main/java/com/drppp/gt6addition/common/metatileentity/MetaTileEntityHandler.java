@@ -84,16 +84,16 @@ public class MetaTileEntityHandler {
     public static void InitMte()
     {
         String[] names = {"lead", "bronze", "steel", "invar", "chrome", "titanium", "tungsten", "tungstensteel"};
-        //燃烧室
-        for (int i = 0; i < HU_BURRING_BOXS.length; i++) {
-            int[] color = {0x251945, 0x815024, 0x4F4F4E, 0x87875C, 0xA39393, 0x896495, 0x1D1D1D, 0x3C3C61};
-            double[] efficiency = {0.5, 0.75, 0.7, 1, 0.85, 0.85, 1, 0.9};
-            int[] output = {16, 24, 32, 16, 112, 96, 128, 128};
-            HU_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(getMyId(names[i] + "_burring_box"), color[i], efficiency[i], output[i], false));
-            HU_DENSE_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(getMyId("dense_" + names[i] + "_burring_box"), color[i], efficiency[i], output[i] * 4, true));
-            HU_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(getMyId(names[i] + "_burring_box_liquid"), color[i], efficiency[i], (int) (output[i] * 1.5), false));
-            HU_DENSE_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(getMyId("dense_" + names[i] + "_burring_box_liquid"), color[i], efficiency[i], (int) (output[i] * 4 * 1.5), true));
-        }
+        //燃烧室 停用
+//        for (int i = 0; i < HU_BURRING_BOXS.length; i++) {
+//            int[] color = {0x251945, 0x815024, 0x4F4F4E, 0x87875C, 0xA39393, 0x896495, 0x1D1D1D, 0x3C3C61};
+//            double[] efficiency = {0.5, 0.75, 0.7, 1, 0.85, 0.85, 1, 0.9};
+//            int[] output = {16, 24, 32, 16, 112, 96, 128, 128};
+//            HU_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(getMyId(names[i] + "_burring_box"), color[i], efficiency[i], output[i], false));
+//            HU_DENSE_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(getMyId("dense_" + names[i] + "_burring_box"), color[i], efficiency[i], output[i] * 4, true));
+//            HU_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(getMyId(names[i] + "_burring_box_liquid"), color[i], efficiency[i], (int) (output[i] * 1.5), false));
+//            HU_DENSE_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(getMyId("dense_" + names[i] + "_burring_box_liquid"), color[i], efficiency[i], (int) (output[i] * 4 * 1.5), true));
+//        }
         for (int i = 0; i < STEAM_TURBINES.length; i++) {
             int[] color = {0x251945, 0x815024, 0x4F4F4E, 0x87875C, 0xA39393, 0x896495, 0x1D1D1D, 0x3C3C61};
             int[] output = {8, 16, 64, 64, 96, 256, 384, 512};

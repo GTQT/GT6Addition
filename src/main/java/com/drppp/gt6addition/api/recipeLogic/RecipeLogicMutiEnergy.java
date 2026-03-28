@@ -48,6 +48,7 @@ public class RecipeLogicMutiEnergy extends AbstractRecipeLogic {
     protected boolean drawEnergy(long recipeEUt, boolean b) {
         if(mutiEnergyProxy==null)
             return false;
+        mutiEnergyProxy.changeEnergy((int)recipeEUt);
         if(mutiEnergyProxy.getEnergy()>=recipeEUt)
             return true;
         return false;
