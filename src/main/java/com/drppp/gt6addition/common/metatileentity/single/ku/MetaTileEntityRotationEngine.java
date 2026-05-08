@@ -54,15 +54,15 @@ import java.util.List;
 
 public class MetaTileEntityRotationEngine extends MetaTileEntity implements IEnergyOutShow {
     public final int color;
-    public final int outPutRu;//最少输出一半  最多输出两倍
-    public final int outPutRuMin;//最少输出一半  最多输出两倍
-    public final int outPutRuMax;//最少输出一半  最多输出两倍
+    public final int outPutRu;//鏈€灏戣緭鍑轰竴鍗? 鏈€澶氳緭鍑轰袱鍊?
+    public final int outPutRuMin;//鏈€灏戣緭鍑轰竴鍗? 鏈€澶氳緭鍑轰袱鍊?
+    public final int outPutRuMax;//鏈€灏戣緭鍑轰竴鍗? 鏈€澶氳緭鍑轰袱鍊?
     protected final ICubeRenderer rendererBASE = Gt6AdditionTextures.RU_KU_ENGINE;
     public boolean isActive;
     IKineticEnergy ku = new KineticEnergyHandler();
     public int AllRu=0;
 
-    //获取流体燃烧时间
+    //鑾峰彇娴佷綋鐕冪儳鏃堕棿
     public int currentItemBurnTime = 0;
     public int currentItemHasBurnedTime = 0;
 
@@ -186,9 +186,9 @@ public class MetaTileEntityRotationEngine extends MetaTileEntity implements IEne
     public void update() {
         super.update();
         if (!getWorld().isRemote && getOffsetTimer()%5==0) {
-            var list = getOtherDirections(getFrontFacing(),getFrontFacing().getOpposite());
+            List<EnumFacing> list = getOtherDirections(getFrontFacing(),getFrontFacing().getOpposite());
             AllRu=0;
-            for (var l:list)
+            for (EnumFacing l : list)
             {
                 TileEntity te = getWorld().getTileEntity(getPos().offset(l));
                 if(te !=null && te.hasCapability(CapabilityHandler.CAPABILITY_ROTATION_ENERGY,l.getOpposite()))
@@ -220,7 +220,7 @@ public class MetaTileEntityRotationEngine extends MetaTileEntity implements IEne
 
     @Override
     public boolean hasCapability(@NotNull Capability<?> capability, @Nullable EnumFacing facing) {
-        if (capability == CapabilityHandler.CAPABILITY_ROTATION_ENERGY && (facing == this.frontFacing || facing == this.frontFacing.getOpposite()))
+        if (capability == CapabilityHandler.CAPABILITY_KINETIC_ENERGY && (facing == this.frontFacing || facing == this.frontFacing.getOpposite()))
             return true;
         return super.hasCapability(capability, facing);
     }

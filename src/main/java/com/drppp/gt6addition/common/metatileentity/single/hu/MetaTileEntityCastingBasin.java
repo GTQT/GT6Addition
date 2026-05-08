@@ -7,6 +7,8 @@ import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
+import com.drppp.gt6addition.api.crucible.ICrucibleMold;
+import com.drppp.gt6addition.api.temperature.ITemperatureProvider;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.GregtechCapabilities;
@@ -52,7 +54,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class MetaTileEntityCastingBasin extends MetaTileEntity {
+public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITemperatureProvider, ICrucibleMold {
 
     private static final String NBT_MATERIAL = "Material";
     private static final String NBT_AMOUNT = "Amount";
@@ -73,6 +75,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity {
     private final boolean acidProof;
     private final float hardness;
     private final float resistance;
+    private final long maxTemperature;
     private final BasinFluidHandler fluidHandler = new BasinFluidHandler();
 
     private Material material;
@@ -87,17 +90,25 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity {
 
     public MetaTileEntityCastingBasin(ResourceLocation metaTileEntityId, int tier, int casingColor,
                                       boolean acidProof, float hardness, float resistance) {
+        this(metaTileEntityId, tier, casingColor, acidProof, hardness, resistance,
+                getDefaultMaxTemperature(tier));
+    }
+
+    public MetaTileEntityCastingBasin(ResourceLocation metaTileEntityId, int tier, int casingColor,
+                                      boolean acidProof, float hardness, float resistance, long maxTemperature) {
         super(metaTileEntityId);
         this.tier = tier;
         this.casingColor = casingColor;
         this.acidProof = acidProof;
         this.hardness = hardness;
         this.resistance = resistance;
+        this.maxTemperature = Math.max(ENVIRONMENT_TEMPERATURE, maxTemperature);
     }
 
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
-        return new MetaTileEntityCastingBasin(metaTileEntityId, tier, casingColor, acidProof, hardness, resistance);
+        return new MetaTileEntityCastingBasin(metaTileEntityId, tier, casingColor,
+                acidProof, hardness, resistance, maxTemperature);
     }
 
     @Override
@@ -169,6 +180,54 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity {
         return material != null && materialAmount > 0 && temperature >= getMeltingTemperature(material);
     }
 
+    @Override
+    public boolean isMoldInputSide(@Nullable EnumFacing side) {
+        return side != EnumFacing.UP;
+    }
+
+    @Override
+    public long getMoldMaxTemperature() {
+        return maxTemperature;
+    }
+
+    @Override
+    public long getMoldRequiredMaterialUnits(@Nullable Material requestedMaterial) {
+        if (material != null && requestedMaterial != null && material != requestedMaterial) {
+            return 0L;
+        }
+        return Math.max(0L, CAPACITY - materialAmount);
+    }
+
+    @Override
+    public long fillMold(Material incomingMaterial, long incomingAmount, long incomingTemperature,
+                         @Nullable EnumFacing side, boolean simulate) {
+        if (incomingMaterial == null || incomingMaterial == Materials.NULL || incomingAmount <= 0L ||
+                !isMoldInputSide(side) || incomingTemperature > maxTemperature) {
+            return 0L;
+        }
+        if (material != null && material != incomingMaterial) {
+            return 0L;
+        }
+        long acceptedAmount = Math.min(incomingAmount, Math.max(0L, CAPACITY - materialAmount));
+        if (acceptedAmount <= 0L) {
+            return 0L;
+        }
+        if (!simulate) {
+            if (material == null || materialAmount <= 0L) {
+                material = incomingMaterial;
+                temperature = incomingTemperature;
+                materialAmount = acceptedAmount;
+            } else {
+                long totalAmount = materialAmount + acceptedAmount;
+                temperature = (temperature * materialAmount + incomingTemperature * acceptedAmount) / totalAmount;
+                materialAmount = totalAmount;
+            }
+            markDirty();
+            refreshDisplayState();
+        }
+        return acceptedAmount;
+    }
+
     @Nullable
     private CastResult createCastResult() {
         if (material == null || materialAmount <= 0) {
@@ -217,6 +276,10 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity {
         return 1811;
     }
 
+    private static long getDefaultMaxTemperature(int tier) {
+        return 1800L + Math.max(0, tier) * 300L;
+    }
+
     private int toFluidAmount(long amount) {
         return (int) Math.min(Integer.MAX_VALUE, amount * GTValues.L / GTValues.M);
     }
@@ -235,6 +298,16 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity {
 
     public long getTemperature() {
         return temperature;
+    }
+
+    @Override
+    public long getTemperatureValue(@Nullable EnumFacing side) {
+        return getTemperature();
+    }
+
+    @Override
+    public long getTemperatureMax(@Nullable EnumFacing side) {
+        return maxTemperature;
     }
 
     public String getContentsDisplayName() {

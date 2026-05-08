@@ -5,10 +5,12 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
+import com.drppp.gt6addition.api.crucible.ICrucibleMold;
 import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -81,6 +83,11 @@ public class MetaTileEntityCrucibleFaucet extends MetaTileEntity {
     }
 
     private int transferOnce() {
+        long movedMaterial = transferMaterialUnitsOnce();
+        if (movedMaterial > 0L) {
+            return (int) Math.min(Integer.MAX_VALUE,
+                    Math.max(1L, movedMaterial * GTValues.L / GTValues.M));
+        }
         IFluidHandler source = getAdjacentFluidHandler(getFrontFacing().getOpposite(), getFrontFacing());
         IFluidHandler target = getAdjacentFluidHandler(getFrontFacing(), getFrontFacing().getOpposite());
         if (source == null || target == null) {
@@ -99,6 +106,16 @@ public class MetaTileEntityCrucibleFaucet extends MetaTileEntity {
             return 0;
         }
         return target.fill(drained, true);
+    }
+
+    private long transferMaterialUnitsOnce() {
+        Object source = GTUtility.getMetaTileEntity(getWorld(), getPos().offset(getFrontFacing().getOpposite()));
+        Object target = GTUtility.getMetaTileEntity(getWorld(), getPos().offset(getFrontFacing()));
+        if (!(source instanceof MetaTileEntityCrucible) || !(target instanceof ICrucibleMold)) {
+            return 0L;
+        }
+        return ((MetaTileEntityCrucible) source).fillMoldAtSide((ICrucibleMold) target,
+                getFrontFacing(), getFrontFacing().getOpposite());
     }
 
     @Nullable

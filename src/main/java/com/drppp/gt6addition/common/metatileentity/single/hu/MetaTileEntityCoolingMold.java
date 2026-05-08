@@ -7,6 +7,7 @@ import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
+import com.drppp.gt6addition.api.crucible.ICrucibleMold;
 import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.items.metaitem.MetaItem;
@@ -15,6 +16,7 @@ import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
+import gregtech.api.unification.material.Material;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.common.items.MetaItems;
@@ -54,7 +56,7 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
-public class MetaTileEntityCoolingMold extends MetaTileEntity {
+public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucibleMold {
 
     private static final String NBT_INVENTORY = "Inventory";
     private static final String NBT_TANK = "Tank";
@@ -76,6 +78,7 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity {
     private final boolean acidProof;
     private final float hardness;
     private final float resistance;
+    private final long maxTemperature;
     private final ItemStackHandler inventory = new MoldItemHandler();
     private final FluidTank tank = new FluidTank(CAPACITY) {
         @Override
@@ -95,17 +98,25 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity {
 
     public MetaTileEntityCoolingMold(ResourceLocation metaTileEntityId, int tier, int casingColor,
                                      boolean acidProof, float hardness, float resistance) {
+        this(metaTileEntityId, tier, casingColor, acidProof, hardness, resistance,
+                getDefaultMaxTemperature(tier));
+    }
+
+    public MetaTileEntityCoolingMold(ResourceLocation metaTileEntityId, int tier, int casingColor,
+                                     boolean acidProof, float hardness, float resistance, long maxTemperature) {
         super(metaTileEntityId);
         this.tier = tier;
         this.casingColor = casingColor;
         this.acidProof = acidProof;
         this.hardness = hardness;
         this.resistance = resistance;
+        this.maxTemperature = Math.max(295L, maxTemperature);
     }
 
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
-        return new MetaTileEntityCoolingMold(metaTileEntityId, tier, casingColor, acidProof, hardness, resistance);
+        return new MetaTileEntityCoolingMold(metaTileEntityId, tier, casingColor,
+                acidProof, hardness, resistance, maxTemperature);
     }
 
     @Override
@@ -140,6 +151,14 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity {
     private Recipe findSolidifierRecipe() {
         ItemStack moldStack = inventory.getStackInSlot(0);
         FluidStack fluidStack = tank.getFluid();
+        if (moldStack.isEmpty() || fluidStack == null || fluidStack.amount <= 0) {
+            return null;
+        }
+        return findSolidifierRecipe(moldStack, fluidStack);
+    }
+
+    @Nullable
+    private Recipe findSolidifierRecipe(ItemStack moldStack, FluidStack fluidStack) {
         if (moldStack.isEmpty() || fluidStack == null || fluidStack.amount <= 0) {
             return null;
         }
@@ -250,6 +269,89 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean isMoldInputSide(@Nullable EnumFacing side) {
+        return side != EnumFacing.UP;
+    }
+
+    @Override
+    public long getMoldMaxTemperature() {
+        return maxTemperature;
+    }
+
+    @Override
+    public long getMoldRequiredMaterialUnits(@Nullable Material material) {
+        if (material == null || !material.hasFluid() || tank.getFluid() != null) {
+            return 0L;
+        }
+        ItemStack moldStack = inventory.getStackInSlot(0);
+        if (moldStack.isEmpty()) {
+            return 0L;
+        }
+        FluidStack fluidStack = material.getFluid(CAPACITY);
+        Recipe recipe = findSolidifierRecipe(moldStack, fluidStack);
+        if (recipe == null || !canFitOutput(recipe)) {
+            return 0L;
+        }
+        FluidStack requiredFluid = getRequiredRecipeFluidInput(recipe, fluidStack);
+        return requiredFluid == null ? 0L : toMaterialAmount(requiredFluid.amount);
+    }
+
+    @Override
+    public long fillMold(Material material, long materialAmount, long temperature,
+                         @Nullable EnumFacing side, boolean simulate) {
+        if (material == null || !material.hasFluid() || materialAmount <= 0L ||
+                !isMoldInputSide(side) || temperature > maxTemperature || tank.getFluid() != null) {
+            return 0L;
+        }
+        ItemStack moldStack = inventory.getStackInSlot(0);
+        if (moldStack.isEmpty()) {
+            return 0L;
+        }
+        FluidStack fluidStack = material.getFluid(CAPACITY);
+        Recipe recipe = findSolidifierRecipe(moldStack, fluidStack);
+        if (recipe == null || !canFitOutput(recipe)) {
+            return 0L;
+        }
+        FluidStack requiredFluid = getRequiredRecipeFluidInput(recipe, fluidStack);
+        if (requiredFluid == null || requiredFluid.amount <= 0) {
+            return 0L;
+        }
+        long requiredMaterial = toMaterialAmount(requiredFluid.amount);
+        if (materialAmount < requiredMaterial || tank.fill(requiredFluid, false) < requiredFluid.amount) {
+            return 0L;
+        }
+        if (!simulate) {
+            tank.fill(requiredFluid.copy(), true);
+            resetProgress();
+            markDirty();
+            refreshRenderState();
+        }
+        return requiredMaterial;
+    }
+
+    @Nullable
+    private FluidStack getRequiredRecipeFluidInput(Recipe recipe, FluidStack fluidStack) {
+        if (recipe == null || fluidStack == null) {
+            return null;
+        }
+        for (GTRecipeInput input : recipe.getFluidInputs()) {
+            FluidStack required = input.getInputFluidStack();
+            if (required != null && !input.isNonConsumable() && required.isFluidEqual(fluidStack)) {
+                return required.copy();
+            }
+        }
+        return null;
+    }
+
+    private static long toMaterialAmount(int fluidAmount) {
+        return Math.max(1L, (fluidAmount * GTValues.M + GTValues.L - 1L) / GTValues.L);
+    }
+
+    private static long getDefaultMaxTemperature(int tier) {
+        return 1800L + Math.max(0, tier) * 300L;
     }
 
     public int getCoolingProgress() {

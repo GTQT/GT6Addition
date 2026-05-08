@@ -15,6 +15,10 @@ import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCasti
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCoolingMold;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucibleFaucet;
+import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityTemperatureSensor;
+import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticAxle;
+import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticGearbox;
+import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticSteamEngine;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityRotationEngine;
 import com.drppp.gt6addition.common.metatileentity.single.mu.MetaTileEntityElectromagnet;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityDieselEngine;
@@ -50,6 +54,10 @@ public class MetaTileEntityHandler {
     public static MetaTileEntityMutiEnergyMachine[] HAMMER_KU = new MetaTileEntityMutiEnergyMachine[5];
     public static MetaTileEntityMutiEnergyMachine[] SIFTER_KU = new MetaTileEntityMutiEnergyMachine[5];
     public static MetaTileEntityRotationEngine[] RU_KU_ENGINE = new MetaTileEntityRotationEngine[5];
+    public static MetaTileEntityKineticSteamEngine[] KINETIC_STEAM_ENGINES = new MetaTileEntityKineticSteamEngine[5];
+    public static MetaTileEntityKineticGearbox[] KINETIC_GEARBOXES = new MetaTileEntityKineticGearbox[5];
+    public static MetaTileEntityKineticGearbox[] ADJUSTABLE_KINETIC_GEARBOXES = new MetaTileEntityKineticGearbox[5];
+    public static MetaTileEntityKineticAxle[] KINETIC_AXLES = new MetaTileEntityKineticAxle[22];
 
     public static MetaTileEntityColorOvenMachine[] OVEN_HU = new MetaTileEntityColorOvenMachine[4];
     public static MetaTileEntityColorMachine[] DISTILLERY_HU = new MetaTileEntityColorMachine[4];
@@ -61,6 +69,7 @@ public class MetaTileEntityHandler {
     public static MetaTileEntityCrucibleFaucet[] CRUCIBLE_FAUCETS = new MetaTileEntityCrucibleFaucet[22];
     public static MetaTileEntityCastingBasin[] CASTING_BASINS = new MetaTileEntityCastingBasin[22];
     public static MetaTileEntityCoolingMold[] COOLING_MOLDS = new MetaTileEntityCoolingMold[22];
+    public static MetaTileEntityTemperatureSensor TEMPERATURE_SENSOR;
 
     public static MetaTileEntitySteamTurbine[] STEAM_TURBINES = new MetaTileEntitySteamTurbine[8];
     public static MetaTileEntityElectricMotor[] ELECTRIC_MOTOR = new MetaTileEntityElectricMotor[5];
@@ -100,6 +109,12 @@ public class MetaTileEntityHandler {
         int[] ruKuEngineColor = {0x000000, 0x815024, 0x4F4F4E, 0x90a5b6, 0x896495, 0x3C3C61};
         for (int i = 1; i <= 5; i++) {
             RU_KU_ENGINE[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityRotationEngine(getMyId("ru_ku_engine." + GTValues.VN[i]), ruKuEngineColor[i], (int) GTValues.V[i]));
+        }
+        for (int i = 1; i <= 5; i++) {
+            int throughput = (int) GTValues.V[i];
+            KINETIC_STEAM_ENGINES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticSteamEngine(getMyId("kinetic_steam_engine." + GTValues.VN[i]), ruKuEngineColor[i], throughput, 80));
+            KINETIC_GEARBOXES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticGearbox(getMyId("kinetic_gearbox." + GTValues.VN[i]), ruKuEngineColor[i], throughput * 2, false));
+            ADJUSTABLE_KINETIC_GEARBOXES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticGearbox(getMyId("adjustable_kinetic_gearbox." + GTValues.VN[i]), ruKuEngineColor[i], throughput * 2, true));
         }
 
         int[] muColor = {getColor(MaterialColorUtil.MaterialName.galvanized_steel), getColor(MaterialColorUtil.MaterialName.aluminum), getColor(MaterialColorUtil.MaterialName.stain_steel), getColor(MaterialColorUtil.MaterialName.titanium), getColor(MaterialColorUtil.MaterialName.tungsten_steel)};
@@ -223,15 +238,27 @@ public class MetaTileEntityHandler {
                     getCrucibleColor(material, crucibleFallbackColors[i]),
                     crucibleAcidProof[i],
                     crucibleHardness[i],
-                    crucibleResistance[i]));
+                    crucibleResistance[i],
+                    getCrucibleMaxTemperature(material)));
             COOLING_MOLDS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCoolingMold(
                     getMyId("cooling_mold_" + crucibleNames[i]),
                     crucibleTiers[i],
                     getCrucibleColor(material, crucibleFallbackColors[i]),
                     crucibleAcidProof[i],
                     crucibleHardness[i],
-                    crucibleResistance[i]));
+                    crucibleResistance[i],
+                    getCrucibleMaxTemperature(material)));
+            KINETIC_AXLES[i] = registerMetaTileEntity(getID(), new MetaTileEntityKineticAxle(
+                    getMyId("kinetic_axle_" + crucibleNames[i]),
+                    getCrucibleColor(material, crucibleFallbackColors[i]),
+                    getKineticTransferLimit(material, crucibleTiers[i])));
         }
+
+        TEMPERATURE_SENSOR = registerMetaTileEntity(getID(), new MetaTileEntityTemperatureSensor(
+                getMyId("temperature_sensor"),
+                getCrucibleColor(Materials.Steel, 0x4F4F4E),
+                2.0F,
+                6.0F));
 
         for (int i = 1; i <= 5; i++) {
             POLARIZER[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("mu_polarizer." + GTValues.VN[i]), RecipeMaps.POLARIZER_RECIPES, Gt6AdditionTextures.MU_POLARIZER, i, false, EnergyTypeList.MU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.UP, MachineEnergyAcceptFacing.DOWN}, muColor[i - 1], i * 2));
@@ -255,6 +282,13 @@ public class MetaTileEntityHandler {
             baseTemperature = 1811;
         }
         return (int) Math.ceil(baseTemperature * 1.25D);
+    }
+
+    private static int getKineticTransferLimit(Material material, int tier) {
+        int safeTier = Math.min(5, Math.max(1, tier));
+        long tierLimit = GTValues.V[safeTier];
+        long materialLimit = getCrucibleMaxTemperature(material);
+        return (int) Math.min(Integer.MAX_VALUE, Math.max(tierLimit, materialLimit));
     }
 
     private static int getCrucibleColor(Material material, int fallback) {

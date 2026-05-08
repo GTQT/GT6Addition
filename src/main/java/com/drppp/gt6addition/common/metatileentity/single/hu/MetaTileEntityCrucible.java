@@ -8,6 +8,8 @@ import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.baseMTile.TieredMutiEnergyMetaTileEntity;
+import com.drppp.gt6addition.api.crucible.ICrucibleMold;
+import com.drppp.gt6addition.api.temperature.ITemperatureProvider;
 import com.drppp.gt6addition.api.utils.EnergyTypeList;
 import com.drppp.gt6addition.api.utils.MachineEnergyAcceptFacing;
 import gregtech.api.GTValues;
@@ -79,7 +81,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
-public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity {
+public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity implements ITemperatureProvider {
 
     private static final String NBT_TEMPERATURE = "Temperature";
     private static final String NBT_OLD_TEMPERATURE = "OldTemperature";
@@ -720,6 +722,50 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity {
         return null;
     }
 
+    public long fillMoldAtSide(ICrucibleMold mold, @Nullable EnumFacing sideOfCrucible,
+                               @Nullable EnumFacing sideOfMold) {
+        if (mold == null || !mold.isMoldInputSide(sideOfMold)) {
+            return 0L;
+        }
+        long moldMaxTemperature = mold.getMoldMaxTemperature();
+        if (moldMaxTemperature > 0L && temperature > moldMaxTemperature) {
+            return 0L;
+        }
+        for (StoredMaterial material : contents) {
+            if (!isPourableMaterial(material)) {
+                continue;
+            }
+            long amountToTry = material.amount;
+            long requiredAmount = mold.getMoldRequiredMaterialUnits(material.material);
+            if (requiredAmount > 0L) {
+                amountToTry = Math.min(amountToTry, requiredAmount);
+            }
+            if (amountToTry <= 0L) {
+                continue;
+            }
+            long accepted = mold.fillMold(material.material, amountToTry, temperature, sideOfMold, true);
+            if (accepted <= 0L) {
+                continue;
+            }
+            long filled = mold.fillMold(material.material, Math.min(material.amount, accepted),
+                    temperature, sideOfMold, false);
+            if (filled <= 0L) {
+                continue;
+            }
+            material.amount -= Math.min(material.amount, filled);
+            removeEmptyContents();
+            markDirty();
+            refreshDisplayState();
+            return filled;
+        }
+        return 0L;
+    }
+
+    private boolean isPourableMaterial(StoredMaterial material) {
+        return material != null && material.material != null && material.amount > 0L &&
+                material.molten && temperature >= getMeltingTemperature(material.material);
+    }
+
     private void refreshDisplayState() {
         calculateDisplayState();
         if (getWorld() != null && !getWorld().isRemote && isDisplayStateChanged()) {
@@ -786,6 +832,16 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity {
 
     public int getMaxTemperature() {
         return maxTemperature;
+    }
+
+    @Override
+    public long getTemperatureValue(@Nullable EnumFacing side) {
+        return getCurrentTemperature();
+    }
+
+    @Override
+    public long getTemperatureMax(@Nullable EnumFacing side) {
+        return getMaxTemperature();
     }
 
     @Override
