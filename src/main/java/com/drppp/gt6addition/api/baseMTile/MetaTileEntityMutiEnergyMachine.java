@@ -45,7 +45,6 @@ import gregtech.common.covers.*;
 import gregtech.common.covers.ender.CoverEnderFluidLink;
 import gregtech.common.covers.ender.CoverEnderItemLink;
 import gregtech.common.covers.filter.BaseFilterContainer;
-import lombok.var;
 import net.minecraft.block.Block;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -237,7 +236,7 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
                 if(facings!=null)
                 {
                     boolean flag=false;
-                    for (var f: facings)
+                    for (EnumFacing f : facings)
                     {
                         TileEntity te = getWorld().getTileEntity(this.getPos().offset(f));
                         if(te!=null && mutiEnergyProxy.getNearEnergyToMyself(te,f) && !flag)
@@ -681,7 +680,7 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
                         .background(GTGuiTextures.SLOT, GTGuiTextures.INT_CIRCUIT_OVERLAY));
             }
         }
-        var throttle = guiSyncManager.panel("io_setting", this::makeThrottlePanel, true);
+        IPanelHandler throttle = guiSyncManager.panel("io_setting", this::makeThrottlePanel, true);
 
         panel.child(new ButtonWidget<>()
                 .size(18)
@@ -1049,7 +1048,7 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
     private String getAcceptFacingString()
     {
         StringBuilder res= new StringBuilder();
-        for (var s: acceptFacing)
+        for (MachineEnergyAcceptFacing s : acceptFacing)
         {
             switch (s){
                 case UP : res.append(I18n.format("gt6addition.up"));

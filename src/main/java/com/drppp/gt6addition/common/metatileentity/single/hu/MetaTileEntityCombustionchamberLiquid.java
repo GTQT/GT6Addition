@@ -24,7 +24,7 @@ import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import gregtech.common.pipelike.heat.tile.TileEntityHeatConductor;
-import lombok.var;
+import net.minecraft.tileentity.TileEntity;
 import org.jetbrains.annotations.NotNull;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
@@ -258,7 +258,7 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
                     }
 
                 }
-                var te = getWorld().getTileEntity(getPos().up());
+                TileEntity te = getWorld().getTileEntity(getPos().up());
                 if(te!=null && te instanceof TileEntityHeatConductor)
                 {
                     TileEntityHeatConductor heat = (TileEntityHeatConductor)te;
