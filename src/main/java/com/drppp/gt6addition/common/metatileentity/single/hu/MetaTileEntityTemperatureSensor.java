@@ -18,6 +18,7 @@ import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import net.minecraft.block.state.BlockFaceShape;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -33,6 +34,7 @@ import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -370,6 +372,12 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
     @Override
     public int getLightOpacity() {
         return 0;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
+        return Pair.of(Textures.SOLID_STEEL_CASING.getParticleSprite(), casingColor);
     }
 
     @Override

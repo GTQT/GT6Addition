@@ -120,7 +120,13 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
         switch (this.EnergyType)
         {
             case EnergyTypeList.HU:
-                if(te.hasCapability(CAPABILITY_HEAT_CONTAINER,facing.getOpposite()))
+                if(te.hasCapability(CapabilityHandler.CAPABILITY_HEAT_ENERGY,facing.getOpposite()))
+                {
+                    IHeatEnergy energy = te.getCapability(CapabilityHandler.CAPABILITY_HEAT_ENERGY,facing.getOpposite());
+                    this.huEnergy.setHuEnergy(Math.min(energy.getHeat(), (int)GTValues.V[this.tire]*2));
+                    return true;
+                }
+                else if(te.hasCapability(CAPABILITY_HEAT_CONTAINER,facing.getOpposite()))
                 {
                     IHeatable energy = te.getCapability(CAPABILITY_HEAT_CONTAINER,facing.getOpposite());
                     this.huEnergy.setHuEnergy(Math.min((int)energy.getHeatStored(), (int)GTValues.V[this.tire]*2));

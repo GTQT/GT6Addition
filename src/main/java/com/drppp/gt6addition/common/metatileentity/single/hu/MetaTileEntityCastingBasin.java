@@ -26,6 +26,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -49,6 +50,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.ItemHandlerHelper;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -182,7 +184,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
 
     @Override
     public boolean isMoldInputSide(@Nullable EnumFacing side) {
-        return side != EnumFacing.UP;
+        return true;
     }
 
     @Override
@@ -202,7 +204,13 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     public long fillMold(Material incomingMaterial, long incomingAmount, long incomingTemperature,
                          @Nullable EnumFacing side, boolean simulate) {
         if (incomingMaterial == null || incomingMaterial == Materials.NULL || incomingAmount <= 0L ||
-                !isMoldInputSide(side) || incomingTemperature > maxTemperature) {
+                !isMoldInputSide(side) || !hasSolidOutput(incomingMaterial)) {
+            return 0L;
+        }
+        if (incomingTemperature > maxTemperature) {
+            if (!simulate) {
+                meltDown();
+            }
             return 0L;
         }
         if (material != null && material != incomingMaterial) {
@@ -247,6 +255,31 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
             }
         }
         return null;
+    }
+
+    private boolean hasSolidOutput(Material material) {
+        if (material == null || material == Materials.NULL) {
+            return false;
+        }
+        OrePrefix[] prefixes = {OrePrefix.block, OrePrefix.ingot, OrePrefix.dust, OrePrefix.nugget,
+                OrePrefix.dustSmall, OrePrefix.dustTiny};
+        for (OrePrefix prefix : prefixes) {
+            if (!OreDictUnifier.get(prefix, material).isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void meltDown() {
+        material = null;
+        materialAmount = 0L;
+        temperature = ENVIRONMENT_TEMPERATURE;
+        markDirty();
+        refreshDisplayState();
+        if (getWorld() != null && !getWorld().isRemote) {
+            getWorld().setBlockState(getPos(), Blocks.FLOWING_LAVA.getDefaultState(), 3);
+        }
     }
 
     @Nullable
@@ -321,7 +354,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     @Override
     public boolean hasCapability(Capability<?> capability, EnumFacing side) {
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
-            return side != EnumFacing.UP;
+            return true;
         }
         if (capability == CapabilityEnergy.ENERGY || capability == GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER) {
             return false;
@@ -332,7 +365,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     @Nullable
     @Override
     public <T> T getCapability(Capability<T> capability, EnumFacing side) {
-        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && side != EnumFacing.UP) {
+        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(fluidHandler);
         }
         if (capability == CapabilityEnergy.ENERGY || capability == GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER) {
@@ -454,6 +487,12 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     @Override
     public int getLightOpacity() {
         return 0;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
+        return Pair.of(Textures.SOLID_STEEL_CASING.getParticleSprite(), casingColor);
     }
 
     @Override
@@ -581,6 +620,16 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
             if (filledMaterial == null || resource == null || resource.amount <= 0) {
                 return 0;
             }
+            long incomingTemperature = resource.getFluid().getTemperature(resource);
+            if (!hasSolidOutput(filledMaterial)) {
+                return 0;
+            }
+            if (incomingTemperature > maxTemperature) {
+                if (doFill) {
+                    meltDown();
+                }
+                return 0;
+            }
             if (material != null && material != filledMaterial) {
                 return 0;
             }
@@ -597,7 +646,6 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
                 return 0;
             }
             if (doFill) {
-                long incomingTemperature = resource.getFluid().getTemperature(resource);
                 long oldAmount = materialAmount;
                 material = filledMaterial;
                 materialAmount += acceptedMaterialAmount;

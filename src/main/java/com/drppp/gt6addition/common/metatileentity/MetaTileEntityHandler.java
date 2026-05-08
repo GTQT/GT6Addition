@@ -93,13 +93,54 @@ public class MetaTileEntityHandler {
     public static void InitMte() {
         String[] names = {"lead", "bronze", "steel", "invar", "chrome", "titanium", "tungsten", "tungstensteel"};
 
+        String[] crucibleNames = {
+                "stone", "basalt", "graniteblack", "granitered", "quartz", "carbon",
+                "bronze", "invar", "steel", "stainlesssteel", "titanium", "chrome",
+                "molybdenum", "niobium", "tantalum", "osmium", "iridium", "niobium_titanium",
+                "vanadium", "tungsten", "tungstensteel", "tungstencarbide"
+        };
+        Material[] crucibleMaterials = {
+                Materials.Stone, Materials.Basalt, Materials.GraniteBlack, Materials.GraniteRed, Materials.NetherQuartz, Materials.Carbon,
+                Materials.Bronze, Materials.Invar, Materials.Steel, Materials.StainlessSteel, Materials.Titanium, Materials.Chrome,
+                Materials.Molybdenum, Materials.Niobium, Materials.Tantalum, Materials.Osmium, Materials.Iridium, Materials.NiobiumTitanium,
+                Materials.Vanadium, Materials.Tungsten, Materials.TungstenSteel, Materials.TungstenCarbide
+        };
+        int[] crucibleTiers = {1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5};
+        int[] crucibleFallbackColors = {
+                0x7A7A7A, 0x2F2F35, 0x1E1E1E, 0x9F4A3A, 0xE5E5D8, 0x141414,
+                0x815024, 0x87875C, 0x4F4F4E, 0x90A5B6, 0x896495, 0xA39393,
+                0xAAA7B8, 0x928FBC, 0x7D7181, 0x6E86A2, 0xDAD3CF, 0x464C5F,
+                0x506A56, 0x1D1D1D, 0x3C3C61, 0x4F4F4F
+        };
+        boolean[] crucibleAcidProof = {
+                false, false, false, false, false, false,
+                false, false, false, true, false, true,
+                false, false, false, false, true, false,
+                false, true, false, true
+        };
+        float[] crucibleHardness = {
+                5.0F, 15.0F, 15.0F, 15.0F, 5.0F, 10.0F,
+                7.0F, 4.0F, 6.0F, 6.0F, 9.0F, 9.0F,
+                9.0F, 9.0F, 9.0F, 9.0F, 9.0F, 9.0F,
+                9.0F, 10.0F, 10.0F, 10.0F
+        };
+        float[] crucibleResistance = crucibleHardness;
         for (int i = 0; i < STEAM_TURBINES.length; i++) {
             int[] color = {0x251945, 0x815024, 0x4F4F4E, 0x87875C, 0xA39393, 0x896495, 0x1D1D1D, 0x3C3C61};
             int[] output = {8, 16, 64, 64, 96, 256, 384, 512};
             int[] outInventory = {8000, 8000, 8000, (int) (8000 * 1.5), 8000 * 2, 8000 * 2, 8000 * 2, 8000 * 2};
             STEAM_TURBINES[i] = registerMetaTileEntity(getID(), new MetaTileEntitySteamTurbine(getMyId(names[i] + "_steam_turbine"), color[i], 0.66, output[i], outInventory[i]));
         }
-
+        //燃烧室
+        for (int i = 0; i < HU_BURRING_BOXS.length; i++) {
+            int[] color = {0x251945, 0x815024, 0x4F4F4E, 0x87875C, 0xA39393, 0x896495, 0x1D1D1D, 0x3C3C61};
+            double[] efficiency = {0.5, 0.75, 0.7, 1, 0.85, 0.85, 1, 0.9};
+            int[] output = {16, 24, 32, 16, 112, 96, 128, 128};
+            HU_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(getMyId(names[i] + "_burring_box"), color[i], efficiency[i], output[i], false));
+            HU_DENSE_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(getMyId("dense_" + names[i] + "_burring_box"), color[i], efficiency[i], output[i] * 4, true));
+            HU_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(getMyId(names[i] + "_burring_box_liquid"), color[i], efficiency[i], (int) (output[i] * 1.5), false));
+            HU_DENSE_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(getMyId("dense_" + names[i] + "_burring_box_liquid"), color[i], efficiency[i], (int) (output[i] * 4 * 1.5), true));
+        }
         int[] electricMotorColor = {0x000000, MaterialColorUtil.MaterialColor.get(MaterialColorUtil.MaterialName.steel), 0x8bd4d2, 0x90a5b6, 0x896495, 0x3C3C61};
         for (int i = 1; i <= 5; i++) {
             ELECTRIC_MOTOR[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityElectricMotor(getMyId("electric_motor." + GTValues.VN[i]), i, electricMotorColor[i], 0.8, (int) GTValues.V[i]));
@@ -116,7 +157,13 @@ public class MetaTileEntityHandler {
         for (int i = 1; i <= 5; i++) {
             int throughput = (int) GTValues.V[i];
             KINETIC_STEAM_ENGINES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticSteamEngine(getMyId("kinetic_steam_engine." + GTValues.VN[i]), ruKuEngineColor[i], throughput, 80));
+        }
+        for (int i = 1; i <= 5; i++) {
+            int throughput = (int) GTValues.V[i];
             KINETIC_GEARBOXES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticGearbox(getMyId("kinetic_gearbox." + GTValues.VN[i]), ruKuEngineColor[i], throughput * 2, false));
+        }
+        for (int i = 1; i <= 5; i++) {
+            int throughput = (int) GTValues.V[i];
             ADJUSTABLE_KINETIC_GEARBOXES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticGearbox(getMyId("adjustable_kinetic_gearbox." + GTValues.VN[i]), ruKuEngineColor[i], throughput * 2, true));
         }
         int[] hopperSlots = {3, 5, 9, 12, 27};
@@ -126,11 +173,20 @@ public class MetaTileEntityHandler {
                     ruKuEngineColor[i + 1],
                     hopperSlots[i],
                     false));
+        }
+        for (int i = 0; i < 5; i++) {
             GT6_QUEUE_HOPPERS[i] = registerMetaTileEntity(getID(), new MetaTileEntityGt6Hopper(
                     getMyId("gt6_queue_hopper_" + levelNames[i]),
                     ruKuEngineColor[i + 1],
                     Math.max(2, hopperSlots[i]),
                     true));
+        }
+        for (int i = 0; i < KINETIC_AXLES.length; i++) {
+            Material material = crucibleMaterials[i];
+            KINETIC_AXLES[i] = registerMetaTileEntity(getID(), new MetaTileEntityKineticAxle(
+                    getMyId("kinetic_axle_" + crucibleNames[i]),
+                    getCrucibleColor(material, crucibleFallbackColors[i]),
+                    getKineticTransferLimit(material, crucibleTiers[i])));
         }
 
         int[] muColor = {getColor(MaterialColorUtil.MaterialName.galvanized_steel), getColor(MaterialColorUtil.MaterialName.aluminum), getColor(MaterialColorUtil.MaterialName.stain_steel), getColor(MaterialColorUtil.MaterialName.titanium), getColor(MaterialColorUtil.MaterialName.tungsten_steel)};
@@ -199,38 +255,7 @@ public class MetaTileEntityHandler {
             FERMENTER_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("hu_fermenter_" + huName[i - 1]), RecipeMaps.FERMENTING_RECIPES, Gt6AdditionTextures.HU_FERMENTER, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, huColor[i - 1]));
         }
 
-        String[] crucibleNames = {
-                "stone", "basalt", "graniteblack", "granitered", "quartz", "carbon",
-                "bronze", "invar", "steel", "stainlesssteel", "titanium", "chrome",
-                "molybdenum", "niobium", "tantalum", "osmium", "iridium", "niobium_titanium",
-                "vanadium", "tungsten", "tungstensteel", "tungstencarbide"
-        };
-        Material[] crucibleMaterials = {
-                Materials.Stone, Materials.Basalt, Materials.GraniteBlack, Materials.GraniteRed, Materials.NetherQuartz, Materials.Carbon,
-                Materials.Bronze, Materials.Invar, Materials.Steel, Materials.StainlessSteel, Materials.Titanium, Materials.Chrome,
-                Materials.Molybdenum, Materials.Niobium, Materials.Tantalum, Materials.Osmium, Materials.Iridium, Materials.NiobiumTitanium,
-                Materials.Vanadium, Materials.Tungsten, Materials.TungstenSteel, Materials.TungstenCarbide
-        };
-        int[] crucibleTiers = {1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5};
-        int[] crucibleFallbackColors = {
-                0x7A7A7A, 0x2F2F35, 0x1E1E1E, 0x9F4A3A, 0xE5E5D8, 0x141414,
-                0x815024, 0x87875C, 0x4F4F4E, 0x90A5B6, 0x896495, 0xA39393,
-                0xAAA7B8, 0x928FBC, 0x7D7181, 0x6E86A2, 0xDAD3CF, 0x464C5F,
-                0x506A56, 0x1D1D1D, 0x3C3C61, 0x4F4F4F
-        };
-        boolean[] crucibleAcidProof = {
-                false, false, false, false, false, false,
-                false, false, false, true, false, true,
-                false, false, false, false, true, false,
-                false, true, false, true
-        };
-        float[] crucibleHardness = {
-                5.0F, 15.0F, 15.0F, 15.0F, 5.0F, 10.0F,
-                7.0F, 4.0F, 6.0F, 6.0F, 9.0F, 9.0F,
-                9.0F, 9.0F, 9.0F, 9.0F, 9.0F, 9.0F,
-                9.0F, 10.0F, 10.0F, 10.0F
-        };
-        float[] crucibleResistance = crucibleHardness;
+
         for (int i = 0; i < CRUCIBLE_HU.length; i++) {
             Material material = crucibleMaterials[i];
             CRUCIBLE_HU[i] = registerMetaTileEntity(getID(), new MetaTileEntityCrucible(
@@ -241,6 +266,9 @@ public class MetaTileEntityHandler {
                     crucibleAcidProof[i],
                     crucibleHardness[i],
                     crucibleResistance[i]));
+        }
+        for (int i = 0; i < CRUCIBLE_FAUCETS.length; i++) {
+            Material material = crucibleMaterials[i];
             CRUCIBLE_FAUCETS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCrucibleFaucet(
                     getMyId("hu_crucible_faucet_" + crucibleNames[i]),
                     crucibleTiers[i],
@@ -248,6 +276,9 @@ public class MetaTileEntityHandler {
                     crucibleAcidProof[i],
                     crucibleHardness[i],
                     crucibleResistance[i]));
+        }
+        for (int i = 0; i < CASTING_BASINS.length; i++) {
+            Material material = crucibleMaterials[i];
             CASTING_BASINS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCastingBasin(
                     getMyId("casting_basin_" + crucibleNames[i]),
                     crucibleTiers[i],
@@ -256,6 +287,9 @@ public class MetaTileEntityHandler {
                     crucibleHardness[i],
                     crucibleResistance[i],
                     getCrucibleMaxTemperature(material)));
+        }
+        for (int i = 0; i < COOLING_MOLDS.length; i++) {
+            Material material = crucibleMaterials[i];
             COOLING_MOLDS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCoolingMold(
                     getMyId("cooling_mold_" + crucibleNames[i]),
                     crucibleTiers[i],
@@ -264,12 +298,7 @@ public class MetaTileEntityHandler {
                     crucibleHardness[i],
                     crucibleResistance[i],
                     getCrucibleMaxTemperature(material)));
-            KINETIC_AXLES[i] = registerMetaTileEntity(getID(), new MetaTileEntityKineticAxle(
-                    getMyId("kinetic_axle_" + crucibleNames[i]),
-                    getCrucibleColor(material, crucibleFallbackColors[i]),
-                    getKineticTransferLimit(material, crucibleTiers[i])));
         }
-
         TEMPERATURE_SENSOR = registerMetaTileEntity(getID(), new MetaTileEntityTemperatureSensor(
                 getMyId("temperature_sensor"),
                 getCrucibleColor(Materials.Steel, 0x4F4F4E),

@@ -8,6 +8,7 @@ import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.crucible.ICrucibleMold;
+import gregtech.api.GregTechAPI;
 import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.items.metaitem.MetaItem;
@@ -16,7 +17,10 @@ import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
+import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
+import gregtech.api.unification.material.Materials;
+import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.common.items.MetaItems;
@@ -25,6 +29,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -44,16 +49,17 @@ import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.List;
 
 public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucibleMold {
@@ -82,6 +88,21 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
     private final ItemStackHandler inventory = new MoldItemHandler();
     private final FluidTank tank = new FluidTank(CAPACITY) {
         @Override
+        public int fill(FluidStack resource, boolean doFill) {
+            Material material = getMaterialFromFluid(resource);
+            if (material == null || !hasSolidOutput(material)) {
+                return 0;
+            }
+            if (resource.getFluid().getTemperature(resource) > maxTemperature) {
+                if (doFill) {
+                    meltDown();
+                }
+                return 0;
+            }
+            return super.fill(resource, doFill);
+        }
+
+        @Override
         protected void onContentsChanged() {
             markDirty();
             refreshRenderState();
@@ -95,6 +116,8 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
     private int lastDisplayFluidAmount = -1;
     private String displayFluidName = "";
     private String lastDisplayFluidName = "";
+    private ItemStack displayOutputStack = ItemStack.EMPTY;
+    private ItemStack lastDisplayOutputStack = ItemStack.EMPTY;
 
     public MetaTileEntityCoolingMold(ResourceLocation metaTileEntityId, int tier, int casingColor,
                                      boolean acidProof, float hardness, float resistance) {
@@ -162,10 +185,47 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
         if (moldStack.isEmpty() || fluidStack == null || fluidStack.amount <= 0) {
             return null;
         }
-        return RecipeMaps.FLUID_SOLIDFICATION_RECIPES.findRecipe(Long.MAX_VALUE,
-                Collections.singletonList(moldStack.copy()),
-                Collections.singletonList(fluidStack.copy()),
-                true);
+        Recipe bestRecipe = null;
+        int bestRequiredFluid = 0;
+        for (Recipe recipe : RecipeMaps.FLUID_SOLIDFICATION_RECIPES.getRecipeList()) {
+            int requiredFluid = getRequiredFluidAmount(recipe, moldStack, fluidStack);
+            if (requiredFluid <= 0 || fluidStack.amount < requiredFluid || !canFitOutput(recipe)) {
+                continue;
+            }
+            if (bestRecipe == null || requiredFluid > bestRequiredFluid) {
+                bestRecipe = recipe;
+                bestRequiredFluid = requiredFluid;
+            }
+        }
+        return bestRecipe;
+    }
+
+    private int getRequiredFluidAmount(Recipe recipe, ItemStack moldStack, FluidStack fluidStack) {
+        if (recipe == null || moldStack.isEmpty() || fluidStack == null) {
+            return 0;
+        }
+        boolean acceptsMold = recipe.getInputs().isEmpty();
+        for (GTRecipeInput input : recipe.getInputs()) {
+            if (input.acceptsStack(moldStack)) {
+                acceptsMold = true;
+                break;
+            }
+        }
+        if (!acceptsMold) {
+            return 0;
+        }
+        int requiredFluid = 0;
+        for (GTRecipeInput input : recipe.getFluidInputs()) {
+            FluidStack required = input.getInputFluidStack();
+            if (required == null || input.isNonConsumable()) {
+                continue;
+            }
+            if (!required.isFluidEqual(fluidStack) && !input.acceptsFluid(fluidStack)) {
+                return 0;
+            }
+            requiredFluid += required.amount;
+        }
+        return requiredFluid;
     }
 
     private boolean canFitOutput(Recipe recipe) {
@@ -273,7 +333,7 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
 
     @Override
     public boolean isMoldInputSide(@Nullable EnumFacing side) {
-        return side != EnumFacing.UP;
+        return true;
     }
 
     @Override
@@ -283,7 +343,7 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
 
     @Override
     public long getMoldRequiredMaterialUnits(@Nullable Material material) {
-        if (material == null || !material.hasFluid() || tank.getFluid() != null) {
+        if (material == null || !material.hasFluid() || !hasSolidOutput(material) || tank.getFluid() != null) {
             return 0L;
         }
         ItemStack moldStack = inventory.getStackInSlot(0);
@@ -303,7 +363,13 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
     public long fillMold(Material material, long materialAmount, long temperature,
                          @Nullable EnumFacing side, boolean simulate) {
         if (material == null || !material.hasFluid() || materialAmount <= 0L ||
-                !isMoldInputSide(side) || temperature > maxTemperature || tank.getFluid() != null) {
+                !isMoldInputSide(side) || !hasSolidOutput(material) || tank.getFluid() != null) {
+            return 0L;
+        }
+        if (temperature > maxTemperature) {
+            if (!simulate) {
+                meltDown();
+            }
             return 0L;
         }
         ItemStack moldStack = inventory.getStackInSlot(0);
@@ -350,6 +416,49 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
         return Math.max(1L, (fluidAmount * GTValues.M + GTValues.L - 1L) / GTValues.L);
     }
 
+    @Nullable
+    private Material getMaterialFromFluid(FluidStack stack) {
+        if (stack == null || stack.getFluid() == null) {
+            return null;
+        }
+        for (Material registeredMaterial : GregTechAPI.materialManager.getRegisteredMaterials()) {
+            if (registeredMaterial == null || !registeredMaterial.hasFluid()) {
+                continue;
+            }
+            FluidStack materialFluid = registeredMaterial.getFluid(1);
+            if (materialFluid != null && materialFluid.isFluidEqual(stack)) {
+                return registeredMaterial;
+            }
+        }
+        return null;
+    }
+
+    private boolean hasSolidOutput(Material material) {
+        if (material == null || material == Materials.NULL) {
+            return false;
+        }
+        OrePrefix[] prefixes = {OrePrefix.block, OrePrefix.ingot, OrePrefix.dust, OrePrefix.nugget,
+                OrePrefix.dustSmall, OrePrefix.dustTiny};
+        for (OrePrefix prefix : prefixes) {
+            if (!OreDictUnifier.get(prefix, material).isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void meltDown() {
+        inventory.setStackInSlot(0, ItemStack.EMPTY);
+        inventory.setStackInSlot(1, ItemStack.EMPTY);
+        tank.setFluid(null);
+        resetProgress();
+        markDirty();
+        refreshRenderState();
+        if (getWorld() != null && !getWorld().isRemote) {
+            getWorld().setBlockState(getPos(), Blocks.FLOWING_LAVA.getDefaultState(), 3);
+        }
+    }
+
     private static long getDefaultMaxTemperature(int tier) {
         return 1800L + Math.max(0, tier) * 300L;
     }
@@ -387,7 +496,7 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
     @Override
     public boolean hasCapability(Capability<?> capability, EnumFacing side) {
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
-            return side != EnumFacing.UP;
+            return true;
         }
         if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             return true;
@@ -401,7 +510,7 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
     @Nullable
     @Override
     public <T> T getCapability(Capability<T> capability, EnumFacing side) {
-        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && side != EnumFacing.UP) {
+        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(tank);
         }
         if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
@@ -427,19 +536,22 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
         if (fluidStack == null || fluidStack.amount <= 0) {
             displayFluidAmount = 0;
             displayFluidName = "";
-            return;
+        } else {
+            displayFluidAmount = Math.min(CAPACITY, fluidStack.amount);
+            displayFluidName = fluidStack.getFluid().getName();
         }
-        displayFluidAmount = Math.min(CAPACITY, fluidStack.amount);
-        displayFluidName = fluidStack.getFluid().getName();
+        displayOutputStack = inventory.getStackInSlot(1).copy();
     }
 
     private boolean isRenderStateChanged() {
-        return displayFluidAmount != lastDisplayFluidAmount || !displayFluidName.equals(lastDisplayFluidName);
+        return displayFluidAmount != lastDisplayFluidAmount || !displayFluidName.equals(lastDisplayFluidName) ||
+                !ItemStack.areItemStacksEqual(displayOutputStack, lastDisplayOutputStack);
     }
 
     private void rememberRenderState() {
         lastDisplayFluidAmount = displayFluidAmount;
         lastDisplayFluidName = displayFluidName;
+        lastDisplayOutputStack = displayOutputStack.copy();
     }
 
     @Override
@@ -452,6 +564,21 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
         Textures.SOLID_STEEL_CASING.render(renderState, translation, shellPipeline, WALL_Z_POS);
         Textures.SOLID_STEEL_CASING.render(renderState, translation, shellPipeline, BOTTOM);
         renderFluid(renderState, translation, pipeline);
+        renderOutputItem(renderState, translation, pipeline);
+    }
+
+    @SideOnly(Side.CLIENT)
+    private void renderOutputItem(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
+        if (displayOutputStack.isEmpty()) {
+            return;
+        }
+        TextureAtlasSprite sprite = Minecraft.getMinecraft().getRenderItem()
+                .getItemModelWithOverrides(displayOutputStack, null, null)
+                .getParticleTexture();
+        Cuboid6 outputBounds = new Cuboid6(0.25D, WALL_SIZE + 0.01D, 0.25D,
+                0.75D, WALL_SIZE + 0.015D, 0.75D);
+        Textures.renderFace(renderState, translation, pipeline, EnumFacing.UP, outputBounds,
+                sprite, BlockRenderLayer.CUTOUT_MIPPED);
     }
 
     @SideOnly(Side.CLIENT)
@@ -489,6 +616,12 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
     @Override
     public int getLightOpacity() {
         return 0;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
+        return Pair.of(Textures.SOLID_STEEL_CASING.getParticleSprite(), casingColor);
     }
 
     @Override
@@ -577,11 +710,13 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
     private void writeRenderState(PacketBuffer buf) {
         buf.writeVarInt(displayFluidAmount);
         buf.writeString(displayFluidName);
+        ByteBufUtils.writeItemStack(buf, displayOutputStack);
     }
 
     private void readRenderState(PacketBuffer buf) {
         displayFluidAmount = buf.readVarInt();
         displayFluidName = buf.readString(Short.MAX_VALUE);
+        displayOutputStack = ByteBufUtils.readItemStack(buf);
     }
 
     private class MoldItemHandler extends ItemStackHandler {
@@ -612,6 +747,7 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
         @Override
         protected void onContentsChanged(int slot) {
             markDirty();
+            refreshRenderState();
         }
     }
 }

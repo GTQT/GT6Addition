@@ -6,8 +6,8 @@ import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
-import com.drppp.gt6addition.api.capability.impl.KineticEnergyHandler;
-import com.drppp.gt6addition.api.capability.interfaces.IKineticEnergy;
+import com.drppp.gt6addition.api.capability.impl.RotationEnergyHandler;
+import com.drppp.gt6addition.api.capability.interfaces.IRotationEnergy;
 import com.drppp.gt6addition.api.top.IEnergyOutShow;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.GregtechDataCodes;
@@ -40,24 +40,19 @@ public class MetaTileEntityKineticGearbox extends MetaTileEntity implements IEne
 
     private static final String NBT_ACTIVE = "Active";
     private static final String NBT_JAMMED = "Jammed";
-    private static final String NBT_RATIO = "Ratio";
+    private static final String NBT_OUTPUT_SIDE = "OutputSide";
     private static final String NBT_LAST_INPUT = "LastInput";
     private static final String NBT_LAST_OUTPUT = "LastOutput";
     private static final int DATA_STATE = 521;
-    private static final int[] RATIO_NUMERATORS = {1, 1, 1, 2, 4};
-    private static final int[] RATIO_DENOMINATORS = {4, 2, 1, 1, 1};
-    private static final String[] RATIO_NAMES = {"1:4", "1:2", "1:1", "2:1", "4:1"};
-    private static final int DEFAULT_RATIO = 2;
     private static final Cuboid6 BODY = new Cuboid6(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
 
     private final int color;
     private final int maxThroughput;
     private final boolean adjustable;
-    private final int efficiency;
-    private final IKineticEnergy kineticEnergy = new KineticEnergyHandler();
+    private final IRotationEnergy rotationEnergy = new RotationEnergyHandler();
     private boolean active;
     private boolean jammed;
-    private int ratioIndex = DEFAULT_RATIO;
+    private EnumFacing outputSide;
     private int lastInput;
     private int lastOutput;
 
@@ -67,7 +62,6 @@ public class MetaTileEntityKineticGearbox extends MetaTileEntity implements IEne
         this.color = color;
         this.maxThroughput = maxThroughput;
         this.adjustable = adjustable;
-        this.efficiency = adjustable ? 90 : 95;
     }
 
     @Override
@@ -100,49 +94,45 @@ public class MetaTileEntityKineticGearbox extends MetaTileEntity implements IEne
             clearOutput();
             return;
         }
-        lastInput = readBestInput();
+        lastInput = readInputRu();
         if (lastInput > maxThroughput) {
             jammed = true;
             clearOutput();
             writeCustomData(DATA_STATE, this::writeState);
             return;
         }
-        long transformed = (long) lastInput * RATIO_NUMERATORS[ratioIndex] / RATIO_DENOMINATORS[ratioIndex];
-        transformed = transformed * efficiency / 100L;
-        if (transformed > maxThroughput) {
-            jammed = true;
-            clearOutput();
-            writeCustomData(DATA_STATE, this::writeState);
-            return;
-        }
-        lastOutput = (int) Math.max(0L, transformed);
-        kineticEnergy.setKineticEnergy(lastOutput);
+        lastOutput = lastInput;
+        rotationEnergy.setRuEnergy(lastOutput);
         setActive(lastOutput > 0);
     }
 
-    private int readBestInput() {
-        int bestInput = 0;
+    private int readInputRu() {
+        int totalInput = 0;
+        EnumFacing output = getOutputSide();
         for (EnumFacing side : EnumFacing.VALUES) {
-            if (side == getFrontFacing()) {
+            if (side == output) {
                 continue;
             }
             TileEntity tileEntity = getWorld().getTileEntity(getPos().offset(side));
             if (tileEntity == null ||
-                    !tileEntity.hasCapability(CapabilityHandler.CAPABILITY_KINETIC_ENERGY, side.getOpposite())) {
+                    !tileEntity.hasCapability(CapabilityHandler.CAPABILITY_ROTATION_ENERGY, side.getOpposite())) {
                 continue;
             }
-            IKineticEnergy energy = tileEntity.getCapability(CapabilityHandler.CAPABILITY_KINETIC_ENERGY,
+            IRotationEnergy energy = tileEntity.getCapability(CapabilityHandler.CAPABILITY_ROTATION_ENERGY,
                     side.getOpposite());
             if (energy != null) {
-                bestInput = Math.max(bestInput, Math.max(0, energy.getKinetic()));
+                totalInput += Math.max(0, energy.getEnergyOutput());
+                if (totalInput > maxThroughput) {
+                    return totalInput;
+                }
             }
         }
-        return bestInput;
+        return totalInput;
     }
 
     private void clearOutput() {
         lastOutput = 0;
-        kineticEnergy.setKineticEnergy(0);
+        rotationEnergy.setRuEnergy(0);
         setActive(false);
     }
 
@@ -160,18 +150,28 @@ public class MetaTileEntityKineticGearbox extends MetaTileEntity implements IEne
             return true;
         }
         if (adjustable) {
-            ratioIndex += player.isSneaking() ? -1 : 1;
-            if (ratioIndex < 0) {
-                ratioIndex = RATIO_NAMES.length - 1;
-            } else if (ratioIndex >= RATIO_NAMES.length) {
-                ratioIndex = 0;
-            }
-            player.sendStatusMessage(new TextComponentTranslation("gt6addition.machine.kinetic_gearbox.status.ratio",
-                    getRatioName()), true);
+            outputSide = cycleOutputSide(player.isSneaking());
+            player.sendStatusMessage(new TextComponentTranslation("gt6addition.machine.kinetic_gearbox.status.output",
+                    getOutputSide().getName()), true);
             writeCustomData(DATA_STATE, this::writeState);
             markDirty();
         }
         return true;
+    }
+
+    private EnumFacing cycleOutputSide(boolean reverse) {
+        EnumFacing[] values = EnumFacing.VALUES;
+        int ordinal = getOutputSide().ordinal() + (reverse ? -1 : 1);
+        if (ordinal < 0) {
+            ordinal = values.length - 1;
+        } else if (ordinal >= values.length) {
+            ordinal = 0;
+        }
+        return values[ordinal];
+    }
+
+    private EnumFacing getOutputSide() {
+        return adjustable ? outputSide == null ? getFrontFacing() : outputSide : getFrontFacing();
     }
 
     @Override
@@ -181,8 +181,8 @@ public class MetaTileEntityKineticGearbox extends MetaTileEntity implements IEne
 
     @Override
     public boolean hasCapability(@NotNull Capability<?> capability, @Nullable EnumFacing side) {
-        if (capability == CapabilityHandler.CAPABILITY_KINETIC_ENERGY) {
-            return side == getFrontFacing();
+        if (capability == CapabilityHandler.CAPABILITY_ROTATION_ENERGY) {
+            return side == getOutputSide();
         }
         if (capability == CapabilityEnergy.ENERGY || capability == GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER) {
             return false;
@@ -193,8 +193,8 @@ public class MetaTileEntityKineticGearbox extends MetaTileEntity implements IEne
     @Nullable
     @Override
     public <T> T getCapability(Capability<T> capability, EnumFacing side) {
-        if (capability == CapabilityHandler.CAPABILITY_KINETIC_ENERGY && side == getFrontFacing()) {
-            return CapabilityHandler.CAPABILITY_KINETIC_ENERGY.cast(kineticEnergy);
+        if (capability == CapabilityHandler.CAPABILITY_ROTATION_ENERGY && side == getOutputSide()) {
+            return CapabilityHandler.CAPABILITY_ROTATION_ENERGY.cast(rotationEnergy);
         }
         if (capability == CapabilityEnergy.ENERGY || capability == GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER) {
             return null;
@@ -207,7 +207,7 @@ public class MetaTileEntityKineticGearbox extends MetaTileEntity implements IEne
         super.writeToNBT(data);
         data.setBoolean(NBT_ACTIVE, active);
         data.setBoolean(NBT_JAMMED, jammed);
-        data.setInteger(NBT_RATIO, ratioIndex);
+        data.setInteger(NBT_OUTPUT_SIDE, getOutputSide().ordinal());
         data.setInteger(NBT_LAST_INPUT, lastInput);
         data.setInteger(NBT_LAST_OUTPUT, lastOutput);
         return data;
@@ -218,10 +218,11 @@ public class MetaTileEntityKineticGearbox extends MetaTileEntity implements IEne
         super.readFromNBT(data);
         active = data.getBoolean(NBT_ACTIVE);
         jammed = data.getBoolean(NBT_JAMMED);
-        ratioIndex = Math.max(0, Math.min(RATIO_NAMES.length - 1, data.getInteger(NBT_RATIO)));
+        int sideOrdinal = data.hasKey(NBT_OUTPUT_SIDE) ? data.getInteger(NBT_OUTPUT_SIDE) : getFrontFacing().ordinal();
+        outputSide = EnumFacing.VALUES[Math.max(0, Math.min(EnumFacing.VALUES.length - 1, sideOrdinal))];
         lastInput = data.getInteger(NBT_LAST_INPUT);
         lastOutput = data.getInteger(NBT_LAST_OUTPUT);
-        kineticEnergy.setKineticEnergy(lastOutput);
+        rotationEnergy.setRuEnergy(lastOutput);
     }
 
     @Override
@@ -251,24 +252,25 @@ public class MetaTileEntityKineticGearbox extends MetaTileEntity implements IEne
     private void writeState(PacketBuffer buf) {
         buf.writeBoolean(active);
         buf.writeBoolean(jammed);
-        buf.writeVarInt(ratioIndex);
+        buf.writeVarInt(getOutputSide().ordinal());
     }
 
     private void readState(PacketBuffer buf) {
         active = buf.readBoolean();
         jammed = buf.readBoolean();
-        ratioIndex = buf.readVarInt();
+        int sideOrdinal = buf.readVarInt();
+        outputSide = EnumFacing.VALUES[Math.max(0, Math.min(EnumFacing.VALUES.length - 1, sideOrdinal))];
     }
 
     @Override
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation,
                                      IVertexOperation[] pipeline) {
         KineticRenderHelper.renderAllFaces(renderState, translation, pipeline, BODY,
-                "iconsets/GEARBOX", jammed ? 0xAA2222 : color);
-        String gearSprite = active ? "iconsets/GEAR_CLOCKWISE" : "iconsets/GEAR";
-        KineticRenderHelper.renderFace(renderState, translation, pipeline, getFrontFacing(), BODY,
-                adjustable ? "iconsets/GEARBOX_AXLE" : gearSprite, color);
-        KineticRenderHelper.renderOverlayFace(renderState, translation, pipeline, getFrontFacing(), BODY, gearSprite);
+                "machines/kinetic/iconsets/gearbox", jammed ? 0xAA2222 : color);
+        String gearSprite = active ? "machines/kinetic/iconsets/gear_clockwise" : "machines/kinetic/iconsets/gear";
+        KineticRenderHelper.renderFace(renderState, translation, pipeline, getOutputSide(), BODY,
+                adjustable ? "machines/kinetic/iconsets/gearbox_axle" : gearSprite, color);
+        KineticRenderHelper.renderOverlayFace(renderState, translation, pipeline, getOutputSide(), BODY, gearSprite);
     }
 
     @Override
@@ -280,11 +282,11 @@ public class MetaTileEntityKineticGearbox extends MetaTileEntity implements IEne
     @Override
     @SideOnly(Side.CLIENT)
     public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
-        return Pair.of(KineticRenderHelper.getSprite("iconsets/GEARBOX"), color);
+        return Pair.of(KineticRenderHelper.getSprite("machines/kinetic/iconsets/gearbox"), color);
     }
 
     public String getRatioName() {
-        return RATIO_NAMES[ratioIndex];
+        return getOutputSide().getName();
     }
 
     public boolean isJammed() {
@@ -296,7 +298,7 @@ public class MetaTileEntityKineticGearbox extends MetaTileEntity implements IEne
                                boolean advanced) {
         super.addInformation(stack, world, tooltip, advanced);
         tooltip.add(I18n.format("gt6addition.machine.kinetic_gearbox.tooltip.1", maxThroughput));
-        tooltip.add(I18n.format("gt6addition.machine.kinetic_gearbox.tooltip.2", efficiency + "%"));
+        tooltip.add(I18n.format("gt6addition.machine.kinetic_gearbox.tooltip.2"));
         if (adjustable) {
             tooltip.add(I18n.format("gt6addition.machine.kinetic_gearbox.tooltip.adjustable"));
         } else {
@@ -307,11 +309,11 @@ public class MetaTileEntityKineticGearbox extends MetaTileEntity implements IEne
 
     @Override
     public String getEnergyName() {
-        return "KU";
+        return "RU";
     }
 
     @Override
     public int getEnergyOut() {
-        return kineticEnergy.getKinetic();
+        return rotationEnergy.getEnergyOutput();
     }
 }

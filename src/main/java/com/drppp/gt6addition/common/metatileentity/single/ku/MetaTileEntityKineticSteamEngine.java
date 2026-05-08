@@ -60,7 +60,17 @@ public class MetaTileEntityKineticSteamEngine extends MetaTileEntity implements 
             0x00FF00, 0x11EE00, 0x22DD00, 0x33CC00, 0x44BB00, 0x55AA00, 0x669900, 0x778800,
             0x887700, 0x996600, 0xAA5500, 0xBB4400, 0xCC3300, 0xDD2200, 0xEE1100, 0xFF0000
     };
-    private static final Cuboid6 BODY = new Cuboid6(0.0625D, 0.0625D, 0.0625D, 0.9375D, 0.9375D, 0.9375D);
+    private static final double P1 = 1.0D / 16.0D;
+    private static final double P2 = 2.0D / 16.0D;
+    private static final double P3 = 3.0D / 16.0D;
+    private static final double P4 = 4.0D / 16.0D;
+    private static final double P6 = 6.0D / 16.0D;
+    private static final double P10 = 10.0D / 16.0D;
+    private static final double P12 = 12.0D / 16.0D;
+    private static final double P13 = 13.0D / 16.0D;
+    private static final double P14 = 14.0D / 16.0D;
+    private static final double P15 = 15.0D / 16.0D;
+    private static final Cuboid6 CAGE = new Cuboid6(P1, P1, P1, P15, P15, P15);
 
     private final int color;
     private final int outputKu;
@@ -320,20 +330,43 @@ public class MetaTileEntityKineticSteamEngine extends MetaTileEntity implements 
     @Override
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation,
                                      IVertexOperation[] pipeline) {
-        renderBody(renderState, translation, pipeline);
+        renderCage(renderState, translation, pipeline);
+        renderEndCaps(renderState, translation, pipeline);
         renderPipes(renderState, translation, pipeline);
-        renderEngine(renderState, translation, pipeline);
+        renderPiston(renderState, translation, pipeline);
+        renderEngineHull(renderState, translation, pipeline);
     }
 
     @SideOnly(Side.CLIENT)
-    private void renderBody(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
+    private void renderCage(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
+        EnumFacing.Axis axis = getFrontFacing().getAxis();
+        for (EnumFacing side : EnumFacing.VALUES) {
+            if (side.getAxis() != axis) {
+                renderColoredOverlayFace(renderState, translation, pipeline, side, CAGE,
+                        "machines/engines/kinetic_steam/colored/cage",
+                        "machines/engines/kinetic_steam/overlay/cage", color);
+            }
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private void renderEndCaps(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
+        EnumFacing.Axis axis = getFrontFacing().getAxis();
+        Cuboid6 backCap = KineticRenderHelper.axisBox(axis, 0.0D, P2, 0.0D, 1.0D, 0.0D, 1.0D);
+        Cuboid6 frontCap = KineticRenderHelper.axisBox(axis, P14, 1.0D, 0.0D, 1.0D, 0.0D, 1.0D);
+        renderOrientedBox(renderState, translation, pipeline, backCap);
+        renderOrientedBox(renderState, translation, pipeline, frontCap);
+    }
+
+    @SideOnly(Side.CLIENT)
+    private void renderOrientedBox(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline,
+                                   Cuboid6 bounds) {
         for (EnumFacing side : EnumFacing.VALUES) {
             String face = side == getFrontFacing() ? "front" :
                     side == getFrontFacing().getOpposite() ? "back" : "side";
-            KineticRenderHelper.renderFace(renderState, translation, pipeline, side, BODY,
-                    "machines/engines/kinetic_steam/colored/" + face, color);
-            KineticRenderHelper.renderOverlayFace(renderState, translation, pipeline, side, BODY,
-                    "machines/engines/kinetic_steam/overlay/" + face);
+            renderColoredOverlayFace(renderState, translation, pipeline, side, bounds,
+                    "machines/engines/kinetic_steam/colored/" + face,
+                    "machines/engines/kinetic_steam/overlay/" + face, color);
         }
     }
 
@@ -344,24 +377,55 @@ public class MetaTileEntityKineticSteamEngine extends MetaTileEntity implements 
             if (axis == mainAxis) {
                 continue;
             }
-            Cuboid6 pipe = KineticRenderHelper.axisBox(axis, 0.0D, 1.0D, 0.375D, 0.625D, 0.375D, 0.625D);
-            KineticRenderHelper.renderAllFaces(renderState, translation, pipeline, pipe,
-                    "machines/engines/kinetic_steam/colored/pipe", color);
+            Cuboid6 pipe = KineticRenderHelper.axisBox(axis, 0.0D, 1.0D, P6, P10, P6, P10);
+            renderPipe(renderState, translation, pipeline, axis, pipe);
         }
     }
 
     @SideOnly(Side.CLIENT)
-    private void renderEngine(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
+    private void renderPipe(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline,
+                            EnumFacing.Axis pipeAxis, Cuboid6 bounds) {
+        for (EnumFacing side : EnumFacing.VALUES) {
+            String face = side.getAxis() == pipeAxis ? "pipe_side" : "pipe";
+            renderColoredOverlayFace(renderState, translation, pipeline, side, bounds,
+                    "machines/engines/kinetic_steam/colored/" + face,
+                    "machines/engines/kinetic_steam/overlay/" + face, color);
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private void renderPiston(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         EnumFacing.Axis axis = getFrontFacing().getAxis();
-        Cuboid6 hull = KineticRenderHelper.axisBox(axis, 0.1875D, 0.8125D, 0.1875D, 0.8125D, 0.1875D, 0.8125D);
-        KineticRenderHelper.renderAllFaces(renderState, translation, pipeline, hull,
-                "machines/engines/kinetic_steam/colored/engine_hull", color);
-        double pistonOffset = active ? piston * 0.03125D : 0.0D;
-        Cuboid6 engine = KineticRenderHelper.axisBox(axis, 0.25D + pistonOffset, 0.75D + pistonOffset,
-                0.25D, 0.75D, 0.25D, 0.75D);
+        Cuboid6 engine = KineticRenderHelper.axisBox(axis, 0.0D, 1.0D, P4, P12, P4, P12);
         int stateColor = ENGINE_STATE_COLORS[Math.max(0, Math.min(31, state))];
-        KineticRenderHelper.renderAllFaces(renderState, translation, pipeline, engine,
-                "machines/engines/kinetic_steam/colored/engine", stateColor);
+        for (EnumFacing side : EnumFacing.VALUES) {
+            if (side != getFrontFacing().getOpposite()) {
+                renderColoredOverlayFace(renderState, translation, pipeline, side, engine,
+                        "machines/engines/kinetic_steam/colored/engine",
+                        "machines/engines/kinetic_steam/overlay/engine", stateColor);
+            }
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private void renderEngineHull(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
+        EnumFacing.Axis axis = getFrontFacing().getAxis();
+        Cuboid6 hull = KineticRenderHelper.axisBox(axis, 0.0D, 1.0D, P3, P13, P3, P13);
+        for (EnumFacing side : EnumFacing.VALUES) {
+            if (side.getAxis() != axis) {
+                renderColoredOverlayFace(renderState, translation, pipeline, side, hull,
+                        "machines/engines/kinetic_steam/colored/engine_hull",
+                        "machines/engines/kinetic_steam/overlay/engine_hull", color);
+            }
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private void renderColoredOverlayFace(CCRenderState renderState, Matrix4 translation,
+                                          IVertexOperation[] pipeline, EnumFacing side, Cuboid6 bounds,
+                                          String coloredPath, String overlayPath, int faceColor) {
+        KineticRenderHelper.renderFace(renderState, translation, pipeline, side, bounds, coloredPath, faceColor);
+        KineticRenderHelper.renderOverlayFace(renderState, translation, pipeline, side, bounds, overlayPath);
     }
 
     @Override

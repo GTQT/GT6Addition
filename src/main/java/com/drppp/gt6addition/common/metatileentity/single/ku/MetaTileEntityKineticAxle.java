@@ -5,8 +5,8 @@ import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
-import com.drppp.gt6addition.api.capability.impl.KineticEnergyHandler;
-import com.drppp.gt6addition.api.capability.interfaces.IKineticEnergy;
+import com.drppp.gt6addition.api.capability.impl.RotationEnergyHandler;
+import com.drppp.gt6addition.api.capability.interfaces.IRotationEnergy;
 import com.drppp.gt6addition.api.top.IEnergyOutShow;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.GregtechDataCodes;
@@ -41,7 +41,7 @@ public class MetaTileEntityKineticAxle extends MetaTileEntity implements IEnergy
 
     private final int color;
     private final int maxThroughput;
-    private final IKineticEnergy kineticEnergy = new KineticEnergyHandler();
+    private final IRotationEnergy rotationEnergy = new RotationEnergyHandler();
     private boolean active;
     private int lastTransferred;
 
@@ -77,29 +77,29 @@ public class MetaTileEntityKineticAxle extends MetaTileEntity implements IEnergy
         if (getWorld().isRemote) {
             return;
         }
-        int input = Math.max(readKineticFrom(getFrontFacing()), readKineticFrom(getFrontFacing().getOpposite()));
+        int input = Math.max(readRotationFrom(getFrontFacing()), readRotationFrom(getFrontFacing().getOpposite()));
         if (input > maxThroughput) {
-            kineticEnergy.setKineticEnergy(0);
+            rotationEnergy.setRuEnergy(0);
             lastTransferred = 0;
             setActive(false);
             getWorld().destroyBlock(getPos(), true);
             return;
         }
         int output = Math.min(input, maxThroughput);
-        kineticEnergy.setKineticEnergy(output);
+        rotationEnergy.setRuEnergy(output);
         lastTransferred = output;
         setActive(output > 0);
     }
 
-    private int readKineticFrom(EnumFacing side) {
+    private int readRotationFrom(EnumFacing side) {
         TileEntity tileEntity = getWorld().getTileEntity(getPos().offset(side));
         if (tileEntity == null ||
-                !tileEntity.hasCapability(CapabilityHandler.CAPABILITY_KINETIC_ENERGY, side.getOpposite())) {
+                !tileEntity.hasCapability(CapabilityHandler.CAPABILITY_ROTATION_ENERGY, side.getOpposite())) {
             return 0;
         }
-        IKineticEnergy energy = tileEntity.getCapability(CapabilityHandler.CAPABILITY_KINETIC_ENERGY,
+        IRotationEnergy energy = tileEntity.getCapability(CapabilityHandler.CAPABILITY_ROTATION_ENERGY,
                 side.getOpposite());
-        return energy == null ? 0 : Math.max(0, energy.getKinetic());
+        return energy == null ? 0 : Math.max(0, energy.getEnergyOutput());
     }
 
     @Override
@@ -113,7 +113,7 @@ public class MetaTileEntityKineticAxle extends MetaTileEntity implements IEnergy
 
     @Override
     public boolean hasCapability(@NotNull Capability<?> capability, @Nullable EnumFacing side) {
-        if (capability == CapabilityHandler.CAPABILITY_KINETIC_ENERGY) {
+        if (capability == CapabilityHandler.CAPABILITY_ROTATION_ENERGY) {
             return isAxial(side);
         }
         if (capability == CapabilityEnergy.ENERGY || capability == GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER) {
@@ -125,8 +125,8 @@ public class MetaTileEntityKineticAxle extends MetaTileEntity implements IEnergy
     @Nullable
     @Override
     public <T> T getCapability(Capability<T> capability, EnumFacing side) {
-        if (capability == CapabilityHandler.CAPABILITY_KINETIC_ENERGY && isAxial(side)) {
-            return CapabilityHandler.CAPABILITY_KINETIC_ENERGY.cast(kineticEnergy);
+        if (capability == CapabilityHandler.CAPABILITY_ROTATION_ENERGY && isAxial(side)) {
+            return CapabilityHandler.CAPABILITY_ROTATION_ENERGY.cast(rotationEnergy);
         }
         if (capability == CapabilityEnergy.ENERGY || capability == GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER) {
             return null;
@@ -147,7 +147,7 @@ public class MetaTileEntityKineticAxle extends MetaTileEntity implements IEnergy
         super.readFromNBT(data);
         active = data.getBoolean(NBT_ACTIVE);
         lastTransferred = data.getInteger(NBT_LAST_TRANSFERRED);
-        kineticEnergy.setKineticEnergy(lastTransferred);
+        rotationEnergy.setRuEnergy(lastTransferred);
     }
 
     @Override
@@ -177,7 +177,7 @@ public class MetaTileEntityKineticAxle extends MetaTileEntity implements IEnergy
         Cuboid6 axle = KineticRenderHelper.axisBox(getFrontFacing().getAxis(), 0.0D, 1.0D,
                 ROD_MIN, ROD_MAX, ROD_MIN, ROD_MAX);
         KineticRenderHelper.renderAllFaces(renderState, translation, pipeline, axle,
-                active ? "iconsets/AXLE_CLOCKWISE" : "iconsets/AXLE", color);
+                active ? "machines/kinetic/iconsets/axle_clockwise" : "machines/kinetic/iconsets/axle", color);
     }
 
     @Override
@@ -199,7 +199,7 @@ public class MetaTileEntityKineticAxle extends MetaTileEntity implements IEnergy
     @Override
     @SideOnly(Side.CLIENT)
     public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
-        return Pair.of(KineticRenderHelper.getSprite("iconsets/AXLE"), color);
+        return Pair.of(KineticRenderHelper.getSprite("machines/kinetic/iconsets/axle"), color);
     }
 
     @Override
@@ -213,11 +213,11 @@ public class MetaTileEntityKineticAxle extends MetaTileEntity implements IEnergy
 
     @Override
     public String getEnergyName() {
-        return "KU";
+        return "RU";
     }
 
     @Override
     public int getEnergyOut() {
-        return kineticEnergy.getKinetic();
+        return rotationEnergy.getEnergyOutput();
     }
 }
