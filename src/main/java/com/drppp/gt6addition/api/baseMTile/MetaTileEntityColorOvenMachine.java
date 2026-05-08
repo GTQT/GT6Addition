@@ -1,5 +1,8 @@
 package com.drppp.gt6addition.api.baseMTile;
 
+import codechicken.lib.render.CCRenderState;
+import codechicken.lib.render.pipeline.IVertexOperation;
+import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.recipeLogic.RecipeLogicMutiEnergy;
 import com.drppp.gt6addition.api.utils.MachineEnergyAcceptFacing;
 import gregtech.api.capability.impl.AbstractRecipeLogic;
@@ -24,6 +27,12 @@ public class MetaTileEntityColorOvenMachine extends MetaTileEntityColorMachine {
     @Override
     protected AbstractRecipeLogic createWorkable(RecipeMap<?> recipeMap) {
         return new RecipeLogicOven(this, recipeMap, this.mutiEnergyProxy);
+    }
+
+    @Override
+    public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
+
+        super.renderMetaTileEntity(renderState, translation, pipeline);
     }
 
     private static class RecipeLogicOven extends RecipeLogicMutiEnergy

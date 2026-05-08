@@ -40,7 +40,9 @@ dependencies {
     api rfg.deobf("curse.maven:ctm-267602:2915363") // CTM 1.0.2.31
     compileOnlyApi 'org.jetbrains:annotations:24.1.0'
     implementation rfg.deobf("curse.maven:codechicken-lib-1-8-242818:2779848")
+    implementation rfg.deobf(files("libs/modelloader-1.0.0.jar"))
     implementation rfg.deobf(files("libs/gregtech-gtqt-1.12.2-2.9.0-190.jar"))
+    compileOnly rfg.deobf("curse.maven:had-enough-items-557549:7938914")
     // AE2 Unofficial Extended Life 0.56.6
     implementation rfg.deobf("curse.maven:ae2-extended-life-570458:6302098")
     // AE2 Fluid Crafting Rework 2.6.6
