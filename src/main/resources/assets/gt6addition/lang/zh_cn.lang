@@ -394,3 +394,25 @@ gt6addition.cu.tc_generator.info.5=§6机器可以接收4A电流
 
 #top info
 gt6addition.top.work.status=工作状态:
+gt6addition.machine.gt6_hopper_bronze.name=GT6料斗(青铜)
+gt6addition.machine.gt6_hopper_steel.name=GT6料斗(钢)
+gt6addition.machine.gt6_hopper_stainlesssteel.name=GT6料斗(不锈钢)
+gt6addition.machine.gt6_hopper_titanium.name=GT6料斗(钛)
+gt6addition.machine.gt6_hopper_tungstensteel.name=GT6料斗(钨钢)
+gt6addition.machine.gt6_queue_hopper_bronze.name=GT6队列料斗(青铜)
+gt6addition.machine.gt6_queue_hopper_steel.name=GT6队列料斗(钢)
+gt6addition.machine.gt6_queue_hopper_stainlesssteel.name=GT6队列料斗(不锈钢)
+gt6addition.machine.gt6_queue_hopper_titanium.name=GT6队列料斗(钛)
+gt6addition.machine.gt6_queue_hopper_tungstensteel.name=GT6队列料斗(钨钢)
+gt6addition.machine.gt6_hopper.tooltip.slots=槽位：%s
+gt6addition.machine.gt6_hopper.tooltip.normal=普通料斗：合并内部库存，并从朝向面输出。
+gt6addition.machine.gt6_hopper.tooltip.queue=队列料斗：从队首输入，按 FIFO 从队尾输出。
+gt6addition.machine.gt6_hopper.tooltip.transfer=从顶部抽取容器和掉落物；红石信号会暂停传输。
+gt6addition.machine.gt6_hopper.tooltip.tools=螺丝刀调整堆叠数量；软锤重置；普通料斗潜行空手右键切换精确模式。
+gt6addition.machine.gt6_hopper.status.exact_on=已启用精确输入模式。
+gt6addition.machine.gt6_hopper.status.exact_off=已关闭精确输入模式。
+gt6addition.machine.gt6_hopper.status.inserted=已放入 %s 个物品。
+gt6addition.machine.gt6_hopper.status.full=料斗已满。
+gt6addition.machine.gt6_hopper.status.empty=料斗为空。
+gt6addition.machine.gt6_hopper.status.stack_size=堆叠数量：%s
+gt6addition.machine.gt6_hopper.status.reset=堆叠数量已重置为 %s。

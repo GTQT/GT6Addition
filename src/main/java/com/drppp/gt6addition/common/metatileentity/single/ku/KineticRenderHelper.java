@@ -13,13 +13,13 @@ import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 import org.apache.commons.lang3.ArrayUtils;
 
-final class KineticRenderHelper {
+public final class KineticRenderHelper {
 
     private KineticRenderHelper() {
     }
 
-    static Cuboid6 axisBox(EnumFacing.Axis axis, double minAxis, double maxAxis,
-                           double minFirst, double maxFirst, double minSecond, double maxSecond) {
+    public static Cuboid6 axisBox(EnumFacing.Axis axis, double minAxis, double maxAxis,
+                                  double minFirst, double maxFirst, double minSecond, double maxSecond) {
         switch (axis) {
             case X:
                 return new Cuboid6(minAxis, minFirst, minSecond, maxAxis, maxFirst, maxSecond);
@@ -31,8 +31,8 @@ final class KineticRenderHelper {
         }
     }
 
-    static void renderAllFaces(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline,
-                               Cuboid6 bounds, String spritePath, int color) {
+    public static void renderAllFaces(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline,
+                                      Cuboid6 bounds, String spritePath, int color) {
         IVertexOperation[] coloredPipeline = ArrayUtils.add(pipeline,
                 new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(color & 0xFFFFFF)));
         TextureAtlasSprite sprite = getSprite(spritePath);
@@ -42,21 +42,21 @@ final class KineticRenderHelper {
         }
     }
 
-    static void renderFace(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline,
-                           EnumFacing face, Cuboid6 bounds, String spritePath, int color) {
+    public static void renderFace(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline,
+                                  EnumFacing face, Cuboid6 bounds, String spritePath, int color) {
         IVertexOperation[] coloredPipeline = ArrayUtils.add(pipeline,
                 new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(color & 0xFFFFFF)));
         Textures.renderFace(renderState, translation, coloredPipeline, face, bounds, getSprite(spritePath),
                 BlockRenderLayer.CUTOUT_MIPPED);
     }
 
-    static void renderOverlayFace(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline,
-                                  EnumFacing face, Cuboid6 bounds, String spritePath) {
+    public static void renderOverlayFace(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline,
+                                         EnumFacing face, Cuboid6 bounds, String spritePath) {
         Textures.renderFace(renderState, translation, pipeline, face, bounds, getSprite(spritePath),
                 BlockRenderLayer.CUTOUT_MIPPED);
     }
 
-    static TextureAtlasSprite getSprite(String spritePath) {
+    public static TextureAtlasSprite getSprite(String spritePath) {
         return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("gregtech:blocks/" + spritePath);
     }
 }

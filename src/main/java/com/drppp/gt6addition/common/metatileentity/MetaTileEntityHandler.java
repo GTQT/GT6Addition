@@ -16,6 +16,7 @@ import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCooli
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucibleFaucet;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityTemperatureSensor;
+import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityGt6Hopper;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticAxle;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticGearbox;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticSteamEngine;
@@ -58,6 +59,8 @@ public class MetaTileEntityHandler {
     public static MetaTileEntityKineticGearbox[] KINETIC_GEARBOXES = new MetaTileEntityKineticGearbox[5];
     public static MetaTileEntityKineticGearbox[] ADJUSTABLE_KINETIC_GEARBOXES = new MetaTileEntityKineticGearbox[5];
     public static MetaTileEntityKineticAxle[] KINETIC_AXLES = new MetaTileEntityKineticAxle[22];
+    public static MetaTileEntityGt6Hopper[] GT6_HOPPERS = new MetaTileEntityGt6Hopper[5];
+    public static MetaTileEntityGt6Hopper[] GT6_QUEUE_HOPPERS = new MetaTileEntityGt6Hopper[5];
 
     public static MetaTileEntityColorOvenMachine[] OVEN_HU = new MetaTileEntityColorOvenMachine[4];
     public static MetaTileEntityColorMachine[] DISTILLERY_HU = new MetaTileEntityColorMachine[4];
@@ -115,6 +118,19 @@ public class MetaTileEntityHandler {
             KINETIC_STEAM_ENGINES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticSteamEngine(getMyId("kinetic_steam_engine." + GTValues.VN[i]), ruKuEngineColor[i], throughput, 80));
             KINETIC_GEARBOXES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticGearbox(getMyId("kinetic_gearbox." + GTValues.VN[i]), ruKuEngineColor[i], throughput * 2, false));
             ADJUSTABLE_KINETIC_GEARBOXES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticGearbox(getMyId("adjustable_kinetic_gearbox." + GTValues.VN[i]), ruKuEngineColor[i], throughput * 2, true));
+        }
+        int[] hopperSlots = {3, 5, 9, 12, 27};
+        for (int i = 0; i < 5; i++) {
+            GT6_HOPPERS[i] = registerMetaTileEntity(getID(), new MetaTileEntityGt6Hopper(
+                    getMyId("gt6_hopper_" + levelNames[i]),
+                    ruKuEngineColor[i + 1],
+                    hopperSlots[i],
+                    false));
+            GT6_QUEUE_HOPPERS[i] = registerMetaTileEntity(getID(), new MetaTileEntityGt6Hopper(
+                    getMyId("gt6_queue_hopper_" + levelNames[i]),
+                    ruKuEngineColor[i + 1],
+                    Math.max(2, hopperSlots[i]),
+                    true));
         }
 
         int[] muColor = {getColor(MaterialColorUtil.MaterialName.galvanized_steel), getColor(MaterialColorUtil.MaterialName.aluminum), getColor(MaterialColorUtil.MaterialName.stain_steel), getColor(MaterialColorUtil.MaterialName.titanium), getColor(MaterialColorUtil.MaterialName.tungsten_steel)};

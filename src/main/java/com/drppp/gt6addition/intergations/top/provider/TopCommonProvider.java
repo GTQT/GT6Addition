@@ -8,6 +8,7 @@ import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombu
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCoolingMold;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityTemperatureSensor;
+import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityGt6Hopper;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticGearbox;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticSteamEngine;
 import gregtech.api.util.GTUtility;
@@ -136,6 +137,29 @@ public class TopCommonProvider implements IProbeInfoProvider {
             iProbeInfo.text(TextFormatting.BOLD + "\u72b6\u6001:" + TextFormatting.GREEN +
                     (s.isJammed() ? "\u5361\u6b7b" : s.isActive() ? "\u4f20\u52a8" : "\u7a7a\u8f6c"));
             iProbeInfo.text(TextFormatting.BOLD + "\u500d\u7387:" + TextFormatting.GREEN + s.getRatioName());
+        } else if (metaTileEntity instanceof MetaTileEntityGt6Hopper) {
+            MetaTileEntityGt6Hopper s = (MetaTileEntityGt6Hopper) metaTileEntity;
+            iProbeInfo.progress(s.getUsedSlots(), Math.max(1, s.getSlotCount()), iProbeInfo.defaultProgressStyle()
+                    .prefix("\u69fd\u4f4d: ")
+                    .suffix(" / " + s.getSlotCount())
+                    .filledColor(0xFF77AA66)
+                    .alternateFilledColor(0xFF99CC88)
+                    .borderColor(0xFF555555)
+                    .backgroundColor(0xFF111111)
+                    .numberFormat(NumberFormat.FULL));
+            iProbeInfo.text(TextFormatting.BOLD + "\u6a21\u5f0f:" + TextFormatting.GREEN +
+                    (s.isQueueMode() ? "\u961f\u5217/FIFO" : "\u666e\u901a\u5408\u5e76"));
+            iProbeInfo.text(TextFormatting.BOLD + "\u5355\u6b21\u6570\u91cf:" + TextFormatting.GREEN +
+                    s.getStackSizeLimit() + (s.isExactMode() ? " exact" : ""));
+            iProbeInfo.text(TextFormatting.BOLD + "\u7269\u54c1\u603b\u6570:" + TextFormatting.GREEN +
+                    s.getTotalItemCount());
+            ItemStack preview = s.getOutputStackPreview();
+            if (!preview.isEmpty()) {
+                IProbeInfo line = iProbeInfo.horizontal();
+                line.item(preview);
+                line.text(TextFormatting.BOLD + "\u5f85\u8f93\u51fa:" + TextFormatting.GREEN +
+                        preview.getDisplayName() + "*" + preview.getCount());
+            }
         } else if (metaTileEntity instanceof MetaTileEntityCombustionchamber) {
             MetaTileEntityCombustionchamber s = (MetaTileEntityCombustionchamber) metaTileEntity;
             ItemStack item = s.getImportItems().getStackInSlot(0).copy();
