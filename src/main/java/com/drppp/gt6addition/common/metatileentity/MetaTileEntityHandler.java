@@ -9,6 +9,9 @@ import com.drppp.gt6addition.api.utils.MachineEnergyAcceptFacing;
 import com.drppp.gt6addition.api.utils.MaterialColorUtil;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import com.drppp.gt6addition.common.metatileentity.single.cu.MetaTileEntityThermoelectricCooler;
+import com.drppp.gt6addition.common.metatileentity.single.eu.MetaTileEntityAutomaticIgniter;
+import com.drppp.gt6addition.common.metatileentity.single.eu.MetaTileEntityElectricCo2Laser;
+import com.drppp.gt6addition.common.metatileentity.single.eu.MetaTileEntityElectricDynamo;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamber;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamberLiquid;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCastingBasin;
@@ -21,14 +24,18 @@ import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKinet
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticGearbox;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticSteamEngine;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityRotationEngine;
+import com.drppp.gt6addition.common.metatileentity.single.lu.MetaTileEntityLaserEngraver;
+import com.drppp.gt6addition.common.metatileentity.single.lu.MetaTileEntityLaserWelder;
 import com.drppp.gt6addition.common.metatileentity.single.mu.MetaTileEntityElectromagnet;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityDieselEngine;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityElectricMotor;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntitySteamTurbine;
 import gregtech.api.GTValues;
+import com.drppp.gt6addition.common.recipes.GT6AdditionRecipeMaps;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
+import gregtech.client.renderer.texture.cube.OrientedOverlayRenderer;
 import net.minecraft.util.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
@@ -76,12 +83,17 @@ public class MetaTileEntityHandler {
 
     public static MetaTileEntitySteamTurbine[] STEAM_TURBINES = new MetaTileEntitySteamTurbine[8];
     public static MetaTileEntityElectricMotor[] ELECTRIC_MOTOR = new MetaTileEntityElectricMotor[5];
+    public static MetaTileEntityElectricDynamo[] ELECTRIC_DYNAMO = new MetaTileEntityElectricDynamo[5];
+    public static MetaTileEntityElectricCo2Laser[] ELECTRIC_CO2_LASER = new MetaTileEntityElectricCo2Laser[5];
     public static MetaTileEntityDieselEngine[] DIESEL_ENGINE = new MetaTileEntityDieselEngine[5];
 
     public static MetaTileEntityElectromagnet[] ELECTROMAGNET = new MetaTileEntityElectromagnet[5];
     public static MetaTileEntityColorMachine[] POLARIZER = new MetaTileEntityColorMachine[5];
     public static MetaTileEntityColorMachine[] SEPARATOR = new MetaTileEntityColorMachine[5];
     public static MetaTileEntityThermoelectricCooler[] THERMOELECTRIC_COOLER = new MetaTileEntityThermoelectricCooler[5];
+    public static MetaTileEntityAutomaticIgniter AUTOMATIC_IGNITER_LV;
+    public static MetaTileEntityLaserWelder[] LASER_WELDER = new MetaTileEntityLaserWelder[5];
+    public static MetaTileEntityLaserEngraver[] LASER_ENGRAVER = new MetaTileEntityLaserEngraver[5];
 
     static int startID = 0;
 
@@ -131,19 +143,30 @@ public class MetaTileEntityHandler {
             int[] outInventory = {8000, 8000, 8000, (int) (8000 * 1.5), 8000 * 2, 8000 * 2, 8000 * 2, 8000 * 2};
             STEAM_TURBINES[i] = registerMetaTileEntity(getID(), new MetaTileEntitySteamTurbine(getMyId(names[i] + "_steam_turbine"), color[i], 0.66, output[i], outInventory[i]));
         }
-        //燃烧室
+        //鐕冪儳瀹?
         for (int i = 0; i < HU_BURRING_BOXS.length; i++) {
             int[] color = {0x251945, 0x815024, 0x4F4F4E, 0x87875C, 0xA39393, 0x896495, 0x1D1D1D, 0x3C3C61};
             double[] efficiency = {0.5, 0.75, 0.7, 1, 0.85, 0.85, 1, 0.9};
             int[] output = {16, 24, 32, 16, 112, 96, 128, 128};
-            HU_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(getMyId(names[i] + "_burring_box"), color[i], efficiency[i], output[i], false));
-            HU_DENSE_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(getMyId("dense_" + names[i] + "_burring_box"), color[i], efficiency[i], output[i] * 4, true));
-            HU_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(getMyId(names[i] + "_burring_box_liquid"), color[i], efficiency[i], (int) (output[i] * 1.5), false));
-            HU_DENSE_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(getMyId("dense_" + names[i] + "_burring_box_liquid"), color[i], efficiency[i], (int) (output[i] * 4 * 1.5), true));
+            int[] baseTier = {1, 1, 2, 3, 3, 4, 5, 5};
+            HU_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(
+                    getMyId(names[i] + "_burring_box"), color[i], efficiency[i], output[i], false, baseTier[i]));
+            HU_DENSE_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(
+                    getMyId("dense_" + names[i] + "_burring_box"), color[i], efficiency[i], output[i] * 4, true, baseTier[i]));
+            HU_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(
+                    getMyId(names[i] + "_burring_box_liquid"), color[i], efficiency[i], (int) (output[i] * 1.5), false, baseTier[i]));
+            HU_DENSE_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(
+                    getMyId("dense_" + names[i] + "_burring_box_liquid"), color[i], efficiency[i], (int) (output[i] * 4 * 1.5), true, baseTier[i]));
         }
         int[] electricMotorColor = {0x000000, MaterialColorUtil.MaterialColor.get(MaterialColorUtil.MaterialName.steel), 0x8bd4d2, 0x90a5b6, 0x896495, 0x3C3C61};
         for (int i = 1; i <= 5; i++) {
             ELECTRIC_MOTOR[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityElectricMotor(getMyId("electric_motor." + GTValues.VN[i]), i, electricMotorColor[i], 0.8, (int) GTValues.V[i]));
+        }
+        for (int i = 1; i <= 5; i++) {
+            ELECTRIC_DYNAMO[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityElectricDynamo(getMyId("electric_dynamo." + GTValues.VN[i]), i));
+        }
+        for (int i = 1; i <= 5; i++) {
+            ELECTRIC_CO2_LASER[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityElectricCo2Laser(getMyId("electric_co2_laser." + GTValues.VN[i]), i));
         }
         for (int i = 1; i <= 5; i++) {
             DIESEL_ENGINE[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityDieselEngine(getMyId("diesel_engine." + GTValues.VN[i]), electricMotorColor[i], GTValues.VH[i] * 3));
@@ -195,6 +218,26 @@ public class MetaTileEntityHandler {
         }
         for (int i = 0; i < 5; i++) {
             THERMOELECTRIC_COOLER[i] = registerMetaTileEntity(getID(), new MetaTileEntityThermoelectricCooler(getMyId("thermoelectric_cooler." + GTValues.VN[i + 1]), i + 1, muColor[i], 0.5, (int) GTValues.VH[i + 1]));
+        }
+        AUTOMATIC_IGNITER_LV = registerMetaTileEntity(getID(), new MetaTileEntityAutomaticIgniter(
+                getMyId("automatic_igniter.lv"), GTValues.LV, MaterialColorUtil.MaterialColor.get(MaterialColorUtil.MaterialName.steel)));
+        OrientedOverlayRenderer laserWelderRenderer = new OrientedOverlayRenderer("gt6addition:machines/lu_machines/laser_welder");
+        OrientedOverlayRenderer laserEngraverRenderer = new OrientedOverlayRenderer("gt6addition:machines/lu_machines/laser_engraver");
+        for (int i = 1; i <= 5; i++) {
+            LASER_WELDER[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityLaserWelder(
+                    getMyId("laser_welder." + GTValues.VN[i]),
+                    GT6AdditionRecipeMaps.LASER_WELDER_RECIPES,
+                    laserWelderRenderer,
+                    i,
+                    new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.BACK}));
+        }
+        for (int i = 1; i <= 5; i++) {
+            LASER_ENGRAVER[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityLaserEngraver(
+                    getMyId("laser_engraver." + GTValues.VN[i]),
+                    RecipeMaps.LASER_ENGRAVER_RECIPES,
+                    laserEngraverRenderer,
+                    i,
+                    new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.BACK}));
         }
 
         for (int i = 0; i < 5; i++) {
@@ -341,3 +384,6 @@ public class MetaTileEntityHandler {
         return materialColor == 0 ? fallback : materialColor;
     }
 }
+
+
+

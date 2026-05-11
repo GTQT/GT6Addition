@@ -20,6 +20,7 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
     public IKineticEnergy kuEnergy;
     public IColdEnergy cuEnergy;
     public IMagnetEnergy muEnergy;
+    public ILaserEnergy luEnergy;
     public IHeatable huable;
     public int tire;
     public MutiEnergyProxyManager(String EnergyType,int tire)
@@ -41,6 +42,9 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
         }else if(this.EnergyType.equals(EnergyTypeList.MU))
         {
             this.muEnergy = new MagnetEnergyHandler();
+        }else if(this.EnergyType.equals(EnergyTypeList.LU))
+        {
+            this.luEnergy = new LaserEnergyHandler();
         }
     }
 
@@ -63,6 +67,8 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
                 return this.cuEnergy.getCold();
             case EnergyTypeList.MU:
                 return this.muEnergy.getMagnet();
+            case EnergyTypeList.LU:
+                return this.luEnergy.getEnergyOutput();
         }
         return 0;
     }
@@ -85,6 +91,9 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
                 break;
             case EnergyTypeList.MU:
                 this.muEnergy.setMuEnergy(energy);
+                break;
+            case EnergyTypeList.LU:
+                this.luEnergy.setLuEnergy(energy);
                 break;
         }
     }
@@ -171,6 +180,14 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
                 {
                     IMagnetEnergy energy = te.getCapability(CapabilityHandler.CAPABILITY_MAGNET_ENERGY,facing.getOpposite());
                     this.muEnergy.setMuEnergy(Math.min(energy.getMagnet(), (int)GTValues.V[this.tire]*2));
+                    return true;
+                }
+                return false;
+            case EnergyTypeList.LU:
+                if(te.hasCapability(CapabilityHandler.CAPABILITY_LASER_ENERGY,facing.getOpposite()))
+                {
+                    ILaserEnergy energy = te.getCapability(CapabilityHandler.CAPABILITY_LASER_ENERGY,facing.getOpposite());
+                    this.luEnergy.setLuEnergy(Math.min(energy.getEnergyOutput(), (int)GTValues.V[this.tire]*2));
                     return true;
                 }
                 return false;

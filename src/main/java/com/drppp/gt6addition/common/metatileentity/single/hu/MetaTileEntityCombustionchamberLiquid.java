@@ -8,6 +8,7 @@ import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
 import com.drppp.gt6addition.api.capability.impl.HeatEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
+import com.drppp.gt6addition.api.machine.IAutomaticIgnitable;
 import com.drppp.gt6addition.api.utils.CraftingGetItemUtils;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.capability.GregtechDataCodes;
@@ -51,11 +52,12 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Random;
 
-public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
+public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity implements IAutomaticIgnitable {
     public final int color;
     public final double efficiency;
     public final int outPutHu;
     public final int burnSpeed;
+    public final int baseTier;
     protected final ICubeRenderer rendererBASE = Gt6AdditionTextures.HU_BASE_BURRING_BOX_LIQUID;
     protected final SimpleOverlayRenderer renderer = Gt6AdditionTextures.HU_BURRING_BOX_SIDE_OVERLAY;
     protected final SimpleOverlayRenderer renderer_full = Gt6AdditionTextures.HU_BURRING_BOX_SIDE_FULL_OVERLAY;
@@ -67,12 +69,14 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
     IHeatEnergy hu = new HeatEnergyHandler();
     protected FluidTank inputFluidTank;
     protected FluidTank outputFluidTank;
-    public MetaTileEntityCombustionchamberLiquid(ResourceLocation metaTileEntityId, int color, double efficiency, int outPutHu, boolean isDense) {
+    public MetaTileEntityCombustionchamberLiquid(ResourceLocation metaTileEntityId, int color, double efficiency,
+                                                 int outPutHu, boolean isDense, int baseTier) {
         super(metaTileEntityId);
         this.color = color;
         this.efficiency = efficiency;
         this.outPutHu = outPutHu;
         this.isDense = isDense;
+        this.baseTier = baseTier;
         this.burnSpeed = (int) (this.outPutHu / this.efficiency * 0.6);
         this.initializeInventory();
     }
@@ -114,7 +118,8 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
 
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity iGregTechTileEntity) {
-        return new MetaTileEntityCombustionchamberLiquid(this.metaTileEntityId, this.color, this.efficiency, this.outPutHu, this.isDense);
+        return new MetaTileEntityCombustionchamberLiquid(this.metaTileEntityId, this.color, this.efficiency,
+                this.outPutHu, this.isDense, this.baseTier);
     }
 
     @Override
@@ -124,6 +129,10 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
 
     @SideOnly(Side.CLIENT)
     protected SimpleSidedCubeRenderer getBaseRenderer() {
+        if (baseTier > 0 && baseTier < Gt6AdditionTextures.MACHINE_BASES.length &&
+                Gt6AdditionTextures.MACHINE_BASES[baseTier] != null) {
+            return Gt6AdditionTextures.MACHINE_BASES[baseTier];
+        }
         return Gt6AdditionTextures.BASE_BURRING_BOX_TEXTURE;
     }
 
@@ -136,13 +145,43 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         super.renderMetaTileEntity(renderState, translation, pipeline);
         IVertexOperation[] colouredPipeline = ArrayUtils.add(pipeline, new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(this.getPaintingColorForRendering())));
-        IVertexOperation[] pipeline1 = ArrayUtils.add(pipeline, new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(this.color)));
+        IVertexOperation[] sidePipeline = ArrayUtils.add(pipeline,
+                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getSideAccentColor())));
+        IVertexOperation[] topPipeline = ArrayUtils.add(pipeline,
+                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getTopAccentColor())));
+        IVertexOperation[] frontPipeline = ArrayUtils.add(pipeline,
+                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getFrontAccentColor())));
         this.getBaseRenderer().render(renderState, translation, colouredPipeline);
-        this.renderer_full.renderSided(EnumFacing.UP, renderState, translation, pipeline1);
+        this.renderer_full.renderSided(EnumFacing.UP, renderState, translation, topPipeline);
         for (EnumFacing facing : EnumFacing.HORIZONTALS) {
-            this.renderer.renderSided(facing, renderState, translation, pipeline1);
+         this.renderer.renderSided(facing, renderState, translation, sidePipeline);
+
         }
-        this.rendererBASE.renderOrientedState(renderState, translation, pipeline, this.getFrontFacing(), isActive, isActive);
+        this.rendererBASE.renderOrientedState(renderState, translation, frontPipeline, this.getFrontFacing(), isActive, isActive);
+    }
+
+    @SideOnly(Side.CLIENT)
+    private int getSideAccentColor() {
+        return mixColors(this.color, isDense ? 0x1F4450 : 0x203943, isDense ? 0.54F : 0.40F);
+    }
+
+    @SideOnly(Side.CLIENT)
+    private int getTopAccentColor() {
+        return isActive ? mixColors(this.color, 0x4AA39D, 0.40F) : mixColors(this.color, 0x51606A, 0.32F);
+    }
+
+    @SideOnly(Side.CLIENT)
+    private int getFrontAccentColor() {
+        return isActive ? mixColors(this.color, 0x6FD9CF, 0.48F) : mixColors(this.color, 0x325863, 0.36F);
+    }
+
+    private static int mixColors(int baseColor, int overlayColor, float overlayWeight) {
+        float clampedWeight = Math.max(0.0F, Math.min(1.0F, overlayWeight));
+        float baseWeight = 1.0F - clampedWeight;
+        int red = Math.min(255, Math.max(0, Math.round(((baseColor >> 16) & 0xFF) * baseWeight + ((overlayColor >> 16) & 0xFF) * clampedWeight)));
+        int green = Math.min(255, Math.max(0, Math.round(((baseColor >> 8) & 0xFF) * baseWeight + ((overlayColor >> 8) & 0xFF) * clampedWeight)));
+        int blue = Math.min(255, Math.max(0, Math.round((baseColor & 0xFF) * baseWeight + (overlayColor & 0xFF) * clampedWeight)));
+        return (red << 16) | (green << 8) | blue;
     }
 
     @Override
@@ -288,6 +327,17 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity {
         this.hu.setHuEnergy(0);
         setActive(false);
     }
+
+    @Override
+    public boolean igniteFromAutomaticIgniter() {
+        if (isActive || !canActive() ||
+                (getWorld() != null && getWorld().getBlockState(getPos().offset(getFrontFacing())).getBlock() != Blocks.AIR)) {
+            return false;
+        }
+        setActive(true);
+        return true;
+    }
+
     private FluidStack getSelfFluid()
     {
         return this.inputFluidTank.getFluid();

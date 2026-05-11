@@ -3866,7 +3866,9 @@ gregtech:chainsaw_iv, item.gt.tool.chainsaw_iv.name.name
 gregtech:wrench_lv, item.gt.tool.wrench_lv.name.name
 gregtech:wrench_hv, item.gt.tool.wrench_hv.name.name
 gregtech:wrench_iv, item.gt.tool.wrench_iv.name.name
-gregtech:buzzsaw, item.gt.tool.buzzsaw.name.name
+gregtech:buzzsaw_lv, item.gt.tool.buzzsaw_lv.name.name
+gregtech:buzzsaw_hv, item.gt.tool.buzzsaw_hv.name.name
+gregtech:buzzsaw_iv, item.gt.tool.buzzsaw_iv.name.name
 gregtech:screwdriver_lv, item.gt.tool.screwdriver_lv.name.name
 gregtech:screwdriver_hv, item.gt.tool.screwdriver_hv.name.name
 gregtech:screwdriver_iv, item.gt.tool.screwdriver_iv.name.name
@@ -4023,110 +4025,246 @@ gt6addition:mte:20, 旋转动能引擎(钢)
 gt6addition:mte:21, 旋转动能引擎(不锈钢)
 gt6addition:mte:22, 旋转动能引擎(钛)
 gt6addition:mte:23, 旋转动能引擎(钨钢)
-gt6addition:mte:24, 电磁铁(镀锌钢)
-gt6addition:mte:25, 电磁铁(铝)
-gt6addition:mte:26, 电磁铁(不锈钢)
-gt6addition:mte:27, 电磁铁(钛)
-gt6addition:mte:28, 电磁铁(钨钢)
-gt6addition:mte:29, 半导体制冷器(镀锌钢)
-gt6addition:mte:30, 半导体制冷器(铝)
-gt6addition:mte:31, 半导体制冷器(不锈钢)
-gt6addition:mte:32, 半导体制冷器(钛)
-gt6addition:mte:33, 半导体制冷器(钨钢)
-gt6addition:mte:34, 旋转能卷板机(青铜)
-gt6addition:mte:35, 旋转能卷板机(钢)
-gt6addition:mte:36, 旋转能卷板机(不锈钢)
-gt6addition:mte:37, 旋转能卷板机(钛)
-gt6addition:mte:38, 旋转能卷板机(钨钢)
-gt6addition:mte:39, 旋转能线材轧机(青铜)
-gt6addition:mte:40, 旋转能线材轧机(钢)
-gt6addition:mte:41, 旋转能线材轧机(不锈钢)
-gt6addition:mte:42, 旋转能线材轧机(钛)
-gt6addition:mte:43, 旋转能线材轧机(钨钢)
-gt6addition:mte:44, 旋转能车床(青铜)
-gt6addition:mte:45, 旋转能车床(钢)
-gt6addition:mte:46, 旋转能车床(不锈钢)
-gt6addition:mte:47, 旋转能车床(钛)
-gt6addition:mte:48, 旋转能车床(钨钢)
-gt6addition:mte:49, 旋转能圆锯(青铜)
-gt6addition:mte:50, 旋转能圆锯(钢)
-gt6addition:mte:51, 旋转能圆锯(不锈钢)
-gt6addition:mte:52, 旋转能圆锯(钛)
-gt6addition:mte:53, 旋转能圆锯(钨钢)
-gt6addition:mte:54, 旋转能离心机(青铜)
-gt6addition:mte:55, 旋转能离心机(钢)
-gt6addition:mte:56, 旋转能离心机(不锈钢)
-gt6addition:mte:57, 旋转能离心机(钛)
-gt6addition:mte:58, 旋转能离心机(钨钢)
-gt6addition:mte:59, 旋转能织布机(青铜)
-gt6addition:mte:60, 旋转能织布机(钢)
-gt6addition:mte:61, 旋转能织布机(不锈钢)
-gt6addition:mte:62, 旋转能织布机(钛)
-gt6addition:mte:63, 旋转能织布机(钨钢)
-gt6addition:mte:64, 旋转能洗矿厂(青铜)
-gt6addition:mte:65, 旋转能洗矿厂(钢)
-gt6addition:mte:66, 旋转能洗矿厂(不锈钢)
-gt6addition:mte:67, 旋转能洗矿厂(钛)
-gt6addition:mte:68, 旋转能洗矿厂(钨钢)
-gt6addition:mte:69, 旋转能搅拌机(青铜)
-gt6addition:mte:70, 旋转能搅拌机(钢)
-gt6addition:mte:71, 旋转能搅拌机(不锈钢)
-gt6addition:mte:72, 旋转能搅拌机(钛)
-gt6addition:mte:73, 旋转能搅拌机(钨钢)
-gt6addition:mte:74, 动能压缩机(青铜)
-gt6addition:mte:75, 动能压缩机(钢)
-gt6addition:mte:76, 动能压缩机(不锈钢)
-gt6addition:mte:77, 动能压缩机(钛)
-gt6addition:mte:78, 动能压缩机(钨钢)
-gt6addition:mte:79, 动能冲压机床(青铜)
-gt6addition:mte:80, 动能冲压机床(钢)
-gt6addition:mte:81, 动能冲压机床(不锈钢)
-gt6addition:mte:82, 动能冲压机床(钛)
-gt6addition:mte:83, 动能冲压机床(钨钢)
-gt6addition:mte:84, 动能锻造锤(青铜)
-gt6addition:mte:85, 动能锻造锤(钢)
-gt6addition:mte:86, 动能锻造锤(不锈钢)
-gt6addition:mte:87, 动能锻造锤(钛)
-gt6addition:mte:88, 动能锻造锤(钨钢)
-gt6addition:mte:89, 动能筛选机(青铜)
-gt6addition:mte:90, 动能筛选机(钢)
-gt6addition:mte:91, 动能筛选机(不锈钢)
-gt6addition:mte:92, 动能筛选机(钛)
-gt6addition:mte:93, 动能筛选机(钨钢)
-gt6addition:mte:94, 热力熔炉(钢)
-gt6addition:mte:95, 热力熔炉(殷钢)
-gt6addition:mte:96, 热力熔炉(钛)
-gt6addition:mte:97, 热力熔炉(碳化钨)
-gt6addition:mte:98, 热力蒸馏室(钢)
-gt6addition:mte:99, 热力蒸馏室(殷钢)
-gt6addition:mte:100, 热力蒸馏室(钛)
-gt6addition:mte:101, 热力蒸馏室(碳化钨)
-gt6addition:mte:102, 热力压模机(钢)
-gt6addition:mte:103, 热力压模机(殷钢)
-gt6addition:mte:104, 热力压模机(钛)
-gt6addition:mte:105, 热力压模机(碳化钨)
-gt6addition:mte:106, 热力过胶机(钢)
-gt6addition:mte:107, 热力过胶机(殷钢)
-gt6addition:mte:108, 热力过胶机(钛)
-gt6addition:mte:109, 热力过胶机(碳化钨)
-gt6addition:mte:110, 热力焙烧炉(钢)
-gt6addition:mte:111, 热力焙烧炉(殷钢)
-gt6addition:mte:112, 热力焙烧炉(钛)
-gt6addition:mte:113, 热力焙烧炉(碳化钨)
-gt6addition:mte:114, 热力发酵室(钢)
-gt6addition:mte:115, 热力发酵室(殷钢)
-gt6addition:mte:116, 热力发酵室(钛)
-gt6addition:mte:117, 热力发酵室(碳化钨)
-gt6addition:mte:118, 电磁偏振器(镀锌钢)
-gt6addition:mte:119, 电磁偏振器(铝)
-gt6addition:mte:120, 电磁偏振器(不锈钢)
-gt6addition:mte:121, 电磁偏振器(钛)
-gt6addition:mte:122, 电磁偏振器(钨钢)
-gt6addition:mte:123, 磁选机(镀锌钢)
-gt6addition:mte:124, 磁选机(铝)
-gt6addition:mte:125, 磁选机(不锈钢)
-gt6addition:mte:126, 磁选机(钛)
-gt6addition:mte:127, 磁选机(钨钢)
+gt6addition:mte:24, 蒸汽动能引擎(青铜)
+gt6addition:mte:25, 动能变速箱(青铜)
+gt6addition:mte:26, 可调动能变速箱(青铜)
+gt6addition:mte:27, 蒸汽动能引擎(钢)
+gt6addition:mte:28, 动能变速箱(钢)
+gt6addition:mte:29, 可调动能变速箱(钢)
+gt6addition:mte:30, 蒸汽动能引擎(不锈钢)
+gt6addition:mte:31, 动能变速箱(不锈钢)
+gt6addition:mte:32, 可调动能变速箱(不锈钢)
+gt6addition:mte:33, 蒸汽动能引擎(钛)
+gt6addition:mte:34, 动能变速箱(钛)
+gt6addition:mte:35, 可调动能变速箱(钛)
+gt6addition:mte:36, 蒸汽动能引擎(钨钢)
+gt6addition:mte:37, 动能变速箱(钨钢)
+gt6addition:mte:38, 可调动能变速箱(钨钢)
+gt6addition:mte:39, GT6料斗(青铜)
+gt6addition:mte:40, GT6队列料斗(青铜)
+gt6addition:mte:41, GT6料斗(钢)
+gt6addition:mte:42, GT6队列料斗(钢)
+gt6addition:mte:43, GT6料斗(不锈钢)
+gt6addition:mte:44, GT6队列料斗(不锈钢)
+gt6addition:mte:45, GT6料斗(钛)
+gt6addition:mte:46, GT6队列料斗(钛)
+gt6addition:mte:47, GT6料斗(钨钢)
+gt6addition:mte:48, GT6队列料斗(钨钢)
+gt6addition:mte:49, 电磁铁(镀锌钢)
+gt6addition:mte:50, 电磁铁(铝)
+gt6addition:mte:51, 电磁铁(不锈钢)
+gt6addition:mte:52, 电磁铁(钛)
+gt6addition:mte:53, 电磁铁(钨钢)
+gt6addition:mte:54, 半导体制冷器(镀锌钢)
+gt6addition:mte:55, 半导体制冷器(铝)
+gt6addition:mte:56, 半导体制冷器(不锈钢)
+gt6addition:mte:57, 半导体制冷器(钛)
+gt6addition:mte:58, 半导体制冷器(钨钢)
+gt6addition:mte:59, 旋转能卷板机(青铜)
+gt6addition:mte:60, 旋转能卷板机(钢)
+gt6addition:mte:61, 旋转能卷板机(不锈钢)
+gt6addition:mte:62, 旋转能卷板机(钛)
+gt6addition:mte:63, 旋转能卷板机(钨钢)
+gt6addition:mte:64, 旋转能线材轧机(青铜)
+gt6addition:mte:65, 旋转能线材轧机(钢)
+gt6addition:mte:66, 旋转能线材轧机(不锈钢)
+gt6addition:mte:67, 旋转能线材轧机(钛)
+gt6addition:mte:68, 旋转能线材轧机(钨钢)
+gt6addition:mte:69, 旋转能车床(青铜)
+gt6addition:mte:70, 旋转能车床(钢)
+gt6addition:mte:71, 旋转能车床(不锈钢)
+gt6addition:mte:72, 旋转能车床(钛)
+gt6addition:mte:73, 旋转能车床(钨钢)
+gt6addition:mte:74, 旋转能圆锯(青铜)
+gt6addition:mte:75, 旋转能圆锯(钢)
+gt6addition:mte:76, 旋转能圆锯(不锈钢)
+gt6addition:mte:77, 旋转能圆锯(钛)
+gt6addition:mte:78, 旋转能圆锯(钨钢)
+gt6addition:mte:79, 旋转能离心机(青铜)
+gt6addition:mte:80, 旋转能离心机(钢)
+gt6addition:mte:81, 旋转能离心机(不锈钢)
+gt6addition:mte:82, 旋转能离心机(钛)
+gt6addition:mte:83, 旋转能离心机(钨钢)
+gt6addition:mte:84, 旋转能织布机(青铜)
+gt6addition:mte:85, 旋转能织布机(钢)
+gt6addition:mte:86, 旋转能织布机(不锈钢)
+gt6addition:mte:87, 旋转能织布机(钛)
+gt6addition:mte:88, 旋转能织布机(钨钢)
+gt6addition:mte:89, 旋转能洗矿厂(青铜)
+gt6addition:mte:90, 旋转能洗矿厂(钢)
+gt6addition:mte:91, 旋转能洗矿厂(不锈钢)
+gt6addition:mte:92, 旋转能洗矿厂(钛)
+gt6addition:mte:93, 旋转能洗矿厂(钨钢)
+gt6addition:mte:94, 旋转能搅拌机(青铜)
+gt6addition:mte:95, 旋转能搅拌机(钢)
+gt6addition:mte:96, 旋转能搅拌机(不锈钢)
+gt6addition:mte:97, 旋转能搅拌机(钛)
+gt6addition:mte:98, 旋转能搅拌机(钨钢)
+gt6addition:mte:99, 动能压缩机(青铜)
+gt6addition:mte:100, 动能压缩机(钢)
+gt6addition:mte:101, 动能压缩机(不锈钢)
+gt6addition:mte:102, 动能压缩机(钛)
+gt6addition:mte:103, 动能压缩机(钨钢)
+gt6addition:mte:104, 动能冲压机床(青铜)
+gt6addition:mte:105, 动能冲压机床(钢)
+gt6addition:mte:106, 动能冲压机床(不锈钢)
+gt6addition:mte:107, 动能冲压机床(钛)
+gt6addition:mte:108, 动能冲压机床(钨钢)
+gt6addition:mte:109, 动能锻造锤(青铜)
+gt6addition:mte:110, 动能锻造锤(钢)
+gt6addition:mte:111, 动能锻造锤(不锈钢)
+gt6addition:mte:112, 动能锻造锤(钛)
+gt6addition:mte:113, 动能锻造锤(钨钢)
+gt6addition:mte:114, 动能筛选机(青铜)
+gt6addition:mte:115, 动能筛选机(钢)
+gt6addition:mte:116, 动能筛选机(不锈钢)
+gt6addition:mte:117, 动能筛选机(钛)
+gt6addition:mte:118, 动能筛选机(钨钢)
+gt6addition:mte:119, 热力熔炉(钢)
+gt6addition:mte:120, 热力熔炉(殷钢)
+gt6addition:mte:121, 热力熔炉(钛)
+gt6addition:mte:122, 热力熔炉(碳化钨)
+gt6addition:mte:123, 热力蒸馏室(钢)
+gt6addition:mte:124, 热力蒸馏室(殷钢)
+gt6addition:mte:125, 热力蒸馏室(钛)
+gt6addition:mte:126, 热力蒸馏室(碳化钨)
+gt6addition:mte:127, 热力压模机(钢)
+gt6addition:mte:128, 热力压模机(殷钢)
+gt6addition:mte:129, 热力压模机(钛)
+gt6addition:mte:130, 热力压模机(碳化钨)
+gt6addition:mte:131, 热力过胶机(钢)
+gt6addition:mte:132, 热力过胶机(殷钢)
+gt6addition:mte:133, 热力过胶机(钛)
+gt6addition:mte:134, 热力过胶机(碳化钨)
+gt6addition:mte:135, 热力焙烧炉(钢)
+gt6addition:mte:136, 热力焙烧炉(殷钢)
+gt6addition:mte:137, 热力焙烧炉(钛)
+gt6addition:mte:138, 热力焙烧炉(碳化钨)
+gt6addition:mte:139, 热力发酵室(钢)
+gt6addition:mte:140, 热力发酵室(殷钢)
+gt6addition:mte:141, 热力发酵室(钛)
+gt6addition:mte:142, 热力发酵室(碳化钨)
+gt6addition:mte:143, 热力坩埚(石头)
+gt6addition:mte:144, 坩埚龙头(石头)
+gt6addition:mte:145, 浇铸盆(石头)
+gt6addition:mte:146, 冷却模具(石头)
+gt6addition:mte:147, 动能传动轴(石)
+gt6addition:mte:148, 热力坩埚(玄武岩)
+gt6addition:mte:149, 坩埚龙头(玄武岩)
+gt6addition:mte:150, 浇铸盆(玄武岩)
+gt6addition:mte:151, 冷却模具(玄武岩)
+gt6addition:mte:152, 动能传动轴(玄武岩)
+gt6addition:mte:153, 热力坩埚(黑色花岗岩)
+gt6addition:mte:154, 坩埚龙头(黑色花岗岩)
+gt6addition:mte:155, 浇铸盆(黑色花岗岩)
+gt6addition:mte:156, 冷却模具(黑色花岗岩)
+gt6addition:mte:157, 动能传动轴(黑色花岗岩)
+gt6addition:mte:158, 热力坩埚(红色花岗岩)
+gt6addition:mte:159, 坩埚龙头(红色花岗岩)
+gt6addition:mte:160, 浇铸盆(红色花岗岩)
+gt6addition:mte:161, 冷却模具(红色花岗岩)
+gt6addition:mte:162, 动能传动轴(红色花岗岩)
+gt6addition:mte:163, 热力坩埚(石英)
+gt6addition:mte:164, 坩埚龙头(石英)
+gt6addition:mte:165, 浇铸盆(石英)
+gt6addition:mte:166, 冷却模具(石英)
+gt6addition:mte:167, 动能传动轴(石英)
+gt6addition:mte:168, 热力坩埚(碳)
+gt6addition:mte:169, 坩埚龙头(碳)
+gt6addition:mte:170, 浇铸盆(碳)
+gt6addition:mte:171, 冷却模具(碳)
+gt6addition:mte:172, 动能传动轴(碳)
+gt6addition:mte:173, 热力坩埚(青铜)
+gt6addition:mte:174, 坩埚龙头(青铜)
+gt6addition:mte:175, 浇铸盆(青铜)
+gt6addition:mte:176, 冷却模具(青铜)
+gt6addition:mte:177, 动能传动轴(青铜)
+gt6addition:mte:178, 热力坩埚(殷钢)
+gt6addition:mte:179, 坩埚龙头(殷钢)
+gt6addition:mte:180, 浇铸盆(殷钢)
+gt6addition:mte:181, 冷却模具(殷钢)
+gt6addition:mte:182, 动能传动轴(因瓦)
+gt6addition:mte:183, 热力坩埚(钢)
+gt6addition:mte:184, 坩埚龙头(钢)
+gt6addition:mte:185, 浇铸盆(钢)
+gt6addition:mte:186, 冷却模具(钢)
+gt6addition:mte:187, 动能传动轴(钢)
+gt6addition:mte:188, 热力坩埚(不锈钢)
+gt6addition:mte:189, 坩埚龙头(不锈钢)
+gt6addition:mte:190, 浇铸盆(不锈钢)
+gt6addition:mte:191, 冷却模具(不锈钢)
+gt6addition:mte:192, 动能传动轴(不锈钢)
+gt6addition:mte:193, 热力坩埚(钛)
+gt6addition:mte:194, 坩埚龙头(钛)
+gt6addition:mte:195, 浇铸盆(钛)
+gt6addition:mte:196, 冷却模具(钛)
+gt6addition:mte:197, 动能传动轴(钛)
+gt6addition:mte:198, 热力坩埚(铬)
+gt6addition:mte:199, 坩埚龙头(铬)
+gt6addition:mte:200, 浇铸盆(铬)
+gt6addition:mte:201, 冷却模具(铬)
+gt6addition:mte:202, 动能传动轴(铬)
+gt6addition:mte:203, 热力坩埚(钼)
+gt6addition:mte:204, 坩埚龙头(钼)
+gt6addition:mte:205, 浇铸盆(钼)
+gt6addition:mte:206, 冷却模具(钼)
+gt6addition:mte:207, 动能传动轴(钼)
+gt6addition:mte:208, 热力坩埚(铌)
+gt6addition:mte:209, 坩埚龙头(铌)
+gt6addition:mte:210, 浇铸盆(铌)
+gt6addition:mte:211, 冷却模具(铌)
+gt6addition:mte:212, 动能传动轴(铌)
+gt6addition:mte:213, 热力坩埚(钽)
+gt6addition:mte:214, 坩埚龙头(钽)
+gt6addition:mte:215, 浇铸盆(钽)
+gt6addition:mte:216, 冷却模具(钽)
+gt6addition:mte:217, 动能传动轴(钽)
+gt6addition:mte:218, 热力坩埚(锇)
+gt6addition:mte:219, 坩埚龙头(锇)
+gt6addition:mte:220, 浇铸盆(锇)
+gt6addition:mte:221, 冷却模具(锇)
+gt6addition:mte:222, 动能传动轴(锇)
+gt6addition:mte:223, 热力坩埚(铱)
+gt6addition:mte:224, 坩埚龙头(铱)
+gt6addition:mte:225, 浇铸盆(铱)
+gt6addition:mte:226, 冷却模具(铱)
+gt6addition:mte:227, 动能传动轴(铱)
+gt6addition:mte:228, 热力坩埚(铌钛合金)
+gt6addition:mte:229, 坩埚龙头(铌钛合金)
+gt6addition:mte:230, 浇铸盆(铌钛合金)
+gt6addition:mte:231, 冷却模具(铌钛合金)
+gt6addition:mte:232, 动能传动轴(铌钛)
+gt6addition:mte:233, 热力坩埚(钒)
+gt6addition:mte:234, 坩埚龙头(钒)
+gt6addition:mte:235, 浇铸盆(钒)
+gt6addition:mte:236, 冷却模具(钒)
+gt6addition:mte:237, 动能传动轴(钒)
+gt6addition:mte:238, 热力坩埚(钨)
+gt6addition:mte:239, 坩埚龙头(钨)
+gt6addition:mte:240, 浇铸盆(钨)
+gt6addition:mte:241, 冷却模具(钨)
+gt6addition:mte:242, 动能传动轴(钨)
+gt6addition:mte:243, 热力坩埚(钨钢)
+gt6addition:mte:244, 坩埚龙头(钨钢)
+gt6addition:mte:245, 浇铸盆(钨钢)
+gt6addition:mte:246, 冷却模具(钨钢)
+gt6addition:mte:247, 动能传动轴(钨钢)
+gt6addition:mte:248, 热力坩埚(碳化钨)
+gt6addition:mte:249, 坩埚龙头(碳化钨)
+gt6addition:mte:250, 浇铸盆(碳化钨)
+gt6addition:mte:251, 冷却模具(碳化钨)
+gt6addition:mte:252, 动能传动轴(碳化钨)
+gt6addition:mte:253, 温度传感器
+gt6addition:mte:254, 电磁偏振器(镀锌钢)
+gt6addition:mte:255, 电磁偏振器(铝)
+gt6addition:mte:256, 电磁偏振器(不锈钢)
+gt6addition:mte:257, 电磁偏振器(钛)
+gt6addition:mte:258, 电磁偏振器(钨钢)
+gt6addition:mte:259, 磁选机(镀锌钢)
+gt6addition:mte:260, 磁选机(铝)
+gt6addition:mte:261, 磁选机(不锈钢)
+gt6addition:mte:262, 磁选机(钛)
+gt6addition:mte:263, 磁选机(钨钢)
 gregtech:mte:0, 上锁的保险柜
 gregtech:mte:1, 小型蒸汽固体燃料锅炉
 gregtech:mte:2, 高压蒸汽固体燃料锅炉
@@ -4148,7 +4286,9 @@ gregtech:mte:17, 蒸汽合金炉
 gregtech:mte:18, 高压合金炉
 gregtech:mte:19, 蒸汽碎岩机
 gregtech:mte:20, 高压蒸汽碎岩机
-gregtech:mte:21, 蒸汽采矿机
+gregtech:mte:21, gregtech.machine.steam_vulcanizing_press_bronze.name
+gregtech:mte:22, gregtech.machine.steam_vulcanizing_press_steel.name
+gregtech:mte:40, 蒸汽采矿机
 gregtech:mte:50, 基础电炉
 gregtech:mte:51, 进阶电炉
 gregtech:mte:52, 进阶电炉 II
@@ -4882,6 +5022,19 @@ gregtech:mte:899, 史诗回收机 II
 gregtech:mte:900, 史诗回收机 III
 gregtech:mte:901, 史诗回收机 IV
 gregtech:mte:902, 传奇回收机
+gregtech:mte:905, 基础硫化机
+gregtech:mte:906, 进阶硫化机
+gregtech:mte:907, 进阶硫化机 II
+gregtech:mte:908, 进阶硫化机 III
+gregtech:mte:909, 精英硫化机
+gregtech:mte:910, 精英硫化机 II
+gregtech:mte:911, 精英硫化机 III
+gregtech:mte:912, 终极硫化机
+gregtech:mte:913, 史诗硫化机
+gregtech:mte:914, 史诗硫化机 II
+gregtech:mte:915, 史诗硫化机 III
+gregtech:mte:916, 史诗硫化机 IV
+gregtech:mte:917, 传奇硫化机
 gregtech:mte:920, 基础采矿机
 gregtech:mte:921, 进阶采矿机
 gregtech:mte:922, 进阶采矿机 II
@@ -5604,29 +5757,47 @@ gregtech:mte:2056, 监控器屏幕
 gregtech:mte:2060, 木桶
 gregtech:mte:2061, 青铜桶
 gregtech:mte:2062, 金桶
-gregtech:mte:2063, 锡桶
+gregtech:mte:2063, 铜桶
 gregtech:mte:2064, 铁桶
 gregtech:mte:2065, 铅桶
 gregtech:mte:2066, 钢桶
-gregtech:mte:2067, 铝桶
-gregtech:mte:2068, 不锈钢桶
-gregtech:mte:2069, 钛桶
-gregtech:mte:2070, 钨钢桶
-gregtech:mte:2071, 镀铑钯桶
-gregtech:mte:2072, 硅岩合金桶
-gregtech:mte:2073, 钅达桶
-gregtech:mte:2074, 中子素桶
+gregtech:mte:2067, 铬桶
+gregtech:mte:2068, 铝桶
+gregtech:mte:2069, 不锈钢桶
+gregtech:mte:2070, 钛桶
+gregtech:mte:2071, 钨桶
+gregtech:mte:2072, 钨钢桶
+gregtech:mte:2073, 铱桶
+gregtech:mte:2074, 镀铑钯桶
+gregtech:mte:2075, 硅岩合金桶
+gregtech:mte:2076, 钅达桶
+gregtech:mte:2077, 中子素桶
 gregtech:mte:2080, 木板条箱
-gregtech:mte:2081, 青铜板条箱
-gregtech:mte:2082, 钢板条箱
-gregtech:mte:2083, 铝板条箱
-gregtech:mte:2084, 不锈钢板条箱
-gregtech:mte:2085, 钛板条箱
-gregtech:mte:2086, 钨钢板条箱
-gregtech:mte:2087, 镀铑钯板条箱
-gregtech:mte:2088, 硅岩合金板条箱
-gregtech:mte:2089, 钅达板条箱
-gregtech:mte:2090, 中子素板条箱
+gregtech:mte:2081, 铜板条箱
+gregtech:mte:2082, 铁板条箱
+gregtech:mte:2083, 青铜板条箱
+gregtech:mte:2084, 银板条箱
+gregtech:mte:2085, 钢板条箱
+gregtech:mte:2086, 金板条箱
+gregtech:mte:2087, 铝板条箱
+gregtech:mte:2088, 钻石板条箱
+gregtech:mte:2089, 不锈钢板条箱
+gregtech:mte:2090, 钛板条箱
+gregtech:mte:2091, 钨钢板条箱
+gregtech:mte:2092, 镀铑钯板条箱
+gregtech:mte:2093, 硅岩合金板条箱
+gregtech:mte:2094, 钅达板条箱
+gregtech:mte:2095, 中子素板条箱
+gregtech:mte:2400, 多重超级缸 I
+gregtech:mte:2401, 多重超级缸 II
+gregtech:mte:2402, 多重超级缸 III
+gregtech:mte:2403, 多重超级缸 IV
+gregtech:mte:2404, 多重超级缸 V
+gregtech:mte:2405, 多重量子缸 I
+gregtech:mte:2406, 多重量子缸 II
+gregtech:mte:2407, 多重量子缸 III
+gregtech:mte:2408, 多重量子缸 IV
+gregtech:mte:2409, 多重量子缸 V
 gregtech:mte:2500, §7LV§r输入总成
 gregtech:mte:2501, §bMV§r输入总成
 gregtech:mte:2502, §6HV§r输入总成
@@ -5763,8 +5934,31 @@ gregtech:mte:2702, ME代理样板总成
 gregtech:mte:2703, 巨型ME代理样板总成
 gregtech:mte:2704, ME矿辞前缀代理样板总成
 gregtech:mte:2705, 巨型ME矿辞前缀代理样板总成
-gregtech:mte:2750, ME矿辞输入总线
-gregtech:mte:2751, ME样板管理器
+gregtech:mte:2710, ME矿辞输入总线
+gregtech:mte:2711, ME样板管理器
+gregtech:mte:2720, §7LV§r尾气仓
+gregtech:mte:2721, §bMV§r尾气仓
+gregtech:mte:2722, §6HV§r尾气仓
+gregtech:mte:2723, §5EV§r尾气仓
+gregtech:mte:2724, §1IV§r尾气仓
+gregtech:mte:2725, §dLuV§r尾气仓
+gregtech:mte:2726, §cZPM§r尾气仓
+gregtech:mte:2727, §3UV§r尾气仓
+gregtech:mte:2728, §4UHV§r尾气仓
+gregtech:mte:2735, §8ULV§r 除尘器
+gregtech:mte:2736, §7LV§r 除尘器
+gregtech:mte:2737, §bMV§r 除尘器
+gregtech:mte:2738, §6HV§r 除尘器
+gregtech:mte:2739, §5EV§r 除尘器
+gregtech:mte:2740, §1IV§r 除尘器
+gregtech:mte:2741, §dLuV§r 除尘器
+gregtech:mte:2742, §cZPM§r 除尘器
+gregtech:mte:2743, §3UV§r 除尘器
+gregtech:mte:2744, §4UHV§r 除尘器
+gregtech:mte:2745, §aUEV§r 除尘器
+gregtech:mte:2746, §2UIV§r 除尘器
+gregtech:mte:2747, §eUXV§r 除尘器
+gregtech:mte:2748, §9OpV§r 除尘器
 gregtech:mte:2800, §8ULV§r巨型输入总线
 gregtech:mte:2801, §7LV§r巨型输入总线
 gregtech:mte:2802, §bMV§r巨型输入总线
@@ -5831,20 +6025,20 @@ gregtech:mte:2881, §cZPM§r ME消声仓
 gregtech:mte:2882, §3UV§r ME消声仓
 gregtech:mte:2883, §4UHV§r ME消声仓
 gregtech:mte:2884, §aUEV§r ME消声仓
-gregtech:mte:2890, §8ULV§r 除尘器
-gregtech:mte:2891, §7LV§r 除尘器
-gregtech:mte:2892, §bMV§r 除尘器
-gregtech:mte:2893, §6HV§r 除尘器
-gregtech:mte:2894, §5EV§r 除尘器
-gregtech:mte:2895, §1IV§r 除尘器
-gregtech:mte:2896, §dLuV§r 除尘器
-gregtech:mte:2897, §cZPM§r 除尘器
-gregtech:mte:2898, §3UV§r 除尘器
-gregtech:mte:2899, §4UHV§r 除尘器
-gregtech:mte:2900, §aUEV§r 除尘器
-gregtech:mte:2901, §2UIV§r 除尘器
-gregtech:mte:2902, §eUXV§r 除尘器
-gregtech:mte:2903, §9OpV§r 除尘器
+gregtech:mte:2890, §7LV§r ME尾气仓
+gregtech:mte:2891, §bMV§r ME尾气仓
+gregtech:mte:2892, §6HV§r ME尾气仓
+gregtech:mte:2893, §5EV§r ME尾气仓
+gregtech:mte:2894, §1IV§r ME尾气仓
+gregtech:mte:2895, §dLuV§r ME尾气仓
+gregtech:mte:2896, §cZPM§r ME尾气仓
+gregtech:mte:2897, §3UV§r ME尾气仓
+gregtech:mte:2898, §4UHV§r ME尾气仓
+gregtech:mte:2899, §aUEV§r ME尾气仓
+gregtech:mte:2900, §2UIV§r ME尾气仓
+gregtech:mte:2901, §eUXV§r ME尾气仓
+gregtech:mte:2902, §9OpV§r ME尾气仓
+gregtech:mte:2903, §c§lMAX§r ME尾气仓
 gregtech:mte:2910, §8ULV§r 热阱仓
 gregtech:mte:2911, §7LV§r 热阱仓
 gregtech:mte:2912, §bMV§r 热阱仓
@@ -5860,6 +6054,7 @@ gregtech:mte:2921, §7LV§r 电加热器
 gregtech:mte:2922, §bMV§r 电加热器
 gregtech:mte:2923, §6HV§r 电加热器
 gregtech:mte:2924, §5EV§r 电加热器
+gregtech:mte:2925, 热量传感器
 gregtech:mte:2945, 基础巨型缓存器
 gregtech:mte:2946, 进阶巨型缓存器
 gregtech:mte:2947, 进阶巨型缓存器 II
@@ -9270,6 +9465,14 @@ gregtech:ore_basaltic_mineral_sand_0:4, 红沙玄武岩矿砂矿石
 gregtech:ore_basaltic_mineral_sand_0:5, 花岗岩玄武岩矿砂矿石
 gregtech:ore_basaltic_mineral_sand_0:6, 闪长岩玄武岩矿砂矿石
 gregtech:ore_basaltic_mineral_sand_0:7, 安山岩玄武岩矿砂矿石
+modelloader:tree, Tree
+modelloader:animated_chest, tile.modelloader.animated_chest.name
+modelloader:windmill, tile.modelloader.windmill.name
+modelloader:botarium, tile.modelloader.botarium.name
+gtsteam:storage_upgrade_tier_1, 基础存储升级
+gtsteam:storage_upgrade_tier_2, 高级存储升级
+gtsteam:storage_upgrade_tier_3, 精英存储升级
+gtsteam:void_upgrade, 虚空存储升级
 gtsteam:multiblock_casing0:0, 镀锌瓷瓦砖
 gtsteam:multiblock_casing0:1, 储罐外壁
 gtsteam:multiblock_casing0:2, 加固防腐木缸壁
@@ -9283,10 +9486,6 @@ gtsteam:firebox_casing0:0, 固体燃烧室
 gtsteam:firebox_casing0:1, 液体燃烧室
 gtsteam:evaporation_bed:0, 砂壤土
 gtsteam:serpentine:0, 蛇形铜管方块
-gtsteam:storage_upgrade_tier_1, 基础存储升级
-gtsteam:storage_upgrade_tier_2, 高级存储升级
-gtsteam:storage_upgrade_tier_3, 精英存储升级
-gtsteam:void_upgrade, 虚空存储升级
 theoneprobe:probe, 检测器No.1
 theoneprobe:creativeprobe, 创造模式检测器
 theoneprobe:probenote, The One Probe Read Me

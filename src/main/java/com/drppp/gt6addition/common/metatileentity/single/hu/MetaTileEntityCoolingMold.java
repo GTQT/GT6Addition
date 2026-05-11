@@ -188,6 +188,9 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
         Recipe bestRecipe = null;
         int bestRequiredFluid = 0;
         for (Recipe recipe : RecipeMaps.FLUID_SOLIDFICATION_RECIPES.getRecipeList()) {
+            if (!isUlvSolidifierRecipe(recipe)) {
+                continue;
+            }
             int requiredFluid = getRequiredFluidAmount(recipe, moldStack, fluidStack);
             if (requiredFluid <= 0 || fluidStack.amount < requiredFluid || !canFitOutput(recipe)) {
                 continue;
@@ -198,6 +201,10 @@ public class MetaTileEntityCoolingMold extends MetaTileEntity implements ICrucib
             }
         }
         return bestRecipe;
+    }
+
+    public static boolean isUlvSolidifierRecipe(@Nullable Recipe recipe) {
+        return recipe != null && GTUtility.getTierByVoltage(Math.abs(recipe.getEUt())) == GTValues.ULV;
     }
 
     private int getRequiredFluidAmount(Recipe recipe, ItemStack moldStack, FluidStack fluidStack) {

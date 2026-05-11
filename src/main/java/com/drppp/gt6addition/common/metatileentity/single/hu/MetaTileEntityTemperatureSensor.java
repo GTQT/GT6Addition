@@ -20,6 +20,7 @@ import gregtech.client.renderer.texture.Textures;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -81,6 +82,10 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
     private long maxTemperature;
     private int redstoneOutput;
     private boolean initializedTarget;
+    private boolean updatingRedstoneSignals;
+    private boolean redstoneSignalsInitialized;
+    private EnumFacing appliedTargetFacing = EnumFacing.DOWN;
+    private int appliedRedstoneOutput = -1;
 
     public MetaTileEntityTemperatureSensor(ResourceLocation metaTileEntityId, int casingColor,
                                            float hardness, float resistance) {
@@ -93,6 +98,15 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
         return new MetaTileEntityTemperatureSensor(metaTileEntityId, casingColor, hardness, resistance);
+    }
+
+    @Override
+    public void onPlacement(EntityLivingBase placer) {
+        super.onPlacement(placer);
+        setFrontFacing(getFrontFacing().getOpposite());
+        targetFacing = getFrontFacing();
+        initializedTarget = true;
+        markDirty();
     }
 
     @Override
@@ -109,14 +123,14 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
     @Override
     public void onNeighborChanged() {
         super.onNeighborChanged();
-        if (getWorld() != null && !getWorld().isRemote) {
+        if (getWorld() != null && !getWorld().isRemote && !updatingRedstoneSignals) {
             updateReadingAndRedstone();
         }
     }
 
     private void ensureDefaultTarget() {
         if (!initializedTarget) {
-            targetFacing = getFrontFacing().getOpposite();
+            targetFacing = getFrontFacing();
             initializedTarget = true;
             markDirty();
         }
@@ -178,8 +192,20 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
     }
 
     private void applyRedstoneSignals() {
-        for (EnumFacing facing : EnumFacing.VALUES) {
-            setOutputRedstoneSignal(facing, facing == targetFacing ? 0 : redstoneOutput);
+        if (redstoneSignalsInitialized && appliedTargetFacing == targetFacing &&
+                appliedRedstoneOutput == redstoneOutput) {
+            return;
+        }
+        updatingRedstoneSignals = true;
+        try {
+            for (EnumFacing facing : EnumFacing.VALUES) {
+                setOutputRedstoneSignal(facing, facing == targetFacing ? 0 : redstoneOutput);
+            }
+        } finally {
+            appliedTargetFacing = targetFacing;
+            appliedRedstoneOutput = redstoneOutput;
+            redstoneSignalsInitialized = true;
+            updatingRedstoneSignals = false;
         }
     }
 
@@ -188,13 +214,16 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
     }
 
     private void setTargetFacing(EnumFacing facing) {
-        if (facing == null) {
+        if (facing == null || targetFacing == facing) {
             return;
         }
         targetFacing = facing;
         initializedTarget = true;
         markDirty();
         updateReadingAndRedstone();
+        if (getWorld() != null && !getWorld().isRemote) {
+            writeCustomData(DATA_STATE, this::writeState);
+        }
     }
 
     private void setMode(int mode) {

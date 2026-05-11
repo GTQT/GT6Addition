@@ -22,6 +22,8 @@ public class CapabilityHandler {
     public static Capability<IColdEnergy> CAPABILITY_COLD_ENERGY= null;
     @CapabilityInject(IMagnetEnergy.class)
     public static Capability<IMagnetEnergy> CAPABILITY_MAGNET_ENERGY= null;
+    @CapabilityInject(ILaserEnergy.class)
+    public static Capability<ILaserEnergy> CAPABILITY_LASER_ENERGY= null;
 
     public static <T> void registerCapabilityWithNoDefault(Class<T> capabilityClass) {
         CapabilityManager.INSTANCE.register(capabilityClass, new Capability.IStorage<T>() {
@@ -44,5 +46,6 @@ public class CapabilityHandler {
         CapabilityManager.INSTANCE.register(IKineticEnergy.class,new KineticEnergyStore(),  KineticEnergyHandler::new);
         CapabilityManager.INSTANCE.register(IColdEnergy.class,new ColdEnergyStore(),  ColdEnergyHandler::new);
         CapabilityManager.INSTANCE.register(IMagnetEnergy.class,new MagnetEnergyStore(),  MagnetEnergyHandler::new);
+        CapabilityManager.INSTANCE.register(ILaserEnergy.class,new LaserEnergyStore(),  LaserEnergyHandler::new);
     }
 }

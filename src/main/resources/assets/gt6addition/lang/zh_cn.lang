@@ -416,3 +416,46 @@ gt6addition.machine.gt6_hopper.status.full=料斗已满。
 gt6addition.machine.gt6_hopper.status.empty=料斗为空。
 gt6addition.machine.gt6_hopper.status.stack_size=堆叠数量：%s
 gt6addition.machine.gt6_hopper.status.reset=堆叠数量已重置为 %s。
+
+gt6addition.machine.automatic_igniter.lv.name=自动点火器 (LV)
+gt6addition.machine.automatic_igniter.tooltip.1=GT6风格的自动点火器；每10 tick检查前方。
+gt6addition.machine.automatic_igniter.tooltip.2=自动点燃前方的相邻简易燃烧室。
+gt6addition.machine.automatic_igniter.tooltip.3=每次成功点火消耗 %s EU。
+recipemap.laser_welder.name=激光焊接机
+gt6addition.machine.electric_dynamo.lv.name=电力发电机 (LV)
+gt6addition.machine.electric_dynamo.mv.name=电力发电机 (MV)
+gt6addition.machine.electric_dynamo.hv.name=电力发电机 (HV)
+gt6addition.machine.electric_dynamo.ev.name=电力发电机 (EV)
+gt6addition.machine.electric_dynamo.iv.name=电力发电机 (IV)
+gt6addition.machine.electric_co2_laser.lv.name=电力 CO2 激光器 (LV)
+gt6addition.machine.electric_co2_laser.mv.name=电力 CO2 激光器 (MV)
+gt6addition.machine.electric_co2_laser.hv.name=电力 CO2 激光器 (HV)
+gt6addition.machine.electric_co2_laser.ev.name=电力 CO2 激光器 (EV)
+gt6addition.machine.electric_co2_laser.iv.name=电力 CO2 激光器 (IV)
+gt6addition.machine.laser_welder.lv.name=激光焊接机 (LV)
+gt6addition.machine.laser_welder.mv.name=激光焊接机 (MV)
+gt6addition.machine.laser_welder.hv.name=激光焊接机 (HV)
+gt6addition.machine.laser_welder.ev.name=激光焊接机 (EV)
+gt6addition.machine.laser_welder.iv.name=激光焊接机 (IV)
+gt6addition.machine.laser_engraver.lv.name=激光刻蚀机 (LV)
+gt6addition.machine.laser_engraver.mv.name=激光刻蚀机 (MV)
+gt6addition.machine.laser_engraver.hv.name=激光刻蚀机 (HV)
+gt6addition.machine.laser_engraver.ev.name=激光刻蚀机 (EV)
+gt6addition.machine.laser_engraver.iv.name=激光刻蚀机 (IV)
+
+gt6addition.eu.dynamo.info.1=效率: %s
+gt6addition.eu.dynamo.info.2=背面输入: %sRU/t - %sRU/t
+gt6addition.eu.dynamo.info.3=正面输出: %sEU/t - %sEU/t
+gt6addition.eu.dynamo.info.4=按 GT6 电力发电机比例将 RU 转为 EU。
+
+gt6addition.lu.laser.info.1=效率: %s
+gt6addition.lu.laser.info.2=其余面输入 EU: %sEU/t - %sEU/t
+gt6addition.lu.laser.info.3=正面输出: %sLU/t - %sLU/t
+gt6addition.lu.laser.info.4=按 GT6 电力 CO2 激光器比例将 EU 转为 LU。
+
+gt6addition.lu.welder.info.1=从背面接收 LU。
+
+gt6addition.lu.engraver.info.1=从背面接收 LU。
+gt6addition.lu.engraver.info.2=执行 CEu 原版激光刻蚀配方。
+gt6addition.lu.engraver.info.3=能耗为原配方一半, 耗时为原配方的 75%。
+
