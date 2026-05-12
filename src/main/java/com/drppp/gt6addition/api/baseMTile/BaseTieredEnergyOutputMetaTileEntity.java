@@ -5,6 +5,7 @@ import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.top.IEnergyOutShow;
+import com.drppp.gt6addition.api.utils.EnergyConversionHelper;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.gui.ModularUI;
@@ -145,7 +146,7 @@ public abstract class BaseTieredEnergyOutputMetaTileEntity extends TieredMetaTil
         }
 
         this.energyContainer.removeEnergy(stored);
-        return (int) (stored * efficiency / 2.0D);
+        return EnergyConversionHelper.scaledOutputFromInput(stored, output, efficiency);
     }
 
     protected void rotateEntitiesAbove(float rotationSpeed) {

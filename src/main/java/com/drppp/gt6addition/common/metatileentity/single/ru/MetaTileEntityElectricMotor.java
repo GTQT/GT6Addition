@@ -4,6 +4,7 @@ import com.drppp.gt6addition.api.baseMTile.BaseTieredEnergyOutputMetaTileEntity;
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
 import com.drppp.gt6addition.api.capability.impl.RotationEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IRotationEnergy;
+import com.drppp.gt6addition.api.utils.EnergyConversionHelper;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
@@ -32,8 +33,8 @@ public class MetaTileEntityElectricMotor extends BaseTieredEnergyOutputMetaTileE
         super(metaTileEntityId, tier, color, Gt6AdditionTextures.RU_ELECTRIC_MOTOR);
         this.efficiency = efficiency;
         this.outPutRu = outPutRu;
-        this.minEuUse = (int) (this.outPutRu / this.efficiency);
-        this.maxEuUse = (int) (this.outPutRu * 2 / this.efficiency);
+        this.minEuUse = EnergyConversionHelper.minimumInputForNominalOutput(this.outPutRu, this.efficiency);
+        this.maxEuUse = EnergyConversionHelper.maximumInputForDoubleOutput(this.outPutRu, this.efficiency);
     }
 
     @Override

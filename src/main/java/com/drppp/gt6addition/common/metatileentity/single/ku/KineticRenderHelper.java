@@ -57,6 +57,7 @@ public final class KineticRenderHelper {
     }
 
     public static TextureAtlasSprite getSprite(String spritePath) {
-        return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("gregtech:blocks/" + spritePath);
+        String atlasPath = spritePath.contains(":") ? spritePath : "gregtech:blocks/" + spritePath;
+        return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(atlasPath);
     }
 }

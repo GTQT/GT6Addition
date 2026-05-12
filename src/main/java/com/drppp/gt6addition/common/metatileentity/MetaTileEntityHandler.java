@@ -20,6 +20,9 @@ import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCruci
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucibleFaucet;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityTemperatureSensor;
 import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityGt6Hopper;
+import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityMiniPortalEnd;
+import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityMiniPortalNether;
+import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityMortar;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticAxle;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticGearbox;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticSteamEngine;
@@ -29,6 +32,7 @@ import com.drppp.gt6addition.common.metatileentity.single.lu.MetaTileEntityLaser
 import com.drppp.gt6addition.common.metatileentity.single.mu.MetaTileEntityElectromagnet;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityDieselEngine;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityElectricMotor;
+import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityRotationPump;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntitySteamTurbine;
 import gregtech.api.GTValues;
 import com.drppp.gt6addition.common.recipes.GT6AdditionRecipeMaps;
@@ -63,11 +67,16 @@ public class MetaTileEntityHandler {
     public static MetaTileEntityMutiEnergyMachine[] SIFTER_KU = new MetaTileEntityMutiEnergyMachine[5];
     public static MetaTileEntityRotationEngine[] RU_KU_ENGINE = new MetaTileEntityRotationEngine[5];
     public static MetaTileEntityKineticSteamEngine[] KINETIC_STEAM_ENGINES = new MetaTileEntityKineticSteamEngine[5];
+    public static MetaTileEntityKineticSteamEngine[] KINETIC_STEAM_ENGINES_STRONG = new MetaTileEntityKineticSteamEngine[5];
     public static MetaTileEntityKineticGearbox[] KINETIC_GEARBOXES = new MetaTileEntityKineticGearbox[5];
     public static MetaTileEntityKineticGearbox[] ADJUSTABLE_KINETIC_GEARBOXES = new MetaTileEntityKineticGearbox[5];
     public static MetaTileEntityKineticAxle[] KINETIC_AXLES = new MetaTileEntityKineticAxle[22];
     public static MetaTileEntityGt6Hopper[] GT6_HOPPERS = new MetaTileEntityGt6Hopper[5];
     public static MetaTileEntityGt6Hopper[] GT6_QUEUE_HOPPERS = new MetaTileEntityGt6Hopper[5];
+    public static MetaTileEntityRotationPump[] ROTATION_PUMPS = new MetaTileEntityRotationPump[5];
+    public static MetaTileEntityMortar MORTAR;
+    public static MetaTileEntityMiniPortalNether MINI_PORTAL_NETHER;
+    public static MetaTileEntityMiniPortalEnd MINI_PORTAL_END;
 
     public static MetaTileEntityColorOvenMachine[] OVEN_HU = new MetaTileEntityColorOvenMachine[4];
     public static MetaTileEntityColorMachine[] DISTILLERY_HU = new MetaTileEntityColorMachine[4];
@@ -143,7 +152,7 @@ public class MetaTileEntityHandler {
             int[] outInventory = {8000, 8000, 8000, (int) (8000 * 1.5), 8000 * 2, 8000 * 2, 8000 * 2, 8000 * 2};
             STEAM_TURBINES[i] = registerMetaTileEntity(getID(), new MetaTileEntitySteamTurbine(getMyId(names[i] + "_steam_turbine"), color[i], 0.66, output[i], outInventory[i]));
         }
-        //鐕冪儳瀹?
+        //闁绘洖鍟伴崕宕団偓?
         for (int i = 0; i < HU_BURRING_BOXS.length; i++) {
             int[] color = {0x251945, 0x815024, 0x4F4F4E, 0x87875C, 0xA39393, 0x896495, 0x1D1D1D, 0x3C3C61};
             double[] efficiency = {0.5, 0.75, 0.7, 1, 0.85, 0.85, 1, 0.9};
@@ -183,6 +192,10 @@ public class MetaTileEntityHandler {
         }
         for (int i = 1; i <= 5; i++) {
             int throughput = (int) GTValues.V[i];
+            KINETIC_STEAM_ENGINES_STRONG[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticSteamEngine(getMyId("kinetic_steam_engine_strong." + GTValues.VN[i]), ruKuEngineColor[i], throughput*4, 80));
+        }
+        for (int i = 1; i <= 5; i++) {
+            int throughput = (int) GTValues.V[i];
             KINETIC_GEARBOXES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticGearbox(getMyId("kinetic_gearbox." + GTValues.VN[i]), ruKuEngineColor[i], throughput * 2, false));
         }
         for (int i = 1; i <= 5; i++) {
@@ -204,6 +217,27 @@ public class MetaTileEntityHandler {
                     Math.max(2, hopperSlots[i]),
                     true));
         }
+        int[] rotationPumpColors = {
+                getColor(MaterialColorUtil.MaterialName.steel),
+                getColor(MaterialColorUtil.MaterialName.aluminum),
+                getColor(MaterialColorUtil.MaterialName.stain_steel),
+                getColor(MaterialColorUtil.MaterialName.titanium),
+                getColor(MaterialColorUtil.MaterialName.tungsten_steel)
+        };
+        for (int i = 0; i < 5; i++) {
+            ROTATION_PUMPS[i] = registerMetaTileEntity(getID(), new MetaTileEntityRotationPump(
+                    getMyId("rotation_pump." + GTValues.VN[i + 1]),
+                    i + 1,
+                    rotationPumpColors[i]));
+        }
+        MORTAR = registerMetaTileEntity(getID(), new MetaTileEntityMortar(
+                getMyId("mortar"),
+                0x7A7A7A,
+                getColor(MaterialColorUtil.MaterialName.steel)));
+        MINI_PORTAL_NETHER = registerMetaTileEntity(getID(), new MetaTileEntityMiniPortalNether(
+                getMyId("mini_portal_nether")));
+        MINI_PORTAL_END = registerMetaTileEntity(getID(), new MetaTileEntityMiniPortalEnd(
+                getMyId("mini_portal_end")));
         for (int i = 0; i < KINETIC_AXLES.length; i++) {
             Material material = crucibleMaterials[i];
             KINETIC_AXLES[i] = registerMetaTileEntity(getID(), new MetaTileEntityKineticAxle(

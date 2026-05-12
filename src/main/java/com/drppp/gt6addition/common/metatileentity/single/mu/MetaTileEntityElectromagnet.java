@@ -4,6 +4,7 @@ import com.drppp.gt6addition.api.baseMTile.BaseTieredEnergyOutputMetaTileEntity;
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
 import com.drppp.gt6addition.api.capability.impl.MagnetEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IMagnetEnergy;
+import com.drppp.gt6addition.api.utils.EnergyConversionHelper;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
@@ -32,8 +33,8 @@ public class MetaTileEntityElectromagnet extends BaseTieredEnergyOutputMetaTileE
         super(metaTileEntityId, tier, color, Gt6AdditionTextures.MU_ELECTROMAGNET);
         this.efficiency = efficiency;
         this.outPutRu = outPutRu;
-        this.minSteamUse = (int) (this.outPutRu / this.efficiency);
-        this.maxSteamUse = (int) (this.outPutRu * 2 / this.efficiency);
+        this.minSteamUse = EnergyConversionHelper.minimumInputForNominalOutput(this.outPutRu, this.efficiency);
+        this.maxSteamUse = EnergyConversionHelper.maximumInputForDoubleOutput(this.outPutRu, this.efficiency);
     }
 
     @Override

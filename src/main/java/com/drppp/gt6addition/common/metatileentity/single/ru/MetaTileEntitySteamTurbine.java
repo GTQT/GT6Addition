@@ -4,6 +4,7 @@ import com.drppp.gt6addition.api.baseMTile.BaseEnergyOutputMetaTileEntity;
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
 import com.drppp.gt6addition.api.capability.impl.RotationEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IRotationEnergy;
+import com.drppp.gt6addition.api.utils.EnergyConversionHelper;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.capability.IFilter;
 import gregtech.api.capability.impl.CommonFluidFilters;
@@ -45,8 +46,8 @@ public class MetaTileEntitySteamTurbine extends BaseEnergyOutputMetaTileEntity {
         this.efficiency = efficiency;
         this.outPutRu = outPutRu;
         this.tank_size = tank_size;
-        this.minSteamUse = (int) (this.outPutRu / this.efficiency);
-        this.maxSteamUse = (int) (this.outPutRu * 2 / this.efficiency);
+        this.minSteamUse = EnergyConversionHelper.minimumInputForNominalOutput(this.outPutRu, this.efficiency);
+        this.maxSteamUse = EnergyConversionHelper.maximumInputForDoubleOutput(this.outPutRu, this.efficiency);
         this.initializeInventory();
     }
 
@@ -122,7 +123,7 @@ public class MetaTileEntitySteamTurbine extends BaseEnergyOutputMetaTileEntity {
 
         int amount = this.steamFluidTank.getFluidAmount();
         this.importFluids.drain(amount, true);
-        this.ru.setRuEnergy((int) (amount * this.efficiency / 2));
+        this.ru.setRuEnergy(EnergyConversionHelper.scaledOutputFromInput(amount, this.outPutRu, this.efficiency));
         this.waterFluidTank.fill(Materials.DistilledWater.getFluid((int) (amount * 0.1)), true);
     }
 

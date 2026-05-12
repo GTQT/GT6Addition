@@ -6,6 +6,7 @@ import com.drppp.gt6addition.api.capability.impl.ColdEnergyHandler;
 import com.drppp.gt6addition.api.capability.impl.HeatEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IColdEnergy;
 import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
+import com.drppp.gt6addition.api.utils.EnergyConversionHelper;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
@@ -35,8 +36,8 @@ public class MetaTileEntityThermoelectricCooler extends BaseTieredEnergyOutputMe
         super(metaTileEntityId, tier, color, Gt6AdditionTextures.CU_THERMOELECTRIC_COOLER);
         this.efficiency = efficiency;
         this.outPutRu = outPutRu;
-        this.minEuUse = (int) (this.outPutRu / this.efficiency);
-        this.maxEuUse = (int) (this.outPutRu * 2 / this.efficiency);
+        this.minEuUse = EnergyConversionHelper.minimumInputForNominalOutput(this.outPutRu, this.efficiency);
+        this.maxEuUse = EnergyConversionHelper.maximumInputForDoubleOutput(this.outPutRu, this.efficiency);
     }
 
     @Override
