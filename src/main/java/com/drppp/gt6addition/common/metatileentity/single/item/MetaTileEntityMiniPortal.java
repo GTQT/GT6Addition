@@ -44,23 +44,23 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
     private static final double PX = 1.0D / 16.0D;
     private static final int REDSTONE_HOLD_TICKS = 20;
     private static final Cuboid6[] PORTAL_CORE_BOXES = {
-            new Cuboid6(7 * PX, 2 * PX, 2 * PX, 9 * PX, 14 * PX, 14 * PX),
-            new Cuboid6(2 * PX, 7 * PX, 2 * PX, 14 * PX, 9 * PX, 14 * PX),
-            new Cuboid6(2 * PX, 2 * PX, 7 * PX, 14 * PX, 14 * PX, 9 * PX)
+            new Cuboid6(7.5 * PX, PX, PX, 8.5 * PX, 15 * PX, 15 * PX),
+            new Cuboid6(PX, 7.5 * PX, PX, 15 * PX, 8.5 * PX, 15 * PX),
+            new Cuboid6(PX, PX, 7.5 * PX, 15 * PX, 15 * PX, 8.5 * PX)
     };
     private static final Cuboid6[] FRAME_BOXES = {
-            new Cuboid6(0.0D, 0.0D, 0.0D, 16 * PX, 2 * PX, 2 * PX),
-            new Cuboid6(0.0D, 0.0D, 14 * PX, 16 * PX, 2 * PX, 16 * PX),
-            new Cuboid6(0.0D, 14 * PX, 0.0D, 16 * PX, 16 * PX, 2 * PX),
-            new Cuboid6(0.0D, 14 * PX, 14 * PX, 16 * PX, 16 * PX, 16 * PX),
-            new Cuboid6(0.0D, 0.0D, 2 * PX, 2 * PX, 2 * PX, 14 * PX),
-            new Cuboid6(14 * PX, 0.0D, 2 * PX, 16 * PX, 2 * PX, 14 * PX),
-            new Cuboid6(0.0D, 14 * PX, 2 * PX, 2 * PX, 16 * PX, 14 * PX),
-            new Cuboid6(14 * PX, 14 * PX, 2 * PX, 16 * PX, 16 * PX, 14 * PX),
-            new Cuboid6(0.0D, 2 * PX, 0.0D, 2 * PX, 14 * PX, 2 * PX),
-            new Cuboid6(14 * PX, 2 * PX, 0.0D, 16 * PX, 14 * PX, 2 * PX),
-            new Cuboid6(0.0D, 2 * PX, 14 * PX, 2 * PX, 14 * PX, 16 * PX),
-            new Cuboid6(14 * PX, 2 * PX, 14 * PX, 16 * PX, 14 * PX, 16 * PX)
+            new Cuboid6(0.0D, 0.0D, 0.0D, 16 * PX, PX, PX),
+            new Cuboid6(0.0D, 0.0D, 15 * PX, 16 * PX, PX, 16 * PX),
+            new Cuboid6(0.0D, 15 * PX, 0.0D, 16 * PX, 16 * PX, PX),
+            new Cuboid6(0.0D, 15 * PX, 15 * PX, 16 * PX, 16 * PX, 16 * PX),
+            new Cuboid6(0.0D, 0.0D, PX, PX, PX, 15 * PX),
+            new Cuboid6(15 * PX, 0.0D, PX, 16 * PX, PX, 15 * PX),
+            new Cuboid6(0.0D, 15 * PX, PX, PX, 16 * PX, 15 * PX),
+            new Cuboid6(15 * PX, 15 * PX, PX, 16 * PX, 16 * PX, 15 * PX),
+            new Cuboid6(0.0D, PX, 0.0D, PX, 15 * PX, PX),
+            new Cuboid6(15 * PX, PX, 0.0D, 16 * PX, 15 * PX, PX),
+            new Cuboid6(0.0D, PX, 15 * PX, PX, 15 * PX, 16 * PX),
+            new Cuboid6(15 * PX, PX, 15 * PX, 16 * PX, 15 * PX, 16 * PX)
     };
 
     private final SideItemHandler[] sideItemHandlers = new SideItemHandler[EnumFacing.VALUES.length];
