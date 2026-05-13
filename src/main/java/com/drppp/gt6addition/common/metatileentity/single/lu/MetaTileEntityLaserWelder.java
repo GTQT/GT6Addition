@@ -2,6 +2,7 @@ package com.drppp.gt6addition.common.metatileentity.single.lu;
 
 import com.drppp.gt6addition.api.baseMTile.MetaTileEntityColorMachine;
 import com.drppp.gt6addition.api.utils.MachineEnergyAcceptFacing;
+import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.recipes.RecipeMap;
@@ -17,12 +18,11 @@ import java.util.List;
 
 public class MetaTileEntityLaserWelder extends MetaTileEntityColorMachine {
 
-    private final SimpleSidedCubeRenderer baseRenderer;
+
 
     public MetaTileEntityLaserWelder(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap, ICubeRenderer renderer,
                                      int tier, MachineEnergyAcceptFacing[] acceptFacing) {
         super(metaTileEntityId, recipeMap, renderer, tier, true, "LU", acceptFacing, 0xFFFFFF);
-        this.baseRenderer = new SimpleSidedCubeRenderer("gt6addition:machines/lu_machines/laser_welder/colored");
     }
 
     @Override
@@ -32,7 +32,7 @@ public class MetaTileEntityLaserWelder extends MetaTileEntityColorMachine {
 
     @Override
     protected SimpleSidedCubeRenderer getBaseRenderer() {
-        return baseRenderer;
+        return Gt6AdditionTextures.BASE_RENDERER;
     }
 
     @Override

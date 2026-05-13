@@ -35,6 +35,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraftforge.oredict.OreDictionary;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
@@ -143,12 +144,13 @@ public class MetaTileEntityMortar extends MetaTileEntity {
                     continue;
                 }
 
-                if (!ingredient.apply(singleHeld)) {
+                ItemStack matchedHeldIngredient = findMatchingHeldIngredient(ingredient, singleHeld);
+                if (matchedHeldIngredient.isEmpty()) {
                     valid = false;
                     break;
                 }
 
-                inventory.setInventorySlotContents(slot, singleHeld.copy());
+                inventory.setInventorySlotContents(slot, matchedHeldIngredient);
                 heldRequired++;
             }
 
@@ -165,6 +167,19 @@ public class MetaTileEntityMortar extends MetaTileEntity {
             }
         }
         return null;
+    }
+
+    @NotNull
+    private ItemStack findMatchingHeldIngredient(Ingredient ingredient, ItemStack heldStack) {
+        if (ingredient.apply(heldStack)) {
+            return heldStack.copy();
+        }
+        for (ItemStack candidate : ingredient.getMatchingStacks()) {
+            if (stackMatchesIngredient(candidate, heldStack)) {
+                return candidate.copy();
+            }
+        }
+        return ItemStack.EMPTY;
     }
 
     @NotNull
@@ -185,6 +200,17 @@ public class MetaTileEntityMortar extends MetaTileEntity {
             }
         }
         return ItemStack.EMPTY;
+    }
+
+    private boolean stackMatchesIngredient(ItemStack candidate, ItemStack heldStack) {
+        if (candidate.isEmpty() || heldStack.isEmpty() || candidate.getItem() != heldStack.getItem()) {
+            return false;
+        }
+        int candidateMeta = candidate.getMetadata();
+        if (candidateMeta != OreDictionary.WILDCARD_VALUE && candidateMeta != heldStack.getMetadata()) {
+            return false;
+        }
+        return !candidate.hasTagCompound() || ItemStack.areItemStackTagsEqual(candidate, heldStack);
     }
 
     private boolean isMortarStack(ItemStack stack) {

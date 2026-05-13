@@ -16,6 +16,9 @@ public class Gt6AdditionTextures {
     public static final SimpleSidedCubeRenderer BASE_BURRING_BOX_TEXTURE = new SimpleSidedCubeRenderer("casings/gt6base/base");
     public static final SimpleSidedCubeRenderer BASE_NULL_TEXTURE = new SimpleSidedCubeRenderer("base/null");
     public static final SimpleSidedCubeRenderer[] MACHINE_BASES = new SimpleSidedCubeRenderer[6];
+    public static final SimpleSidedCubeRenderer BASE_RENDERER =
+            new SimpleSidedCubeRenderer("gt6addition:machines/lu_machines/laser_engraver/colored");
+
     public static OrientedOverlayRenderer RU_BENDER;
     public static OrientedOverlayRenderer RU_WIREMILL;
     public static OrientedOverlayRenderer RU_STEAM_TURBINE;
