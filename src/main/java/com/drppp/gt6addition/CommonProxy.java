@@ -38,6 +38,9 @@ public class CommonProxy {
         GT6AdditionMachineRecipes.init();
     }
 
+    public void registerRenderers() {
+    }
+
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
     }
