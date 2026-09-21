@@ -15,9 +15,10 @@ import com.drppp.gt6addition.common.metatileentity.single.eu.MetaTileEntityElect
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamber;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamberLiquid;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCastingBasin;
-import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCoolingMold;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
-import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucibleFaucet;
+import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucibleCrossing;
+import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCruciblePouringSpout;
+import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityMold;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityTemperatureSensor;
 import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityGt6Hopper;
 import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityMiniPortalEnd;
@@ -85,9 +86,10 @@ public class MetaTileEntityHandler {
     public static MetaTileEntityColorMachine[] ROASTER_HU = new MetaTileEntityColorMachine[4];
     public static MetaTileEntityColorMachine[] FERMENTER_HU = new MetaTileEntityColorMachine[4];
     public static MetaTileEntityCrucible[] CRUCIBLE_HU = new MetaTileEntityCrucible[22];
-    public static MetaTileEntityCrucibleFaucet[] CRUCIBLE_FAUCETS = new MetaTileEntityCrucibleFaucet[22];
+    public static MetaTileEntityCruciblePouringSpout[] CRUCIBLE_POURING_SPOUTS = new MetaTileEntityCruciblePouringSpout[22];
+    public static MetaTileEntityCrucibleCrossing[] CRUCIBLE_POURING_CHANNELS = new MetaTileEntityCrucibleCrossing[22];
     public static MetaTileEntityCastingBasin[] CASTING_BASINS = new MetaTileEntityCastingBasin[22];
-    public static MetaTileEntityCoolingMold[] COOLING_MOLDS = new MetaTileEntityCoolingMold[22];
+    public static MetaTileEntityMold[] MOLDS = new MetaTileEntityMold[22];
     public static MetaTileEntityTemperatureSensor TEMPERATURE_SENSOR;
 
     public static MetaTileEntitySteamTurbine[] STEAM_TURBINES = new MetaTileEntitySteamTurbine[8];
@@ -344,13 +346,21 @@ public class MetaTileEntityHandler {
                     crucibleHardness[i],
                     crucibleResistance[i]));
         }
-        for (int i = 0; i < CRUCIBLE_FAUCETS.length; i++) {
+        for (int i = 0; i < CRUCIBLE_POURING_SPOUTS.length; i++) {
             Material material = crucibleMaterials[i];
-            CRUCIBLE_FAUCETS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCrucibleFaucet(
-                    getMyId("hu_crucible_faucet_" + crucibleNames[i]),
-                    crucibleTiers[i],
+            CRUCIBLE_POURING_SPOUTS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCruciblePouringSpout(
+                    getMyId("crucible_pouring_spout_" + crucibleNames[i]),
                     getCrucibleColor(material, crucibleFallbackColors[i]),
                     crucibleAcidProof[i],
+                    crucibleHardness[i],
+                    crucibleResistance[i],
+                    getCrucibleMaxTemperature(material)));
+        }
+        for (int i = 0; i < CRUCIBLE_POURING_CHANNELS.length; i++) {
+            Material material = crucibleMaterials[i];
+            CRUCIBLE_POURING_CHANNELS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCrucibleCrossing(
+                    getMyId("crucible_pouring_channel_" + crucibleNames[i]),
+                    getCrucibleColor(material, crucibleFallbackColors[i]),
                     crucibleHardness[i],
                     crucibleResistance[i]));
         }
@@ -365,11 +375,10 @@ public class MetaTileEntityHandler {
                     crucibleResistance[i],
                     getCrucibleMaxTemperature(material)));
         }
-        for (int i = 0; i < COOLING_MOLDS.length; i++) {
+        for (int i = 0; i < MOLDS.length; i++) {
             Material material = crucibleMaterials[i];
-            COOLING_MOLDS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCoolingMold(
-                    getMyId("cooling_mold_" + crucibleNames[i]),
-                    crucibleTiers[i],
+            MOLDS[i] = registerMetaTileEntity(getID(), new MetaTileEntityMold(
+                    getMyId("mold_" + crucibleNames[i]),
                     getCrucibleColor(material, crucibleFallbackColors[i]),
                     crucibleAcidProof[i],
                     crucibleHardness[i],

@@ -5,7 +5,7 @@ import com.drppp.gt6addition.api.top.IEnergyOutShow;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCastingBasin;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamber;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamberLiquid;
-import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCoolingMold;
+import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityMold;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityTemperatureSensor;
 import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityGt6Hopper;
@@ -77,26 +77,10 @@ public class TopCommonProvider implements IProbeInfoProvider {
             iProbeInfo.text(TextFormatting.BOLD + "\u5185\u5bb9\u7269:" + TextFormatting.GREEN +
                     (contents.isEmpty() ? "\u7a7a" : contents + " " +
                             (s.isContentsMolten() ? "\u7194\u878d" : "\u56fa\u6001")));
-        } else if (metaTileEntity instanceof MetaTileEntityCoolingMold) {
-            MetaTileEntityCoolingMold s = (MetaTileEntityCoolingMold) metaTileEntity;
-            int duration = Math.max(1, s.getCoolingDuration());
-            iProbeInfo.progress(Math.min(s.getCoolingProgress(), duration), duration, iProbeInfo.defaultProgressStyle()
-                    .prefix("\u51b7\u5374: ")
-                    .suffix(" / " + duration + " t")
-                    .filledColor(0xFF44AAFF)
-                    .alternateFilledColor(0xFF88DDFF)
-                    .borderColor(0xFF555555)
-                    .backgroundColor(0xFF111111)
-                    .numberFormat(NumberFormat.FULL));
-            iProbeInfo.text(TextFormatting.BOLD + "\u6d41\u4f53:" + TextFormatting.GREEN +
-                    (s.getFluidDisplayName().isEmpty() ? "\u7a7a" :
-                            s.getFluidDisplayName() + " " + s.getFluidAmount() + "/" + s.getCapacity() + " L"));
-            ItemStack mold = s.getMoldStack();
-            ItemStack output = s.getOutputStack();
-            iProbeInfo.text(TextFormatting.BOLD + "\u6a21\u5177:" + TextFormatting.GREEN +
-                    (mold.isEmpty() ? "\u7a7a" : mold.getDisplayName()));
-            iProbeInfo.text(TextFormatting.BOLD + "\u8f93\u51fa:" + TextFormatting.GREEN +
-                    (output.isEmpty() ? "\u7a7a" : output.getDisplayName() + "*" + output.getCount()));
+        } else if (metaTileEntity instanceof MetaTileEntityMold) {
+            MetaTileEntityMold s = (MetaTileEntityMold) metaTileEntity;
+            iProbeInfo.text(TextFormatting.BOLD + "\u96d5\u523b\u6a21\u5177:" + TextFormatting.GREEN + "5×5");
+            iProbeInfo.text(TextFormatting.BOLD + "\u8010\u6e29:" + TextFormatting.GREEN + s.getMoldMaxTemperature() + " K");
         } else if (metaTileEntity instanceof MetaTileEntityTemperatureSensor) {
             MetaTileEntityTemperatureSensor s = (MetaTileEntityTemperatureSensor) metaTileEntity;
             long max = Math.max(1L, s.getMaxTemperature());

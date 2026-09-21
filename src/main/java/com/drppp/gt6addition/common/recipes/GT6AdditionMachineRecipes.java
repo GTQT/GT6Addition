@@ -409,21 +409,25 @@ public final class GT6AdditionMachineRecipes {
                     'M', core,
                     'F', new ItemStack(Blocks.FURNACE));
 
-            registerShaped("crucible_faucet_" + i, MetaTileEntityHandler.CRUCIBLE_FAUCETS[i].getStackForm(),
+            registerShaped("crucible_pouring_spout_" + i, MetaTileEntityHandler.CRUCIBLE_POURING_SPOUTS[i].getStackForm(),
                     "  M", " PL", "M  ",
                     'M', core,
                     'P', pipe(CRUCIBLE_MATERIALS[i], 1),
                     'L', new ItemStack(Blocks.LEVER));
 
+            registerShaped("crucible_pouring_channel_" + i, MetaTileEntityHandler.CRUCIBLE_POURING_CHANNELS[i].getStackForm(),
+                    "M M", " P ", "M M",
+                    'M', core,
+                    'P', pipe(CRUCIBLE_MATERIALS[i], 1));
+
             registerShaped("casting_basin_" + i, MetaTileEntityHandler.CASTING_BASINS[i].getStackForm(),
                     "M M", "M M", "MMM",
                     'M', core);
 
-            registerShaped("cooling_mold_" + i, MetaTileEntityHandler.COOLING_MOLDS[i].getStackForm(),
-                    " I ", "MBM", " M ",
-                    'I', new ItemStack(Blocks.ICE),
+            registerShaped("mold_" + i, MetaTileEntityHandler.MOLDS[i].getStackForm(),
+                    "CMC", "M M", "MMM",
                     'M', core,
-                    'B', MetaTileEntityHandler.CASTING_BASINS[i].getStackForm());
+                    'C', new ItemStack(Blocks.CLAY));
         }
     }
 

@@ -86,10 +86,6 @@ public class MetaTileEntityMortar extends MetaTileEntity {
         if (getWorld().isRemote) {
             return true;
         }
-        if (facing != EnumFacing.UP) {
-            return true;
-        }
-
         ItemStack heldStack = player.getHeldItem(hand);
         if (heldStack.isEmpty()) {
             return true;
@@ -309,12 +305,8 @@ public class MetaTileEntityMortar extends MetaTileEntity {
 
     @Override
     public void addCollisionBoundingBox(List<IndexedCuboid6> collisionList) {
-        collisionList.add(new IndexedCuboid6(null, WALL_X_NEG));
-        collisionList.add(new IndexedCuboid6(null, WALL_X_POS));
-        collisionList.add(new IndexedCuboid6(null, WALL_Z_NEG));
-        collisionList.add(new IndexedCuboid6(null, WALL_Z_POS));
-        collisionList.add(new IndexedCuboid6(null, BOWL_BOTTOM));
-        collisionList.add(new IndexedCuboid6(null, PESTLE));
+        // Match the interaction target to the full block rather than the small bowl model.
+        super.addCollisionBoundingBox(collisionList);
     }
 
     @Override

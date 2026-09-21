@@ -1107,11 +1107,8 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
 
     @Override
     public void addCollisionBoundingBox(List<IndexedCuboid6> collisionList) {
-        collisionList.add(new IndexedCuboid6(null, WALL_X_NEG));
-        collisionList.add(new IndexedCuboid6(null, WALL_Z_NEG));
-        collisionList.add(new IndexedCuboid6(null, WALL_X_POS));
-        collisionList.add(new IndexedCuboid6(null, WALL_Z_POS));
-        collisionList.add(new IndexedCuboid6(null, BOTTOM));
+        // Keep the open crucible model, while allowing interaction anywhere in its block space.
+        super.addCollisionBoundingBox(collisionList);
     }
 
     @SideOnly(Side.CLIENT)

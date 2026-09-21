@@ -561,12 +561,8 @@ public class MetaTileEntityGt6Hopper extends MetaTileEntity {
 
     @Override
     public void addCollisionBoundingBox(List<IndexedCuboid6> collisionList) {
-        collisionList.add(new IndexedCuboid6(null, TOP_BASIN));
-        collisionList.add(new IndexedCuboid6(null, FUNNEL));
-        Cuboid6 pipe = getOutputPipeBounds();
-        if (pipe != null) {
-            collisionList.add(new IndexedCuboid6(null, pipe));
-        }
+        // The visual model is smaller than a block, but its complete block space must be targetable.
+        super.addCollisionBoundingBox(collisionList);
     }
 
     @Override

@@ -64,8 +64,9 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     private static final int DATA_DISPLAY_STATE = 201;
     private static final long CAPACITY = 9L * GTValues.M;
     private static final long ENVIRONMENT_TEMPERATURE = 295L;
-    private static final double WALL_SIZE = 0.125D;
-    private static final double BASIN_HEIGHT = 0.5D;
+    // GT6 Basin: a full-height, one-pixel-thick casting vessel.
+    private static final double WALL_SIZE = 1.0D / 16.0D;
+    private static final double BASIN_HEIGHT = 1.0D;
     private static final Cuboid6 WALL_X_NEG = new Cuboid6(0.0D, 0.0D, 0.0D, WALL_SIZE, BASIN_HEIGHT, 1.0D);
     private static final Cuboid6 WALL_X_POS = new Cuboid6(1.0D - WALL_SIZE, 0.0D, 0.0D, 1.0D, BASIN_HEIGHT, 1.0D);
     private static final Cuboid6 WALL_Z_NEG = new Cuboid6(0.0D, 0.0D, 0.0D, 1.0D, BASIN_HEIGHT, WALL_SIZE);
@@ -502,11 +503,9 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
 
     @Override
     public void addCollisionBoundingBox(List<IndexedCuboid6> collisionList) {
-        collisionList.add(new IndexedCuboid6(null, WALL_X_NEG));
-        collisionList.add(new IndexedCuboid6(null, WALL_Z_NEG));
-        collisionList.add(new IndexedCuboid6(null, WALL_X_POS));
-        collisionList.add(new IndexedCuboid6(null, WALL_Z_POS));
-        collisionList.add(new IndexedCuboid6(null, BOTTOM));
+        // Keep the sculpted vessel render while preserving the project-wide
+        // full-block hit target for reliable interaction.
+        super.addCollisionBoundingBox(collisionList);
     }
 
     @Override
