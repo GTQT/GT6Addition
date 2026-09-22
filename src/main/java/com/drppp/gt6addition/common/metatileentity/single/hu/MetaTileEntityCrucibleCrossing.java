@@ -1,6 +1,7 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
 import codechicken.lib.render.CCRenderState;
+import codechicken.lib.raytracer.IndexedCuboid6;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
@@ -73,7 +74,15 @@ public class MetaTileEntityCrucibleCrossing extends MetaTileEntity {
 
     @Override public void renderMetaTileEntity(CCRenderState state, Matrix4 translation, IVertexOperation[] pipeline) {
         IVertexOperation[] coloured = ArrayUtils.add(pipeline, new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(color)));
-        for (Cuboid6 box : GEOMETRY) Textures.SOLID_STEEL_CASING.render(state, translation, coloured, box);
+        TextureAtlasSprite sprite = Textures.SOLID_STEEL_CASING.getParticleSprite();
+        // GT6's crossing draws every face of each of its eleven render passes.
+        // Draw those faces directly, as with the now-correct mold renderer, rather
+        // than passing the shape through the full-machine casing renderer.
+        for (Cuboid6 box : GEOMETRY) {
+            for (EnumFacing side : EnumFacing.VALUES) {
+                Textures.renderFace(state, translation, coloured, side, box, sprite, BlockRenderLayer.CUTOUT_MIPPED);
+            }
+        }
     }
 
     @Override
@@ -82,15 +91,23 @@ public class MetaTileEntityCrucibleCrossing extends MetaTileEntity {
         return layer == BlockRenderLayer.CUTOUT_MIPPED;
     }
 
-    // The 11-piece silhouette from GT6 MultiTileEntityCrossing.
+    // GT6 PX_N[n] means (16 - n) / 16: three floor pieces at y=1..2,
+    // then eight wall pieces at y=2..6, leaving the crossing open from above.
     private static final Cuboid6[] GEOMETRY = boxes(
-            6,1,0,10,14,16, 0,1,6,6,14,10, 10,1,6,16,14,10,
-            5,2,0,6,10,5, 5,2,11,6,10,16, 0,2,5,6,10,6, 10,2,5,16,10,6,
-            10,2,0,11,10,5, 10,2,11,11,10,16, 0,2,10,6,10,11, 10,2,10,16,10,11);
+            6,1,0,10,2,16, 0,1,6,6,2,10, 10,1,6,16,2,10,
+            5,2,0,6,6,5, 5,2,11,6,6,16, 0,2,5,6,6,6, 10,2,5,16,6,6,
+            10,2,0,11,6,5, 10,2,11,11,6,16, 0,2,10,6,6,11, 10,2,10,16,6,11);
     private static Cuboid6[] boxes(int... c) {
         Cuboid6[] result = new Cuboid6[c.length / 6];
         for (int i = 0; i < result.length; i++) { int p = i * 6; result[i] = new Cuboid6(c[p]/16D,c[p+1]/16D,c[p+2]/16D,c[p+3]/16D,c[p+4]/16D,c[p+5]/16D); }
         return result;
+    }
+
+    /** GT6 collision and selection: y=1..6 px (PX_P[1]..PX_N[10]). */
+    @Override
+    public void addCollisionBoundingBox(List<IndexedCuboid6> collisionList) {
+        collisionList.add(new IndexedCuboid6(null, new Cuboid6(0.0D, 1.0D / 16.0D, 0.0D,
+                1.0D, 6.0D / 16.0D, 1.0D)));
     }
 
     @Override public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, boolean advanced) {

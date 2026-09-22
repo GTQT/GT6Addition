@@ -77,6 +77,11 @@ public class MetaTileEntityMiniPortalNether extends MetaTileEntityMiniPortal {
     }
 
     @Override
+    protected boolean emitsPortalParticles() {
+        return true;
+    }
+
+    @Override
     public void addInformation(ItemStack stack, @Nullable World world, @NotNull List<String> tooltip,
                                boolean advanced) {
         super.addInformation(stack, world, tooltip, advanced);

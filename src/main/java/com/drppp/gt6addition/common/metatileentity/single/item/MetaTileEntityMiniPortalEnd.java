@@ -73,8 +73,14 @@ public class MetaTileEntityMiniPortalEnd extends MetaTileEntityMiniPortal {
     }
 
     @Override
+    protected int getPortalColor() {
+        return 0x111111;
+    }
+
+    @Override
     protected String getFrameTextureId() {
-        return "minecraft:blocks/end_stone";
+        // GT6 copies the End Portal Frame's top texture on every rendered frame face.
+        return "minecraft:blocks/endframe_top";
     }
 
     @Override

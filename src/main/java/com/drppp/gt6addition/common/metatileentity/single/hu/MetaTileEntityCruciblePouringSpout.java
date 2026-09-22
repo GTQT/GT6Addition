@@ -1,6 +1,7 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
 import codechicken.lib.raytracer.CuboidRayTraceResult;
+import codechicken.lib.raytracer.IndexedCuboid6;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
@@ -35,7 +36,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Locale;
 
-/** GT6 MultiTileEntityFaucet: the dedicated Crucible Pouring Spout, not a fluid faucet. */
+/** GT6 MultiTileEntityFaucet's dedicated Crucible Pouring Spout. */
 public class MetaTileEntityCruciblePouringSpout extends MetaTileEntity implements ICrucibleMold {
 
     private static final String NBT_AUTO_PULL = "AutoPull";
@@ -121,16 +122,22 @@ public class MetaTileEntityCruciblePouringSpout extends MetaTileEntity implement
 
     @Override public void renderMetaTileEntity(CCRenderState state, Matrix4 translation, IVertexOperation[] pipeline) {
         IVertexOperation[] coloured = ArrayUtils.add(pipeline, new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(color)));
-        for (Cuboid6 box : geometry()) {
-            // GT6 deliberately leaves the crucible-facing side open. Rendering
-            // the entire cuboid closes that opening and makes the spout bulky.
+        TextureAtlasSprite materialSprite = Textures.SOLID_STEEL_CASING.getParticleSprite();
+        for (Cuboid6 passBounds : gt6RenderPasses()) {
             for (EnumFacing side : EnumFacing.VALUES) {
-                if (side != getFrontFacing()) {
-                    Textures.renderFace(state, translation, coloured, side, box,
-                            Textures.SOLID_STEEL_CASING.getParticleSprite(), BlockRenderLayer.CUTOUT_MIPPED);
+                // GT6 getTexture2: only suppress the crucible-facing side when
+                // that side is occluded by its neighbour.
+                if (side != getFrontFacing() || shouldRenderFrontFace()) {
+                    Textures.renderFace(state, translation, coloured, side, passBounds, materialSprite,
+                            BlockRenderLayer.CUTOUT_MIPPED);
                 }
             }
         }
+    }
+
+    private boolean shouldRenderFrontFace() {
+        return renderContextStack != null || getHolder() == null || getWorld().getBlockState(getPos())
+                .shouldSideBeRendered(getWorld(), getPos(), getFrontFacing());
     }
 
     @Override
@@ -139,19 +146,46 @@ public class MetaTileEntityCruciblePouringSpout extends MetaTileEntity implement
         return layer == BlockRenderLayer.CUTOUT_MIPPED;
     }
 
-    // Exact three render passes from GT6 MultiTileEntityFaucet.
-    private Cuboid6[] geometry() {
+    /** Exact bounds from GT6 MultiTileEntityFaucet#setBlockBounds2, passes 0-2. */
+    private Cuboid6[] gt6RenderPasses() {
         switch (getFrontFacing()) {
-            case NORTH: return boxes(6,1,0,10,14,4, 5,2,0,11,10,4, 10,2,0,11,10,4);
-            case SOUTH: return boxes(6,1,12,10,14,16, 5,2,12,11,10,16, 10,2,12,11,10,16);
-            case WEST: return boxes(0,1,6,4,14,10, 0,2,5,4,10,11, 0,2,10,4,10,11);
-            default: return boxes(12,1,6,16,14,10, 12,2,5,16,10,11, 12,2,10,16,10,11);
+            // GT6 PX_N[n] means (16 - n) / 16: floor ends at y=2, walls at y=6.
+            case NORTH: return boxes(6, 1, 0, 10, 2, 4, 5, 2, 0, 6, 6, 4, 10, 2, 0, 11, 6, 4);
+            case SOUTH: return boxes(6, 1, 12, 10, 2, 16, 5, 2, 12, 6, 6, 16, 10, 2, 12, 11, 6, 16);
+            case WEST:  return boxes(0, 1, 6, 4, 2, 10, 0, 2, 5, 4, 6, 6, 0, 2, 10, 4, 6, 11);
+            default:    return boxes(12, 1, 6, 16, 2, 10, 12, 2, 5, 16, 6, 6, 12, 2, 10, 16, 6, 11);
         }
     }
-    private Cuboid6[] boxes(int... c) {
-        Cuboid6[] result = new Cuboid6[c.length / 6];
-        for (int i = 0; i < result.length; i++) { int p = i * 6; result[i] = new Cuboid6(c[p]/16D,c[p+1]/16D,c[p+2]/16D,c[p+3]/16D,c[p+4]/16D,c[p+5]/16D); }
+
+    private static Cuboid6[] boxes(int... coordinates) {
+        Cuboid6[] result = new Cuboid6[coordinates.length / 6];
+        for (int i = 0; i < result.length; i++) {
+            int offset = i * 6;
+            result[i] = new Cuboid6(coordinates[offset] / 16.0D, coordinates[offset + 1] / 16.0D,
+                    coordinates[offset + 2] / 16.0D, coordinates[offset + 3] / 16.0D,
+                    coordinates[offset + 4] / 16.0D, coordinates[offset + 5] / 16.0D);
+        }
         return result;
+    }
+
+    /** GT6 MultiTileEntityFaucet#getSelectedBoundingBoxFromPool. */
+    @Override
+    public void addCollisionBoundingBox(List<IndexedCuboid6> collisionList) {
+        collisionList.add(new IndexedCuboid6(null, gt6SelectionBounds()));
+    }
+
+    private Cuboid6 gt6SelectionBounds() {
+        switch (getFrontFacing()) {
+            case NORTH: return box(5, 1, 0, 11, 6, 4);
+            case SOUTH: return box(5, 1, 12, 11, 6, 16);
+            case WEST:  return box(0, 1, 5, 4, 6, 11);
+            default:    return box(12, 1, 5, 16, 6, 11);
+        }
+    }
+
+    private static Cuboid6 box(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        return new Cuboid6(minX / 16.0D, minY / 16.0D, minZ / 16.0D,
+                maxX / 16.0D, maxY / 16.0D, maxZ / 16.0D);
     }
 
     @Override public boolean isOpaqueCube() { return false; }

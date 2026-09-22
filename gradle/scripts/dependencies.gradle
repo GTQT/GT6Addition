@@ -36,7 +36,7 @@ dependencies {
     // Include OSXNarratorBlocker by default for the dev env, for M1+ Macs
     runtimeOnly 'com.cleanroommc:osxnarratorblocker:1.0'
     api("com.cleanroommc:groovyscript:1.2.0-hotfix1") { transitive = false }
-    api("com.cleanroommc:modularui:3.0.5") { transitive = false }
+    api("com.cleanroommc:modularui:3.1.5") { transitive = false }
     api rfg.deobf("curse.maven:ctm-267602:2915363") // CTM 1.0.2.31
     compileOnlyApi 'org.jetbrains:annotations:24.1.0'
     implementation rfg.deobf("curse.maven:codechicken-lib-1-8-242818:2779848")

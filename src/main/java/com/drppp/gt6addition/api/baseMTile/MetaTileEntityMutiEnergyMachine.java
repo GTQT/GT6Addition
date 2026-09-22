@@ -592,11 +592,6 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
     @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
         RecipeMap<?> workableRecipeMap = Objects.requireNonNull(workable.getRecipeMap(), "recipe map is null");
-        int yOffset = 0;
-        if (workableRecipeMap.getMaxInputs() >= 6 || workableRecipeMap.getMaxFluidInputs() >= 6 ||
-                workableRecipeMap.getMaxOutputs() >= 6 || workableRecipeMap.getMaxFluidOutputs() >= 6) {
-            yOffset = FONT_HEIGHT;
-        }
 
         // 创建一个Flow行容器
         Flow flowRow = Flow.row();
@@ -620,32 +615,33 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
 
         flowRow.size(s * 18, 18);
 
-        ModularPanel panel = GTGuis.createPanel(this, 176, 166 + yOffset + (s > 0 ? 18 : 0));
-        Widget<?> widget = workableRecipeMap.getRecipeMapUI().buildWidget(workable::getProgressPercent, importItems,
-                exportItems, importFluids, exportFluids, yOffset, guiSyncManager);
-
         BooleanSyncValue hasEnergy = new BooleanSyncValue(workable::isHasNotEnoughEnergy);
         guiSyncManager.syncValue("has_energy", hasEnergy);
-        panel.child(widget)
-                .child(IKey.lang(getMetaFullName()).asWidget().pos(5, 5))
+
+        ModularPanel panel = workableRecipeMap.getRecipeMapUI().constructPanel(this, builder -> builder
+                .calculateOffset()
+                .setInputs(importItems, importFluids)
+                .setOutputs(exportItems, exportFluids)
+                .inventorySlotGroups()
+                .progressWidget(Objects.requireNonNull(workable)::getProgressPercent)
+                .extraWidgets((recipePanel, yOffset) -> {
 //                .child(new ItemSlot()
 //                        .slot(SyncHandlers.itemSlot(chargerInventory, 0))
 //                        .pos(79, 62 + yOffset)
 //                        .background(GTGuiTextures.SLOT, GTGuiTextures.CHARGER_OVERLAY)
 //                        .addTooltipLine(IKey.lang("gregtech.gui.charger_slot.tooltip",
 //                                GTValues.VNF[getTier()], GTValues.VNF[getTier()])))
-                .child(new Widget<>()
+                recipePanel.child(new Widget<>()
                         .size(18, 18)
                         .pos(79, 42 + yOffset)
                         .background(GTGuiTextures.INDICATOR_NO_ENERGY)
-                        .setEnabledIf($ -> hasEnergy.getBoolValue()))
-                .bindPlayerInventory();
+                        .setEnabledIf($ -> hasEnergy.getBoolValue()));
 
         int leftButtonStartX = 7;
 
         if (exportItems.getSlots() > 0) {
 
-            panel.child(new ToggleButton()
+            recipePanel.child(new ToggleButton()
                     .pos(leftButtonStartX, 62 + yOffset)
                     .overlay(GTGuiTextures.BUTTON_ITEM_OUTPUT)
                     .value(new BooleanSyncValue(() -> autoOutputItems, val -> autoOutputItems = val))
@@ -657,7 +653,7 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
 
         if (exportFluids.getTanks() > 0) {
 
-            panel.child(new ToggleButton()
+            recipePanel.child(new ToggleButton()
                     .pos(leftButtonStartX, 62 + yOffset)
                     .overlay(GTGuiTextures.BUTTON_FLUID_OUTPUT)
                     .value(new BooleanSyncValue(() -> autoOutputFluids, val -> autoOutputFluids = val))
@@ -668,13 +664,13 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
         }
 
         if (exportItems.getSlots() + exportFluids.getTanks() <= 9) {
-            panel.child(new Widget<>()
+            recipePanel.child(new Widget<>()
                     .size(17)
                     .pos(152, 63 + yOffset)
                     .background(Gt6AdditionTextures.GREGTECH6_LOGO));
 
             if (hasGhostCircuitInventory() && circuitInventory != null) {
-                panel.child(new gregtech.api.mui.widget.GhostCircuitSlotWidget()
+                recipePanel.child(new gregtech.api.mui.widget.GhostCircuitSlotWidget()
                         .pos(124, 62 + yOffset)
                         .slot(circuitInventory, 0)
                         .background(GTGuiTextures.SLOT, GTGuiTextures.INT_CIRCUIT_OVERLAY));
@@ -682,7 +678,7 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
         }
         IPanelHandler throttle = guiSyncManager.panel("io_setting", this::makeThrottlePanel, true);
 
-        panel.child(new ButtonWidget<>()
+        recipePanel.child(new ButtonWidget<>()
                 .size(18)
                 .pos(leftButtonStartX, 62 + yOffset)
                 .overlay(GTGuiTextures.BUTTON_EXPORT_FACE)
@@ -698,9 +694,11 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
         );
 
         flowRow.pos(7, 80 + yOffset);
-        panel.child(flowRow);
+        recipePanel.child(flowRow);
+                }));
 
-        return panel;
+        return panel.child(IKey.lang(getMetaFullName()).asWidget().pos(5, 5))
+                .bindPlayerInventory();
     }
 
     public String getEnumFacingName(EnumFacing facing) {

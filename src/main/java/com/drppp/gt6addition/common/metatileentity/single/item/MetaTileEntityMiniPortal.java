@@ -20,6 +20,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -43,24 +44,36 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
     private static final String NBT_ACTIVE = "Active";
     private static final double PX = 1.0D / 16.0D;
     private static final int REDSTONE_HOLD_TICKS = 20;
-    private static final Cuboid6[] PORTAL_CORE_BOXES = {
-            new Cuboid6(7.5 * PX, PX, PX, 8.5 * PX, 15 * PX, 15 * PX),
-            new Cuboid6(PX, 7.5 * PX, PX, 15 * PX, 8.5 * PX, 15 * PX),
-            new Cuboid6(PX, PX, 7.5 * PX, 15 * PX, 15 * PX, 8.5 * PX)
-    };
+    // GT6 MultiTileEntityMiniPortal pass 0: one 14 px portal core, not three thin planes.
+    private static final Cuboid6 PORTAL_CORE = new Cuboid6(PX, PX, PX, 15 * PX, 15 * PX, 15 * PX);
     private static final Cuboid6[] FRAME_BOXES = {
-            new Cuboid6(0.0D, 0.0D, 0.0D, 16 * PX, PX, PX),
-            new Cuboid6(0.0D, 0.0D, 15 * PX, 16 * PX, PX, 16 * PX),
-            new Cuboid6(0.0D, 15 * PX, 0.0D, 16 * PX, 16 * PX, PX),
-            new Cuboid6(0.0D, 15 * PX, 15 * PX, 16 * PX, 16 * PX, 16 * PX),
-            new Cuboid6(0.0D, 0.0D, PX, PX, PX, 15 * PX),
-            new Cuboid6(15 * PX, 0.0D, PX, 16 * PX, PX, 15 * PX),
-            new Cuboid6(0.0D, 15 * PX, PX, PX, 16 * PX, 15 * PX),
-            new Cuboid6(15 * PX, 15 * PX, PX, 16 * PX, 16 * PX, 15 * PX),
-            new Cuboid6(0.0D, PX, 0.0D, PX, 15 * PX, PX),
-            new Cuboid6(15 * PX, PX, 0.0D, 16 * PX, 15 * PX, PX),
-            new Cuboid6(0.0D, PX, 15 * PX, PX, 15 * PX, 16 * PX),
-            new Cuboid6(15 * PX, PX, 15 * PX, 16 * PX, 15 * PX, 16 * PX)
+            box(0, 0, 0, 16, 2, 2),
+            box(0, 2, 0, 2, 14, 2),
+            box(0, 0, 0, 2, 2, 16),
+            box(14, 0, 0, 16, 2, 16),
+            box(14, 2, 0, 16, 14, 2),
+            box(0, 14, 0, 2, 16, 16),
+            box(0, 14, 0, 16, 16, 2),
+            box(0, 2, 14, 2, 14, 16),
+            box(0, 0, 14, 16, 2, 16),
+            box(0, 14, 14, 16, 16, 16),
+            box(14, 2, 14, 16, 14, 16),
+            box(14, 14, 0, 16, 16, 16)
+    };
+    // GT6 sRenderedSides for passes 1-12. EnumFacing has the same order: D, U, N, S, W, E.
+    private static final boolean[][] FRAME_SIDE_MASKS = {
+            {true, true, true, true, false, false},
+            {false, false, true, true, true, true},
+            {true, true, false, false, true, true},
+            {true, true, false, false, true, true},
+            {false, false, true, true, true, true},
+            {true, true, false, false, true, true},
+            {true, true, true, true, false, false},
+            {false, false, true, true, true, true},
+            {true, true, true, true, false, false},
+            {true, true, true, true, false, false},
+            {false, false, true, true, true, true},
+            {true, true, false, false, true, true}
     };
 
     private final SideItemHandler[] sideItemHandlers = new SideItemHandler[EnumFacing.VALUES.length];
@@ -378,22 +391,40 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
 
     @Override
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
-        for (Cuboid6 frameBox : FRAME_BOXES) {
-            renderTexturedCube(renderState, translation, pipeline, frameBox, getFrameTextureId());
+        for (int pass = 0; pass < FRAME_BOXES.length; pass++) {
+            renderFramePass(renderState, translation, pipeline, FRAME_BOXES[pass], FRAME_SIDE_MASKS[pass]);
         }
-        if (active) {
-            for (Cuboid6 portalCoreBox : PORTAL_CORE_BOXES) {
-                renderTexturedCube(renderState, translation, pipeline, portalCoreBox, getPortalTextureId());
+        // GT6 also renders the core in an inventory stack, where no world exists.
+        if (active || isItemRender()) {
+            for (EnumFacing side : EnumFacing.VALUES) {
+                if (shouldRenderPortalFace(side)) {
+                    KineticRenderHelper.renderFace(renderState, translation, pipeline, side, PORTAL_CORE,
+                            getPortalTextureId(), getPortalColor());
+                }
             }
         }
     }
 
     @SideOnly(Side.CLIENT)
-    private void renderTexturedCube(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline,
-                                    Cuboid6 cuboid, String textureId) {
+    private void renderFramePass(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline,
+                                 Cuboid6 cuboid, boolean[] sideMask) {
         for (EnumFacing side : EnumFacing.VALUES) {
-            KineticRenderHelper.renderOverlayFace(renderState, translation, pipeline, side, cuboid, textureId);
+            if (sideMask[side.ordinal()]) {
+                KineticRenderHelper.renderOverlayFace(renderState, translation, pipeline, side, cuboid, getFrameTextureId());
+            }
         }
+    }
+
+    private boolean shouldRenderPortalFace(EnumFacing side) {
+        return isItemRender() || getWorld().getBlockState(getPos()).shouldSideBeRendered(getWorld(), getPos(), side);
+    }
+
+    private boolean isItemRender() {
+        return renderContextStack != null || getHolder() == null;
+    }
+
+    private static Cuboid6 box(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        return new Cuboid6(minX * PX, minY * PX, minZ * PX, maxX * PX, maxY * PX, maxZ * PX);
     }
 
     @Override
@@ -405,7 +436,7 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
     @Override
     @SideOnly(Side.CLIENT)
     public boolean canRenderInLayer(BlockRenderLayer layer) {
-        return layer == BlockRenderLayer.CUTOUT_MIPPED || layer == BlockRenderLayer.TRANSLUCENT;
+        return layer == BlockRenderLayer.CUTOUT_MIPPED;
     }
 
     @Override
@@ -470,6 +501,22 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
     }
 
     @Override
+    public void randomDisplayTick() {
+        if (!active || !emitsPortalParticles()) {
+            return;
+        }
+        for (int i = 0; i < 4; i++) {
+            getWorld().spawnParticle(EnumParticleTypes.PORTAL,
+                    getPos().getX() + getWorld().rand.nextFloat(),
+                    getPos().getY() + getWorld().rand.nextFloat(),
+                    getPos().getZ() + getWorld().rand.nextFloat(),
+                    (getWorld().rand.nextFloat() - 0.5D) * 0.5D,
+                    (getWorld().rand.nextFloat() - 0.5D) * 0.5D,
+                    (getWorld().rand.nextFloat() - 0.5D) * 0.5D);
+        }
+    }
+
+    @Override
     public SoundType getSoundType() {
         return SoundType.STONE;
     }
@@ -514,7 +561,16 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
 
     protected abstract String getPortalTextureId();
 
+    /** GT6 End portals use the vanilla portal sprite tinted black; Nether portals remain uncoloured. */
+    protected int getPortalColor() {
+        return 0xFFFFFF;
+    }
+
     protected abstract String getFrameTextureId();
+
+    protected boolean emitsPortalParticles() {
+        return false;
+    }
 
     private final class SideItemHandler implements IItemHandler {
 

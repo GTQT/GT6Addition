@@ -9,7 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION,
-        dependencies = "required-after:gregtech@[2.8.10-beta,);" ,
+        dependencies = "required-after:gregtech@[1.9,);" ,
 acceptedMinecraftVersions = "[1.12.2]")
 public class GT6AdditionMain {
 
