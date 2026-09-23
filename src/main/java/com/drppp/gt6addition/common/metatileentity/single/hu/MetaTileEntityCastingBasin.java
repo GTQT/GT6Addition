@@ -9,6 +9,7 @@ import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.crucible.ICrucibleMold;
 import com.drppp.gt6addition.api.temperature.ITemperatureProvider;
+import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.GregtechCapabilities;
@@ -21,6 +22,7 @@ import gregtech.api.unification.material.properties.PropertyKey;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
+import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -421,12 +423,20 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         IVertexOperation[] shellPipeline = ArrayUtils.add(pipeline,
                 new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(casingColor)));
-        Textures.SOLID_STEEL_CASING.render(renderState, translation, shellPipeline, WALL_X_NEG);
-        Textures.SOLID_STEEL_CASING.render(renderState, translation, shellPipeline, WALL_Z_NEG);
-        Textures.SOLID_STEEL_CASING.render(renderState, translation, shellPipeline, WALL_X_POS);
-        Textures.SOLID_STEEL_CASING.render(renderState, translation, shellPipeline, WALL_Z_POS);
-        Textures.SOLID_STEEL_CASING.render(renderState, translation, shellPipeline, BOTTOM);
+        SimpleSidedCubeRenderer materialRenderer = getMaterialRenderer();
+        materialRenderer.render(renderState, translation, shellPipeline, WALL_X_NEG);
+        materialRenderer.render(renderState, translation, shellPipeline, WALL_Z_NEG);
+        materialRenderer.render(renderState, translation, shellPipeline, WALL_X_POS);
+        materialRenderer.render(renderState, translation, shellPipeline, WALL_Z_POS);
+        materialRenderer.render(renderState, translation, shellPipeline, BOTTOM);
         renderDisplayedContent(renderState, translation, pipeline);
+    }
+
+    @SideOnly(Side.CLIENT)
+    private SimpleSidedCubeRenderer getMaterialRenderer() {
+        SimpleSidedCubeRenderer renderer = tier >= 0 && tier < Gt6AdditionTextures.MACHINE_BASES.length
+                ? Gt6AdditionTextures.MACHINE_BASES[tier] : null;
+        return renderer == null ? Gt6AdditionTextures.BASE_NULL_TEXTURE : renderer;
     }
 
     @SideOnly(Side.CLIENT)
@@ -493,7 +503,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     @Override
     @SideOnly(Side.CLIENT)
     public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
-        return Pair.of(Textures.SOLID_STEEL_CASING.getParticleSprite(), casingColor);
+        return Pair.of(getMaterialRenderer().getParticleSprite(), casingColor);
     }
 
     @Override

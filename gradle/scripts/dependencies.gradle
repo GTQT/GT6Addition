@@ -39,6 +39,7 @@ dependencies {
     api("com.cleanroommc:modularui:3.1.5") { transitive = false }
     api rfg.deobf("curse.maven:ctm-267602:2915363") // CTM 1.0.2.31
     compileOnlyApi 'org.jetbrains:annotations:24.1.0'
+    implementation rfg.deobf("curse.maven:chisel-235279:2915375")
     implementation rfg.deobf("curse.maven:codechicken-lib-1-8-242818:2779848")
     implementation rfg.deobf(files("libs/modelloader-1.0.0.jar"))
     implementation rfg.deobf(files("libs/gregtech-gtqt-1.12.2-2.9.0-190.jar"))

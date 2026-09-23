@@ -350,6 +350,7 @@ public class MetaTileEntityHandler {
             Material material = crucibleMaterials[i];
             CRUCIBLE_POURING_SPOUTS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCruciblePouringSpout(
                     getMyId("crucible_pouring_spout_" + crucibleNames[i]),
+                    crucibleTiers[i],
                     getCrucibleColor(material, crucibleFallbackColors[i]),
                     crucibleAcidProof[i],
                     crucibleHardness[i],
@@ -360,6 +361,7 @@ public class MetaTileEntityHandler {
             Material material = crucibleMaterials[i];
             CRUCIBLE_POURING_CHANNELS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCrucibleCrossing(
                     getMyId("crucible_pouring_channel_" + crucibleNames[i]),
+                    crucibleTiers[i],
                     getCrucibleColor(material, crucibleFallbackColors[i]),
                     crucibleHardness[i],
                     crucibleResistance[i]));
@@ -379,6 +381,7 @@ public class MetaTileEntityHandler {
             Material material = crucibleMaterials[i];
             MOLDS[i] = registerMetaTileEntity(getID(), new MetaTileEntityMold(
                     getMyId("mold_" + crucibleNames[i]),
+                    crucibleTiers[i],
                     getCrucibleColor(material, crucibleFallbackColors[i]),
                     crucibleAcidProof[i],
                     crucibleHardness[i],

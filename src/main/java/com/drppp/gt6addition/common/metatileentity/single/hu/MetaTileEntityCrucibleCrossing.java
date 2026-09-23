@@ -7,10 +7,12 @@ import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.crucible.ICrucibleMold;
+import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
+import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
@@ -30,20 +32,23 @@ import java.util.List;
 public class MetaTileEntityCrucibleCrossing extends MetaTileEntity {
 
     private static long nextLockId;
+    private final int tier;
     private final int color;
     private final float hardness;
     private final float resistance;
     private long lockId;
+    private boolean redstoneActive;
 
-    public MetaTileEntityCrucibleCrossing(ResourceLocation id, int color, float hardness, float resistance) {
+    public MetaTileEntityCrucibleCrossing(ResourceLocation id, int tier, int color, float hardness, float resistance) {
         super(id);
+        this.tier = tier;
         this.color = color;
         this.hardness = hardness;
         this.resistance = resistance;
     }
 
     @Override public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tile) {
-        return new MetaTileEntityCrucibleCrossing(metaTileEntityId, color, hardness, resistance);
+        return new MetaTileEntityCrucibleCrossing(metaTileEntityId, tier, color, hardness, resistance);
     }
 
     public boolean fillMoldAtSide(ICrucibleMold mold, @Nullable EnumFacing inputSide, @Nullable EnumFacing sideOfMold) {
@@ -65,24 +70,53 @@ public class MetaTileEntityCrucibleCrossing extends MetaTileEntity {
         return false;
     }
 
-    @Override public void update() { super.update(); if (!getWorld().isRemote) lockId = 0L; }
+    @Override
+    public void update() {
+        super.update();
+        if (getWorld().isRemote) return;
+        lockId = 0L;
+        boolean powered = getInputRedstoneSignal(EnumFacing.UP, false) > 0 ||
+                getInputRedstoneSignal(EnumFacing.DOWN, false) > 0;
+        if (powered != redstoneActive) {
+            redstoneActive = powered;
+            int output = redstoneActive ? 1 : 0;
+            for (EnumFacing direction : EnumFacing.HORIZONTALS) {
+                setOutputRedstoneSignal(direction, output);
+            }
+            markDirty();
+        }
+    }
+
+    @Override
+    protected boolean canMachineConnectRedstone(@Nullable EnumFacing side) {
+        return true;
+    }
     @Override public boolean isOpaqueCube() { return false; }
     @Override public int getLightOpacity() { return 0; }
     @Override public float getBlockHardness() { return hardness; }
     @Override public float getBlockResistance() { return resistance; }
-    @Override @SideOnly(Side.CLIENT) public Pair<TextureAtlasSprite, Integer> getParticleTexture() { return Pair.of(Textures.SOLID_STEEL_CASING.getParticleSprite(), color); }
+    @Override @SideOnly(Side.CLIENT) public Pair<TextureAtlasSprite, Integer> getParticleTexture() { return Pair.of(getMaterialRenderer().getParticleSprite(), color); }
 
     @Override public void renderMetaTileEntity(CCRenderState state, Matrix4 translation, IVertexOperation[] pipeline) {
         IVertexOperation[] coloured = ArrayUtils.add(pipeline, new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(color)));
-        TextureAtlasSprite sprite = Textures.SOLID_STEEL_CASING.getParticleSprite();
+        SimpleSidedCubeRenderer materialRenderer = getMaterialRenderer();
         // GT6's crossing draws every face of each of its eleven render passes.
         // Draw those faces directly, as with the now-correct mold renderer, rather
         // than passing the shape through the full-machine casing renderer.
         for (Cuboid6 box : GEOMETRY) {
             for (EnumFacing side : EnumFacing.VALUES) {
-                Textures.renderFace(state, translation, coloured, side, box, sprite, BlockRenderLayer.CUTOUT_MIPPED);
+                Textures.renderFace(state, translation, coloured, side, box,
+                        materialRenderer.getSpriteOnSide(SimpleSidedCubeRenderer.RenderSide.bySide(side)),
+                        BlockRenderLayer.CUTOUT_MIPPED);
             }
         }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private SimpleSidedCubeRenderer getMaterialRenderer() {
+        SimpleSidedCubeRenderer renderer = tier >= 0 && tier < Gt6AdditionTextures.MACHINE_BASES.length
+                ? Gt6AdditionTextures.MACHINE_BASES[tier] : null;
+        return renderer == null ? Gt6AdditionTextures.BASE_NULL_TEXTURE : renderer;
     }
 
     @Override
@@ -103,11 +137,12 @@ public class MetaTileEntityCrucibleCrossing extends MetaTileEntity {
         return result;
     }
 
-    /** GT6 collision and selection: y=1..6 px (PX_P[1]..PX_N[10]). */
+    /** Exact eleven-piece crossing geometry, shared by collision and click ray tracing. */
     @Override
     public void addCollisionBoundingBox(List<IndexedCuboid6> collisionList) {
-        collisionList.add(new IndexedCuboid6(null, new Cuboid6(0.0D, 1.0D / 16.0D, 0.0D,
-                1.0D, 6.0D / 16.0D, 1.0D)));
+        for (Cuboid6 bounds : GEOMETRY) {
+            collisionList.add(new IndexedCuboid6(null, bounds));
+        }
     }
 
     @Override public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, boolean advanced) {

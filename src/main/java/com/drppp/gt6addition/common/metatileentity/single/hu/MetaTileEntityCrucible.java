@@ -727,10 +727,6 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
         if (mold == null || !mold.isMoldInputSide(sideOfMold)) {
             return 0L;
         }
-        long moldMaxTemperature = mold.getMoldMaxTemperature();
-        if (moldMaxTemperature > 0L && temperature > moldMaxTemperature) {
-            return 0L;
-        }
         for (StoredMaterial material : contents) {
             if (!isPourableMaterial(material)) {
                 continue;

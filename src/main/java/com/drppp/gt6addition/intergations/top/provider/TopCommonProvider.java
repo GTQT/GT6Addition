@@ -81,6 +81,27 @@ public class TopCommonProvider implements IProbeInfoProvider {
             MetaTileEntityMold s = (MetaTileEntityMold) metaTileEntity;
             iProbeInfo.text(TextFormatting.BOLD + "\u96d5\u523b\u6a21\u5177:" + TextFormatting.GREEN + "5×5");
             iProbeInfo.text(TextFormatting.BOLD + "\u8010\u6e29:" + TextFormatting.GREEN + s.getMoldMaxTemperature() + " K");
+            if (s.isCooling()) {
+                iProbeInfo.text(TextFormatting.BOLD + "\u51b7\u5374\u4e2d:" + TextFormatting.GREEN +
+                        s.getCoolingMaterialName());
+                iProbeInfo.progress(s.getCoolingProgressPercent(), 100, iProbeInfo.defaultProgressStyle()
+                        .prefix("\u51b7\u5374\u8fdb\u5ea6: ")
+                        .suffix("%  " + s.getTemperatureValue(null) + " K / " +
+                                s.getCoolingTargetTemperature() + " K")
+                        .filledColor(0xFF4DA6FF)
+                        .alternateFilledColor(0xFF80D8FF)
+                        .borderColor(0xFF555555)
+                        .backgroundColor(0xFF111111)
+                        .numberFormat(NumberFormat.FULL));
+            } else {
+                ItemStack output = s.getOutputStack();
+                if (!output.isEmpty()) {
+                    IProbeInfo line = iProbeInfo.horizontal();
+                    line.item(output);
+                    line.text(TextFormatting.BOLD + "\u6210\u54c1:" + TextFormatting.GREEN +
+                            output.getDisplayName() + " ×" + output.getCount());
+                }
+            }
         } else if (metaTileEntity instanceof MetaTileEntityTemperatureSensor) {
             MetaTileEntityTemperatureSensor s = (MetaTileEntityTemperatureSensor) metaTileEntity;
             long max = Math.max(1L, s.getMaxTemperature());

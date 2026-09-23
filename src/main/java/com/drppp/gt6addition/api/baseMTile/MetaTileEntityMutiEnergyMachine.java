@@ -6,7 +6,9 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
 import com.cleanroommc.modularui.api.IPanelHandler;
+import com.cleanroommc.modularui.api.drawable.IDrawable;
 import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.drawable.DynamicDrawable;
 import com.cleanroommc.modularui.drawable.ItemDrawable;
 import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
@@ -15,6 +17,7 @@ import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
+import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
 import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.drppp.gt6addition.api.utils.MachineEnergyAcceptFacing;
@@ -593,8 +596,11 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
         RecipeMap<?> workableRecipeMap = Objects.requireNonNull(workable.getRecipeMap(), "recipe map is null");
 
-        // 创建一个Flow行容器
-        Flow flowRow = Flow.row();
+        // Keep cover/filter controls in their own row, above the player inventory.
+        Flow flowRow = Flow.row()
+                .name("col:extra.buttons")
+                .left(7)
+                .bottom(86);
 
         int s = 0;
         for (EnumFacing data : EnumFacing.VALUES) {
@@ -615,72 +621,72 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
 
         flowRow.size(s * 18, 18);
 
+        int specialButtonsHeight = 0;
+        if (exportItems.getSlots() + exportFluids.getTanks() <= 9) {
+            specialButtonsHeight += 18;
+        }
+        if (hasGhostCircuitInventory() && circuitInventory != null) {
+            specialButtonsHeight += 18;
+        }
+        specialButtonsHeight += 18; // IO settings
+        if (exportFluids.getTanks() > 0) {
+            specialButtonsHeight += 18;
+        }
+        if (exportItems.getSlots() > 0) {
+            specialButtonsHeight += 18;
+        }
+
+        Flow specialButtons = Flow.column()
+                .name("col:special.buttons")
+                .right(7)
+                .bottom(7)
+                .height(specialButtonsHeight)
+                .width(18);
+
         BooleanSyncValue hasEnergy = new BooleanSyncValue(workable::isHasNotEnoughEnergy);
         guiSyncManager.syncValue("has_energy", hasEnergy);
 
+        int panelHeight = s > 0 ? 188 : 170;
         ModularPanel panel = workableRecipeMap.getRecipeMapUI().constructPanel(this, builder -> builder
                 .calculateOffset()
+                .setMaxSize(196, panelHeight)
                 .setInputs(importItems, importFluids)
                 .setOutputs(exportItems, exportFluids)
                 .inventorySlotGroups()
-                .progressWidget(Objects.requireNonNull(workable)::getProgressPercent)
-                .extraWidgets((recipePanel, yOffset) -> {
-//                .child(new ItemSlot()
-//                        .slot(SyncHandlers.itemSlot(chargerInventory, 0))
-//                        .pos(79, 62 + yOffset)
-//                        .background(GTGuiTextures.SLOT, GTGuiTextures.CHARGER_OVERLAY)
-//                        .addTooltipLine(IKey.lang("gregtech.gui.charger_slot.tooltip",
-//                                GTValues.VNF[getTier()], GTValues.VNF[getTier()])))
-                recipePanel.child(new Widget<>()
-                        .size(18, 18)
-                        .pos(79, 42 + yOffset)
-                        .background(GTGuiTextures.INDICATOR_NO_ENERGY)
-                        .setEnabledIf($ -> hasEnergy.getBoolValue()));
+                .progressWidget(Objects.requireNonNull(workable)::getProgressPercent,
+                        progressWidget -> progressWidget.overlay(
+                                new DynamicDrawable(() -> hasEnergy.getBoolValue()
+                                        ? GTGuiTextures.INDICATOR_NO_ENERGY
+                                        : IDrawable.NONE)
+                                        .asIcon()
+                                        .size(18)
+                                        .marginTop(50))));
 
-        int leftButtonStartX = 7;
-
-        if (exportItems.getSlots() > 0) {
-
-            recipePanel.child(new ToggleButton()
-                    .pos(leftButtonStartX, 62 + yOffset)
-                    .overlay(GTGuiTextures.BUTTON_ITEM_OUTPUT)
-                    .value(new BooleanSyncValue(() -> autoOutputItems, val -> autoOutputItems = val))
-                    .addTooltip(true, IKey.lang("gregtech.gui.item_auto_output.tooltip.enabled"))
-                    .addTooltip(false, IKey.lang("gregtech.gui.item_auto_output.tooltip.disabled")));
-
-            leftButtonStartX += 18;
-        }
-
-        if (exportFluids.getTanks() > 0) {
-
-            recipePanel.child(new ToggleButton()
-                    .pos(leftButtonStartX, 62 + yOffset)
-                    .overlay(GTGuiTextures.BUTTON_FLUID_OUTPUT)
-                    .value(new BooleanSyncValue(() -> autoOutputFluids, val -> autoOutputFluids = val))
-                    .addTooltip(true, IKey.lang("gregtech.gui.fluid_auto_output.tooltip.enabled"))
-                    .addTooltip(false, IKey.lang("gregtech.gui.fluid_auto_output.tooltip.disabled")));
-
-            leftButtonStartX += 18;
-        }
+        int specialButtonOffset = 0;
 
         if (exportItems.getSlots() + exportFluids.getTanks() <= 9) {
-            recipePanel.child(new Widget<>()
+            specialButtons.child(new Widget<>()
                     .size(17)
-                    .pos(152, 63 + yOffset)
+                    .marginTop(1)
+                    .marginRight(1)
+                    .bottom(specialButtonOffset)
                     .background(Gt6AdditionTextures.GREGTECH6_LOGO));
-
-            if (hasGhostCircuitInventory() && circuitInventory != null) {
-                recipePanel.child(new gregtech.api.mui.widget.GhostCircuitSlotWidget()
-                        .pos(124, 62 + yOffset)
-                        .slot(circuitInventory, 0)
-                        .background(GTGuiTextures.SLOT, GTGuiTextures.INT_CIRCUIT_OVERLAY));
-            }
+            specialButtonOffset += 18;
         }
+
+        if (hasGhostCircuitInventory() && circuitInventory != null) {
+            specialButtons.child(new gregtech.api.mui.widget.GhostCircuitSlotWidget()
+                    .bottom(specialButtonOffset)
+                    .slot(circuitInventory, 0)
+                    .background(GTGuiTextures.SLOT, GTGuiTextures.INT_CIRCUIT_OVERLAY));
+            specialButtonOffset += 18;
+        }
+
         IPanelHandler throttle = guiSyncManager.panel("io_setting", this::makeThrottlePanel, true);
 
-        recipePanel.child(new ButtonWidget<>()
+        specialButtons.child(new ButtonWidget<>()
                 .size(18)
-                .pos(leftButtonStartX, 62 + yOffset)
+                .bottom(specialButtonOffset)
                 .overlay(GTGuiTextures.BUTTON_EXPORT_FACE)
                 .addTooltipLine("IO设置")
                 .onMousePressed(i -> {
@@ -690,15 +696,32 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
                         throttle.openPanel();
                     }
                     return true;
-                })
-        );
-
-        flowRow.pos(7, 80 + yOffset);
-        recipePanel.child(flowRow);
                 }));
+        specialButtonOffset += 18;
+
+        if (exportFluids.getTanks() > 0) {
+            specialButtons.child(new ToggleButton()
+                    .bottom(specialButtonOffset)
+                    .overlay(GTGuiTextures.BUTTON_FLUID_OUTPUT)
+                    .value(new BooleanSyncValue(() -> autoOutputFluids, val -> autoOutputFluids = val))
+                    .addTooltip(true, IKey.lang("gregtech.gui.fluid_auto_output.tooltip.enabled"))
+                    .addTooltip(false, IKey.lang("gregtech.gui.fluid_auto_output.tooltip.disabled")));
+            specialButtonOffset += 18;
+        }
+
+        if (exportItems.getSlots() > 0) {
+            specialButtons.child(new ToggleButton()
+                    .bottom(specialButtonOffset)
+                    .overlay(GTGuiTextures.BUTTON_ITEM_OUTPUT)
+                    .value(new BooleanSyncValue(() -> autoOutputItems, val -> autoOutputItems = val))
+                    .addTooltip(true, IKey.lang("gregtech.gui.item_auto_output.tooltip.enabled"))
+                    .addTooltip(false, IKey.lang("gregtech.gui.item_auto_output.tooltip.disabled")));
+        }
 
         return panel.child(IKey.lang(getMetaFullName()).asWidget().pos(5, 5))
-                .bindPlayerInventory();
+                .child(specialButtons)
+                .child(flowRow)
+                .child(SlotGroupWidget.playerInventory(true).left(7));
     }
 
     public String getEnumFacingName(EnumFacing facing) {

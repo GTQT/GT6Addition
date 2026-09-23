@@ -8,11 +8,13 @@ import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.crucible.ICrucibleMold;
+import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.unification.material.Material;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
+import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
@@ -40,6 +42,7 @@ import java.util.Locale;
 public class MetaTileEntityCruciblePouringSpout extends MetaTileEntity implements ICrucibleMold {
 
     private static final String NBT_AUTO_PULL = "AutoPull";
+    private final int tier;
     private final int color;
     private final boolean acidProof;
     private final float hardness;
@@ -47,9 +50,10 @@ public class MetaTileEntityCruciblePouringSpout extends MetaTileEntity implement
     private final long maxTemperature;
     private boolean autoPull;
 
-    public MetaTileEntityCruciblePouringSpout(ResourceLocation id, int color, boolean acidProof,
+    public MetaTileEntityCruciblePouringSpout(ResourceLocation id, int tier, int color, boolean acidProof,
                                                float hardness, float resistance, long maxTemperature) {
         super(id);
+        this.tier = tier;
         this.color = color;
         this.acidProof = acidProof;
         this.hardness = hardness;
@@ -58,7 +62,7 @@ public class MetaTileEntityCruciblePouringSpout extends MetaTileEntity implement
     }
 
     @Override public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tile) {
-        return new MetaTileEntityCruciblePouringSpout(metaTileEntityId, color, acidProof, hardness, resistance, maxTemperature);
+        return new MetaTileEntityCruciblePouringSpout(metaTileEntityId, tier, color, acidProof, hardness, resistance, maxTemperature);
     }
 
     @Override public void onPlacement(EntityLivingBase placer) {
@@ -69,21 +73,29 @@ public class MetaTileEntityCruciblePouringSpout extends MetaTileEntity implement
 
     @Override public void update() {
         super.update();
-        if (!getWorld().isRemote && (autoPull ? getOffsetTimer() % 20 == 5 : getWorld().isBlockPowered(getPos()))) pullOnce();
+        if (!getWorld().isRemote && (autoPull ? getOffsetTimer() % 20 == 5 : getWorld().isBlockPowered(getPos()))) triggerPour();
     }
 
     @Override public boolean onRightClick(EntityPlayer player, EnumHand hand, EnumFacing side, CuboidRayTraceResult hit) {
-        if (!getWorld().isRemote && !pullOnce()) player.sendStatusMessage(new TextComponentTranslation("gt6addition.machine.crucible_pouring_spout.status.empty"), true);
+        if (!getWorld().isRemote && !triggerPour()) player.sendStatusMessage(new TextComponentTranslation("gt6addition.machine.crucible_pouring_spout.status.empty"), true);
         return true;
     }
 
-    private boolean pullOnce() {
-        Object source = GTUtility.getMetaTileEntity(getWorld(), getPos().offset(getFrontFacing()));
+    /** Manual/automatic trigger shared by the spout and a mold below it. */
+    public boolean triggerPour() {
+        if (getWorld() == null || getWorld().isRemote) {
+            return false;
+        }
+        return pullFrom(getFrontFacing());
+    }
+
+    private boolean pullFrom(EnumFacing sourceDirection) {
+        Object source = GTUtility.getMetaTileEntity(getWorld(), getPos().offset(sourceDirection));
         if (source instanceof MetaTileEntityCrucible) {
-            return ((MetaTileEntityCrucible) source).fillMoldAtSide(this, getFrontFacing().getOpposite(), getFrontFacing()) > 0L;
+            return ((MetaTileEntityCrucible) source).fillMoldAtSide(this, sourceDirection.getOpposite(), getFrontFacing()) > 0L;
         }
         return source instanceof MetaTileEntityCrucibleCrossing &&
-                ((MetaTileEntityCrucibleCrossing) source).fillMoldAtSide(this, getFrontFacing().getOpposite(), getFrontFacing());
+                ((MetaTileEntityCrucibleCrossing) source).fillMoldAtSide(this, sourceDirection.getOpposite(), getFrontFacing());
     }
 
     @Override public boolean isMoldInputSide(@Nullable EnumFacing side) { return side == getFrontFacing(); }
@@ -96,10 +108,15 @@ public class MetaTileEntityCruciblePouringSpout extends MetaTileEntity implement
             Object target = GTUtility.getMetaTileEntity(getWorld(), cursor);
             if (target instanceof MetaTileEntityCruciblePouringSpout) { cursor = cursor.down(); continue; }
             if (target instanceof ICrucibleMold) return ((ICrucibleMold) target).getMoldRequiredMaterialUnits(material);
-            if (!getWorld().isAirBlock(cursor)) return 0L;
+            if (!canFlowThrough(cursor)) return 0L;
             cursor = cursor.down();
         }
         return 0L;
+    }
+
+    private boolean canFlowThrough(BlockPos pos) {
+        if (getWorld().isAirBlock(pos)) return true;
+        return getWorld().getBlockState(pos).getCollisionBoundingBox(getWorld(), pos) == null;
     }
 
     @Override public long fillMold(Material material, long amount, long temperature, @Nullable EnumFacing side, boolean simulate) {
@@ -107,32 +124,69 @@ public class MetaTileEntityCruciblePouringSpout extends MetaTileEntity implement
                 (!acidProof && material.getName().toLowerCase(Locale.ROOT).contains("acid"))) return 0L;
         if (temperature > maxTemperature) {
             if (!simulate) getWorld().setBlockState(getPos(), Blocks.FLOWING_LAVA.getDefaultState(), 3);
-            return 0L;
         }
         BlockPos cursor = getPos().down();
         while (cursor.getY() > 0) {
             Object target = GTUtility.getMetaTileEntity(getWorld(), cursor);
             if (target instanceof MetaTileEntityCruciblePouringSpout) { cursor = cursor.down(); continue; }
             if (target instanceof ICrucibleMold) return ((ICrucibleMold) target).fillMold(material, amount, temperature, EnumFacing.UP, simulate);
-            if (!getWorld().isAirBlock(cursor)) return 0L;
+            if (!canFlowThrough(cursor)) return 0L;
             cursor = cursor.down();
         }
         return 0L;
     }
 
+    @Override
+    public boolean onWrenchClick(EntityPlayer player, EnumHand hand, @Nullable EnumFacing side,
+                                 CuboidRayTraceResult hitResult) {
+        if (getWorld() != null && !getWorld().isRemote) {
+            autoPull = !autoPull;
+            markDirty();
+            player.sendStatusMessage(new TextComponentTranslation(autoPull
+                    ? "gt6addition.machine.crucible_pouring_spout.status.automatic"
+                    : "gt6addition.machine.crucible_pouring_spout.status.redstone"), true);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onSoftMalletClick(EntityPlayer player, EnumHand hand, @Nullable EnumFacing side,
+                                     CuboidRayTraceResult hitResult) {
+        if (getWorld() != null && !getWorld().isRemote) {
+            autoPull = false;
+            markDirty();
+            player.sendStatusMessage(new TextComponentTranslation(
+                    "gt6addition.machine.crucible_pouring_spout.status.redstone"), true);
+        }
+        return true;
+    }
+
+    @Override
+    protected boolean canMachineConnectRedstone(@Nullable EnumFacing side) {
+        return true;
+    }
+
     @Override public void renderMetaTileEntity(CCRenderState state, Matrix4 translation, IVertexOperation[] pipeline) {
         IVertexOperation[] coloured = ArrayUtils.add(pipeline, new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(color)));
-        TextureAtlasSprite materialSprite = Textures.SOLID_STEEL_CASING.getParticleSprite();
+        SimpleSidedCubeRenderer materialRenderer = getMaterialRenderer();
         for (Cuboid6 passBounds : gt6RenderPasses()) {
             for (EnumFacing side : EnumFacing.VALUES) {
                 // GT6 getTexture2: only suppress the crucible-facing side when
                 // that side is occluded by its neighbour.
                 if (side != getFrontFacing() || shouldRenderFrontFace()) {
-                    Textures.renderFace(state, translation, coloured, side, passBounds, materialSprite,
+                    Textures.renderFace(state, translation, coloured, side, passBounds,
+                            materialRenderer.getSpriteOnSide(SimpleSidedCubeRenderer.RenderSide.bySide(side)),
                             BlockRenderLayer.CUTOUT_MIPPED);
                 }
             }
         }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private SimpleSidedCubeRenderer getMaterialRenderer() {
+        SimpleSidedCubeRenderer renderer = tier >= 0 && tier < Gt6AdditionTextures.MACHINE_BASES.length
+                ? Gt6AdditionTextures.MACHINE_BASES[tier] : null;
+        return renderer == null ? Gt6AdditionTextures.BASE_NULL_TEXTURE : renderer;
     }
 
     private boolean shouldRenderFrontFace() {
@@ -168,31 +222,19 @@ public class MetaTileEntityCruciblePouringSpout extends MetaTileEntity implement
         return result;
     }
 
-    /** GT6 MultiTileEntityFaucet#getSelectedBoundingBoxFromPool. */
+    /** Exact three-piece model geometry, shared by collision and click ray tracing. */
     @Override
     public void addCollisionBoundingBox(List<IndexedCuboid6> collisionList) {
-        collisionList.add(new IndexedCuboid6(null, gt6SelectionBounds()));
-    }
-
-    private Cuboid6 gt6SelectionBounds() {
-        switch (getFrontFacing()) {
-            case NORTH: return box(5, 1, 0, 11, 6, 4);
-            case SOUTH: return box(5, 1, 12, 11, 6, 16);
-            case WEST:  return box(0, 1, 5, 4, 6, 11);
-            default:    return box(12, 1, 5, 16, 6, 11);
+        for (Cuboid6 bounds : gt6RenderPasses()) {
+            collisionList.add(new IndexedCuboid6(null, bounds));
         }
-    }
-
-    private static Cuboid6 box(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
-        return new Cuboid6(minX / 16.0D, minY / 16.0D, minZ / 16.0D,
-                maxX / 16.0D, maxY / 16.0D, maxZ / 16.0D);
     }
 
     @Override public boolean isOpaqueCube() { return false; }
     @Override public int getLightOpacity() { return 0; }
     @Override public float getBlockHardness() { return hardness; }
     @Override public float getBlockResistance() { return resistance; }
-    @Override @SideOnly(Side.CLIENT) public Pair<TextureAtlasSprite, Integer> getParticleTexture() { return Pair.of(Textures.SOLID_STEEL_CASING.getParticleSprite(), color); }
+    @Override @SideOnly(Side.CLIENT) public Pair<TextureAtlasSprite, Integer> getParticleTexture() { return Pair.of(getMaterialRenderer().getParticleSprite(), color); }
     @Override public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, boolean advanced) {
         tooltip.add(I18n.format("gt6addition.machine.crucible_pouring_spout.tooltip.transfer"));
         tooltip.add(I18n.format("gt6addition.machine.crucible_pouring_spout.tooltip.redstone"));
