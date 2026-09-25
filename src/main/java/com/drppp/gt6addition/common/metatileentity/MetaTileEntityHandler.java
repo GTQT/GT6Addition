@@ -33,7 +33,6 @@ import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityRotat
 import com.drppp.gt6addition.common.metatileentity.single.lu.MetaTileEntityLaserEngraver;
 import com.drppp.gt6addition.common.metatileentity.single.lu.MetaTileEntityLaserWelder;
 import com.drppp.gt6addition.common.metatileentity.single.mu.MetaTileEntityElectromagnet;
-import com.drppp.gt6addition.common.metatileentity.multiblock.MetaTileEntityCokeOven;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityDieselEngine;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityElectricMotor;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityRotationPump;
@@ -55,7 +54,6 @@ public class MetaTileEntityHandler {
 
     public static MetaTileEntityCombustionchamber[] HU_BURRING_BOXS = new MetaTileEntityCombustionchamber[13];
     public static MetaTileEntityCombustionchamber HU_BRICK_BURNING_BOX;
-    public static MetaTileEntityCokeOven COKE_OVEN;
     public static MetaTileEntityCombustionchamber[] HU_DENSE_BURRING_BOXS = new MetaTileEntityCombustionchamber[13];
     public static MetaTileEntityCombustionchamberLiquid[] HU_BURRING_BOXS_LIQUID = new MetaTileEntityCombustionchamberLiquid[13];
     public static MetaTileEntityCombustionchamberLiquid[] HU_DENSE_BURRING_BOXS_LIQUID = new MetaTileEntityCombustionchamberLiquid[13];
@@ -205,7 +203,6 @@ public class MetaTileEntityHandler {
         HU_BRICK_BURNING_BOX = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(
                 getMyId("brick_burning_box_solid"), getColor(MaterialColorUtil.MaterialName.BRICK),
                 0.25D, 16, false, 0, true));
-        COKE_OVEN = registerMetaTileEntity(getID(), new MetaTileEntityCokeOven(getMyId("coke_oven")));
         Material[] electricMaterials = {Materials.Steel, Materials.Aluminium, Materials.StainlessSteel,
                 Materials.Titanium, Materials.TungstenSteel};
         for (int i = 1; i <= 5; i++) {

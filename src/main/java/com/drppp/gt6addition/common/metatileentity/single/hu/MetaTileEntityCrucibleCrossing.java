@@ -137,13 +137,17 @@ public class MetaTileEntityCrucibleCrossing extends MetaTileEntity {
         return result;
     }
 
-    /** Exact eleven-piece crossing geometry, shared by collision and click ray tracing. */
+    /**
+     * Use one rectangular interaction/collision volume across the crossing's
+     * actual model height instead of extending it to the full machine block.
+     */
     @Override
     public void addCollisionBoundingBox(List<IndexedCuboid6> collisionList) {
-        for (Cuboid6 bounds : GEOMETRY) {
-            collisionList.add(new IndexedCuboid6(null, bounds));
-        }
+        collisionList.add(new IndexedCuboid6(null, CROSSING_BOUNDS));
     }
+
+    private static final Cuboid6 CROSSING_BOUNDS = new Cuboid6(
+            0.0D, 1.0D / 16.0D, 0.0D, 1.0D, 6.0D / 16.0D, 1.0D);
 
     @Override public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, boolean advanced) {
         tooltip.add(I18n.format("gt6addition.machine.crucible_pouring_channel.tooltip.1"));

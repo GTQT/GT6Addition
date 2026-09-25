@@ -33,7 +33,8 @@ public class MetaTileEntityElectricMotor extends BaseTieredEnergyOutputMetaTileE
         super(metaTileEntityId, tier, color, Gt6AdditionTextures.RU_ELECTRIC_MOTOR);
         this.efficiency = efficiency;
         this.outPutRu = outPutRu;
-        this.minEuUse = EnergyConversionHelper.minimumInputForNominalOutput(this.outPutRu, this.efficiency);
+        this.minEuUse = EnergyConversionHelper.minimumInputForHalfNominalOutput(
+                this.outPutRu, this.efficiency, 1.0D);
         this.maxEuUse = EnergyConversionHelper.maximumInputForDoubleOutput(this.outPutRu, this.efficiency);
     }
 

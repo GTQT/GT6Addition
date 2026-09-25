@@ -14,8 +14,11 @@ import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.unification.material.Materials;
+import gregtech.client.renderer.ICubeRenderer;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -23,12 +26,17 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
 
 public class MetaTileEntitySteamTurbine extends BaseEnergyOutputMetaTileEntity {
+
+    private static final int DATA_RENDER_SPEED = 521;
+    private static final String NBT_FAST_ANIMATION = "fastAnimation";
 
     public final double efficiency;
     public final int outPutRu;
@@ -39,6 +47,7 @@ public class MetaTileEntitySteamTurbine extends BaseEnergyOutputMetaTileEntity {
     protected final IRotationEnergy ru = new RotationEnergyHandler();
     protected FluidTank steamFluidTank;
     protected FluidTank waterFluidTank;
+    private boolean fastAnimation;
 
     public MetaTileEntitySteamTurbine(ResourceLocation metaTileEntityId, int color, double efficiency, int outPutRu,
                                       int tank_size) {
@@ -46,8 +55,11 @@ public class MetaTileEntitySteamTurbine extends BaseEnergyOutputMetaTileEntity {
         this.efficiency = efficiency;
         this.outPutRu = outPutRu;
         this.tank_size = tank_size;
-        this.minSteamUse = EnergyConversionHelper.minimumInputForNominalOutput(this.outPutRu, this.efficiency);
-        this.maxSteamUse = EnergyConversionHelper.maximumInputForDoubleOutput(this.outPutRu, this.efficiency);
+        // GT6's steam unit ratio is 2 Steam per energy unit; apply efficiency after the unit conversion.
+        this.minSteamUse = EnergyConversionHelper.minimumInputForHalfNominalOutput(
+                this.outPutRu, this.efficiency, 2.0D);
+        this.maxSteamUse = EnergyConversionHelper.maximumInputForDoubleOutput(
+                this.outPutRu, this.efficiency, 2.0D);
         this.initializeInventory();
     }
 
@@ -109,27 +121,87 @@ public class MetaTileEntitySteamTurbine extends BaseEnergyOutputMetaTileEntity {
 
         if (this.steamFluidTank.getFluidAmount() < this.minSteamUse
                 || this.waterFluidTank.getFluidAmount() >= this.tank_size) {
+            setFastAnimation(false);
             clearOut();
             return;
         }
 
         setActive(true);
         if (this.steamFluidTank.getFluidAmount() >= this.maxSteamUse) {
+            setFastAnimation(true);
             this.importFluids.drain(this.maxSteamUse, true);
             this.ru.setRuEnergy(this.outPutRu * 2);
             this.waterFluidTank.fill(Materials.DistilledWater.getFluid((int) (this.maxSteamUse * 0.1)), true);
             return;
         }
 
+        setFastAnimation(false);
         int amount = this.steamFluidTank.getFluidAmount();
         this.importFluids.drain(amount, true);
-        this.ru.setRuEnergy(EnergyConversionHelper.scaledOutputFromInput(amount, this.outPutRu, this.efficiency));
+        this.ru.setRuEnergy(EnergyConversionHelper.scaledOutputFromInput(
+                amount, this.outPutRu, this.efficiency, 2.0D));
         this.waterFluidTank.fill(Materials.DistilledWater.getFluid((int) (amount * 0.1)), true);
     }
 
     private void clearOut() {
         this.ru.setRuEnergy(0);
         setActive(false);
+    }
+
+    private void setFastAnimation(boolean fast) {
+        if (this.fastAnimation == fast) {
+            return;
+        }
+        this.fastAnimation = fast;
+        markDirty();
+        if (getWorld() != null && !getWorld().isRemote) {
+            writeCustomData(DATA_RENDER_SPEED, buf -> buf.writeBoolean(fast));
+        }
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound data) {
+        super.writeToNBT(data);
+        data.setBoolean(NBT_FAST_ANIMATION, this.fastAnimation);
+        return data;
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound data) {
+        super.readFromNBT(data);
+        this.fastAnimation = data.getBoolean(NBT_FAST_ANIMATION);
+    }
+
+    @Override
+    public void writeInitialSyncData(PacketBuffer buf) {
+        super.writeInitialSyncData(buf);
+        buf.writeBoolean(this.fastAnimation);
+    }
+
+    @Override
+    public void receiveInitialSyncData(PacketBuffer buf) {
+        super.receiveInitialSyncData(buf);
+        this.fastAnimation = buf.readBoolean();
+    }
+
+    @Override
+    public void receiveCustomData(int dataId, @NotNull PacketBuffer buf) {
+        super.receiveCustomData(dataId, buf);
+        if (dataId == DATA_RENDER_SPEED) {
+            this.fastAnimation = buf.readBoolean();
+            scheduleRenderUpdate();
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    @Override
+    protected ICubeRenderer getMachineRenderer() {
+        if (!this.isActive) {
+            return Gt6AdditionTextures.RU_STEAM_TURBINE;
+        }
+        return this.fastAnimation
+                ? Gt6AdditionTextures.RU_STEAM_TURBINE_FAST
+                : Gt6AdditionTextures.RU_STEAM_TURBINE_SLOW;
     }
 
     @Override

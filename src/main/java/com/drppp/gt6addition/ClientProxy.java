@@ -2,7 +2,6 @@
 package com.drppp.gt6addition;
 
 import com.drppp.gt6addition.common.item.GT6AdditionItems;
-import com.drppp.gt6addition.common.block.GT6AdditionBlocks;
 import net.minecraft.item.Item;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
@@ -31,7 +30,6 @@ public class ClientProxy extends CommonProxy {
         registerItemModel(GT6AdditionItems.CLAY_CHANNEL);
         registerItemModel(GT6AdditionItems.CLAY_BASIN);
         registerItemModel(GT6AdditionItems.CLAY_MOLD);
-        registerItemModel(GT6AdditionBlocks.COKE_OVEN_BRICK_ITEM);
     }
 
     private static void registerItemModel(Item item) {

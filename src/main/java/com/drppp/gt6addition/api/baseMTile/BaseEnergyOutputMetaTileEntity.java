@@ -72,6 +72,11 @@ public abstract class BaseEnergyOutputMetaTileEntity extends MetaTileEntity impl
     }
 
     @SideOnly(Side.CLIENT)
+    protected ICubeRenderer getMachineRenderer() {
+        return this.machineRenderer;
+    }
+
+    @SideOnly(Side.CLIENT)
     public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
         return Pair.of(Gt6AdditionTextures.BASE_NULL_TEXTURE.getParticleSprite(), this.color);
     }
@@ -83,7 +88,7 @@ public abstract class BaseEnergyOutputMetaTileEntity extends MetaTileEntity impl
                 pipeline,
                 new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(this.color)));
         this.getBaseRenderer().render(renderState, translation, coloredPipeline);
-        this.machineRenderer.renderOrientedState(renderState, translation, pipeline, this.getFrontFacing(), isActive, isActive);
+        this.getMachineRenderer().renderOrientedState(renderState, translation, pipeline, this.getFrontFacing(), isActive, isActive);
     }
 
     @Override

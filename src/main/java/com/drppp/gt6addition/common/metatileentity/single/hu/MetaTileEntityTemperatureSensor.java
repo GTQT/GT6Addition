@@ -12,6 +12,7 @@ import com.drppp.gt6addition.common.metatileentity.single.ku.KineticRenderHelper
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.ModularUI;
+import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.gui.widgets.ClickButtonWidget;
 import gregtech.api.gui.widgets.CycleButtonWidget;
 import gregtech.api.gui.widgets.TextFieldWidget;
@@ -51,6 +52,12 @@ import java.nio.ByteBuffer;
 
 public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
 
+    private static final double BODY_THICKNESS = 2.0D / 16.0D;
+    private static final double DISPLAY_MIN = 2.0D / 16.0D;
+    private static final double DISPLAY_MAX = 4.0D / 16.0D;
+    private static final double DISPLAY_DEPTH = 1.0D / 1024.0D;
+    private static final long[] DISPLAY_DIGIT_DIVISORS = {10000L, 1000L, 100L, 10L, 1L};
+
     public static final int MODE_DISPLAY = 0;
     public static final int MODE_PERCENT = 1;
     public static final int MODE_GREATER = 2;
@@ -87,7 +94,7 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
     private final float resistance;
 
     private EnumFacing targetFacing = EnumFacing.DOWN;
-    private int mode = MODE_GREATER;
+    private int mode = MODE_DISPLAY;
     private int setTemperature = 1200;
     private long currentTemperature;
     private long maxTemperature;
@@ -119,7 +126,6 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
     @Override
     public void onPlacement(EntityLivingBase placer) {
         super.onPlacement(placer);
-        setFrontFacing(getFrontFacing().getOpposite());
         targetFacing = getFrontFacing();
         initializedTarget = true;
         markDirty();
@@ -284,6 +290,9 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
         this.mode = Math.max(0, Math.min(MODE_KEYS.length - 1, mode));
         markDirty();
         updateReadingAndRedstone();
+        if (getWorld() != null && !getWorld().isRemote) {
+            writeCustomData(DATA_STATE, this::writeState);
+        }
     }
 
     private void setAveragingCount(int count) {
@@ -389,10 +398,16 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
 
     @Override
     protected ModularUI createUI(EntityPlayer entityPlayer) {
-        ModularUI.Builder builder = ModularUI.defaultBuilder(176, 146);
+        // This GUI uses a flat, full-size background. GuiTextures.BACKGROUND is
+        // an adoptable nine-slice texture; its sliced UVs produce large blocks
+        // with this nonstandard layout, so draw our 176x166 image as one area.
+        ModularUI.Builder builder = new ModularUI.Builder(new TextureArea(
+                new ResourceLocation("gt6addition", "textures/gui/temperature_sensor_background.png"),
+                0.0F, 0.0F, 1.0F, 1.0F), 176, 166)
+                .shouldColor(false);
         builder.label(8, 8, "gt6addition.machine.temperature_sensor.gui.title");
-        builder.dynamicLabel(8, 22, () -> "Current: " + currentTemperature + " / " + maxTemperature + " K", 0xFFFFFF);
-        builder.dynamicLabel(8, 34, () -> "Redstone: " + redstoneOutput + "  Target side: " + targetFacing.getName(), 0xFFFFFF);
+        builder.dynamicLabel(8, 22, () -> "Current: " + currentTemperature + " / " + maxTemperature + " K", 0x404040);
+        builder.dynamicLabel(8, 34, () -> "Redstone: " + redstoneOutput + "  Target side: " + targetFacing.getName(), 0x404040);
         builder.label(8, 50, "gt6addition.machine.temperature_sensor.gui.set_temperature");
         builder.widget(new TextFieldWidget(86, 46, 64, 18, GuiTextures.DISPLAY,
                 () -> Integer.toString(setTemperature), this::setSetTemperature)
@@ -440,31 +455,92 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
         IVertexOperation[] shellPipeline = ArrayUtils.add(pipeline,
                 new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(casingColor)));
         String textureRoot = "gt6addition:blocks/machines/redstone/sensors/thermometer/";
+        Cuboid6 bodyBox = getBodyBox();
         for (EnumFacing face : EnumFacing.VALUES) {
             String name = face == getFrontFacing() ? "front" :
                     face == getFrontFacing().getOpposite() ? "back" : "side";
-            KineticRenderHelper.renderFace(renderState, translation, shellPipeline, face, getBodyBox(),
+            KineticRenderHelper.renderFace(renderState, translation, shellPipeline, face, bodyBox,
                     textureRoot + "colored/" + name, 0xFFFFFF);
-            KineticRenderHelper.renderOverlayFace(renderState, translation, pipeline, face, getBodyBox(),
+            KineticRenderHelper.renderOverlayFace(renderState, translation, pipeline, face, bodyBox,
                     textureRoot + "overlay/" + name);
+        }
+        if (mode == MODE_DISPLAY) {
+            renderTemperatureDisplay(renderState, translation, pipeline, bodyBox);
+        }
+    }
+
+    /** Draw the same six 2x2-pixel character cells used by GT6's sensor face. */
+    private void renderTemperatureDisplay(CCRenderState renderState, Matrix4 translation,
+                                          IVertexOperation[] pipeline, Cuboid6 bodyBox) {
+        long displayedTemperature = Math.max(0L, Math.min(65535L, currentTemperature));
+        EnumFacing front = getFrontFacing();
+        for (int index = 0; index < 6; index++) {
+            String glyph;
+            int color = 0xFFFFFF;
+            if (index == 5) {
+                glyph = "kelvin";
+                color = 0xFF0000;
+            } else {
+                int digit = (int) ((displayedTemperature / DISPLAY_DIGIT_DIVISORS[index]) % 10L);
+                glyph = Integer.toString(digit);
+            }
+            Cuboid6 glyphBox = getDisplayGlyphBox(front, index, bodyBox);
+            KineticRenderHelper.renderFace(renderState, translation, pipeline, front, glyphBox,
+                    "gt6addition:blocks/overlays/characters/" + glyph, color);
+        }
+    }
+
+    private Cuboid6 getDisplayGlyphBox(EnumFacing facing, int index, Cuboid6 bodyBox) {
+        double first = DISPLAY_MIN + index * (DISPLAY_MAX - DISPLAY_MIN);
+        double second = first + (DISPLAY_MAX - DISPLAY_MIN);
+        double yMin = 12.0D / 16.0D;
+        double yMax = 14.0D / 16.0D;
+        switch (facing) {
+            case NORTH: {
+                double minX = 1.0D - second;
+                double maxX = 1.0D - first;
+                return new Cuboid6(minX, yMin, bodyBox.min.z - DISPLAY_DEPTH,
+                        maxX, yMax, bodyBox.min.z + DISPLAY_DEPTH);
+            }
+            case SOUTH:
+                return new Cuboid6(first, yMin, bodyBox.max.z - DISPLAY_DEPTH,
+                        second, yMax, bodyBox.max.z + DISPLAY_DEPTH);
+            case WEST:
+                return new Cuboid6(bodyBox.min.x - DISPLAY_DEPTH, yMin, first,
+                        bodyBox.min.x + DISPLAY_DEPTH, yMax, second);
+            case EAST: {
+                double minZ = 1.0D - second;
+                double maxZ = 1.0D - first;
+                return new Cuboid6(bodyBox.max.x - DISPLAY_DEPTH, yMin, minZ,
+                        bodyBox.max.x + DISPLAY_DEPTH, yMax, maxZ);
+            }
+            case DOWN:
+                return new Cuboid6(first, bodyBox.min.y - DISPLAY_DEPTH, 12.0D / 16.0D,
+                        second, bodyBox.min.y + DISPLAY_DEPTH, 14.0D / 16.0D);
+            case UP:
+            default:
+                return new Cuboid6(first, bodyBox.max.y - DISPLAY_DEPTH, DISPLAY_MIN,
+                        second, bodyBox.max.y + DISPLAY_DEPTH, DISPLAY_MAX);
         }
     }
 
     private Cuboid6 getBodyBox() {
+        // Match GT6 MultiTileEntitySensor: the 2/16-thick panel sits against
+        // the support side (opposite its front) while the front face points outward.
         switch (getFrontFacing()) {
             case SOUTH:
-                return new Cuboid6(0.0D, 0.0D, 0.875D, 1.0D, 1.0D, 1.0D);
+                return new Cuboid6(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, BODY_THICKNESS);
             case WEST:
-                return new Cuboid6(0.0D, 0.0D, 0.0D, 0.125D, 1.0D, 1.0D);
+                return new Cuboid6(1.0D - BODY_THICKNESS, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
             case EAST:
-                return new Cuboid6(0.875D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
+                return new Cuboid6(0.0D, 0.0D, 0.0D, BODY_THICKNESS, 1.0D, 1.0D);
             case UP:
-                return new Cuboid6(0.0D, 0.875D, 0.0D, 1.0D, 1.0D, 1.0D);
+                return new Cuboid6(0.0D, 0.0D, 0.0D, 1.0D, BODY_THICKNESS, 1.0D);
             case DOWN:
-                return new Cuboid6(0.0D, 0.0D, 0.0D, 1.0D, 0.125D, 1.0D);
+                return new Cuboid6(0.0D, 1.0D - BODY_THICKNESS, 0.0D, 1.0D, 1.0D, 1.0D);
             case NORTH:
             default:
-                return new Cuboid6(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 0.125D);
+                return new Cuboid6(0.0D, 0.0D, 1.0D - BODY_THICKNESS, 1.0D, 1.0D, 1.0D);
         }
     }
 
@@ -580,6 +656,14 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
         if (dataId == DATA_STATE) {
             readState(buf);
             scheduleRenderUpdate();
+            // The displayed digits are emitted into the chunk render buffer,
+            // not rendered dynamically. Explicitly invalidate that block mesh
+            // when the server sends a new reading so the face cannot lag behind
+            // the GUI/tooltip value.
+            World world = getWorld();
+            if (world != null && world.isRemote) {
+                world.markBlockRangeForRenderUpdate(getPos(), getPos());
+            }
         }
     }
 

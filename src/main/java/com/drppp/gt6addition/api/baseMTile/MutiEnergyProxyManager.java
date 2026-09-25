@@ -129,6 +129,9 @@ public class MutiEnergyProxyManager implements IMutiEnergyProxy{
         switch (this.EnergyType)
         {
             case EnergyTypeList.HU:
+                // Do not retain a reference to a previously sampled heat
+                // container when the current source exposes the add-on HU API.
+                this.huable = null;
                 if(te.hasCapability(CapabilityHandler.CAPABILITY_HEAT_ENERGY,facing.getOpposite()))
                 {
                     IHeatEnergy energy = te.getCapability(CapabilityHandler.CAPABILITY_HEAT_ENERGY,facing.getOpposite());

@@ -29,6 +29,7 @@ import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -167,7 +168,8 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
             return;
         } else if (temperature < getMaterialMeltingTemperature(contentMaterial)) {
             OrePrefix recipe = getMoldRecipe(shape);
-            ItemStack result = createOutput(recipe, contentMaterial, contentAmount);
+            Material solidifyingMaterial = getSolidifyingMaterial(contentMaterial);
+            ItemStack result = createOutput(recipe, solidifyingMaterial, contentAmount);
             contentMaterial = null;
             contentAmount = 0L;
             if (!result.isEmpty()) {
@@ -388,7 +390,7 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
         data.setLong(NBT_COOLING_START_TEMPERATURE, coolingStartTemperature);
         data.setLong(NBT_CONTENT_AMOUNT, contentAmount);
         if (contentMaterial != null) {
-            data.setString(NBT_CONTENT_MATERIAL, contentMaterial.getName());
+            data.setString(NBT_CONTENT_MATERIAL, getMaterialRegistryName(contentMaterial));
         }
         if (!output.isEmpty()) {
             data.setTag(NBT_OUTPUT, output.writeToNBT(new NBTTagCompound()));
@@ -408,7 +410,7 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
         contentAmount = data.hasKey(NBT_CONTENT_AMOUNT) ? data.getLong(NBT_CONTENT_AMOUNT) : 0L;
         contentMaterial = null;
         if (data.hasKey(NBT_CONTENT_MATERIAL)) {
-            contentMaterial = GregTechAPI.materialManager.getMaterial(data.getString(NBT_CONTENT_MATERIAL));
+            contentMaterial = resolveMaterial(data.getString(NBT_CONTENT_MATERIAL));
         }
         if (contentMaterial == null || contentAmount <= 0L) {
             contentMaterial = null;
@@ -431,7 +433,7 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
     private void writeState(PacketBuffer buffer) {
         buffer.writeLong(temperature);
         buffer.writeLong(coolingStartTemperature);
-        buffer.writeString(contentMaterial == null ? "" : contentMaterial.getName());
+        buffer.writeString(getMaterialRegistryName(contentMaterial));
         buffer.writeLong(contentAmount);
         buffer.writeItemStack(output);
     }
@@ -440,7 +442,7 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
         temperature = buffer.readLong();
         coolingStartTemperature = buffer.readLong();
         String materialName = buffer.readString(Short.MAX_VALUE);
-        contentMaterial = materialName.isEmpty() ? null : GregTechAPI.materialManager.getMaterial(materialName);
+        contentMaterial = resolveMaterial(materialName);
         contentAmount = buffer.readLong();
         try {
             output = buffer.readItemStack();
@@ -454,6 +456,29 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
         if (output == null) {
             output = ItemStack.EMPTY;
         }
+    }
+
+    private static String getMaterialRegistryName(@Nullable Material material) {
+        return material == null ? "" : material.getRegistryName();
+    }
+
+    @Nullable
+    private static Material resolveMaterial(@Nullable String materialName) {
+        if (materialName == null || materialName.isEmpty()) {
+            return null;
+        }
+        Material material = GregTechAPI.materialManager.getMaterial(materialName);
+        if (material != null) {
+            return material;
+        }
+        // Keep molds from older saves working; they stored Material#getName()
+        // without the namespace used by this mod's registered materials.
+        for (Material registeredMaterial : GregTechAPI.materialManager.getRegisteredMaterials()) {
+            if (registeredMaterial != null && materialName.equals(registeredMaterial.getName())) {
+                return registeredMaterial;
+            }
+        }
+        return null;
     }
 
     private OrePrefix getMoldRecipe(int moldShape) {
@@ -616,11 +641,20 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
                 Fluid fluid = fluidStack.getFluid();
                 ResourceLocation still = fluid.getStill(fluidStack);
                 if (still != null) {
-                    return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(still.toString());
+                    TextureMap textureMap = Minecraft.getMinecraft().getTextureMapBlocks();
+                    TextureAtlasSprite sprite = textureMap.getAtlasSprite(still.toString());
+                    if (sprite != textureMap.getMissingSprite()) {
+                        return sprite;
+                    }
                 }
             }
         }
-        return null;
+        // Match the crucible's material fallback: some registered materials
+        // (for example solidifying compounds without a FluidProperty) are
+        // meltable/castable but have no Forge fluid still texture. Returning
+        // null here hid the liquid during cooling, even though the output item
+        // appeared correctly once solidified.
+        return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("minecraft:blocks/gravel");
     }
 
     private int getContentRenderColor(Material material) {
@@ -800,7 +834,11 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
         }
 
         if (!simulate) {
-            contentMaterial = solidifyingMaterial;
+            // Keep the poured/molten material while cooling. GT6 stores this
+            // material in the mold and only converts it to its solidifying
+            // target at the phase transition; resolving the output material
+            // here can discard the molten texture (e.g. lava -> obsidian).
+            contentMaterial = material;
             contentAmount = requiredAmount;
             this.temperature = temperature;
             this.coolingStartTemperature = temperature;

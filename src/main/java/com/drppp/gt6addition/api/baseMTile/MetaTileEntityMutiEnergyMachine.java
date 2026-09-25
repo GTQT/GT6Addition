@@ -85,6 +85,8 @@ import static gregtech.api.capability.GregtechDataCodes.UPDATE_OUTPUT_FACING;
 public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMetaTileEntity
         implements IActiveOutputSide, IGhostSlotConfigurable {
 
+    private static final int UPDATE_RUNNING_VISUAL = 0x47543652; // GT6A-specific custom sync id
+
     public static final int FONT_HEIGHT = 9; // Minecraft's FontRenderer FONT_HEIGHT value
     @Nullable // particle run every tick when the machine is active
     public final IMachineParticleEffect tickingParticle;
@@ -102,6 +104,7 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
     public boolean allowInputFromOutputSideItems = false;
     public boolean allowInputFromOutputSideFluids = false;
     public IItemHandlerModifiable actualImportItems;
+    private boolean runningForRendering;
 
     public MetaTileEntityMutiEnergyMachine(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
                                        ICubeRenderer renderer, int tier, boolean hasFrontFacing, String type ,MachineEnergyAcceptFacing[] acceptFacing) {
@@ -257,6 +260,7 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
                     clearEnergy();
                 }
             }
+            updateRunningVisualState();
             if (getOffsetTimer() % 5 == 0) {
                 if (isAutoOutputFluids()) {
                     pushFluidsIntoNearbyHandlers(getOutputFacingFluids());
@@ -269,6 +273,20 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
             tickingParticle.runEffect(this);
         }
     }
+
+    private void updateRunningVisualState() {
+        boolean running = hasEnoughPowerForRendering();
+        if (this.runningForRendering == running) return;
+        this.runningForRendering = running;
+        writeCustomData(UPDATE_RUNNING_VISUAL, buf -> buf.writeBoolean(running));
+        scheduleRenderUpdate();
+    }
+
+    @Override
+    protected boolean isRunningForRendering() {
+        return this.runningForRendering;
+    }
+
     private void clearEnergy()
     {
         this.energyContainer.changeEnergy(-this.energyContainer.getEnergyStored());
@@ -399,6 +417,7 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
         buf.writeByte(getOutputFacingFluids().getIndex());
         buf.writeBoolean(autoOutputItems);
         buf.writeBoolean(autoOutputFluids);
+        buf.writeBoolean(runningForRendering);
     }
 
     @Override
@@ -408,6 +427,7 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
         this.outputFacingFluids = EnumFacing.VALUES[buf.readByte()];
         this.autoOutputItems = buf.readBoolean();
         this.autoOutputFluids = buf.readBoolean();
+        this.runningForRendering = buf.readBoolean();
     }
 
     @Override
@@ -422,6 +442,9 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
             scheduleRenderUpdate();
         } else if (dataId == UPDATE_AUTO_OUTPUT_FLUIDS) {
             this.autoOutputFluids = buf.readBoolean();
+            scheduleRenderUpdate();
+        } else if (dataId == UPDATE_RUNNING_VISUAL) {
+            this.runningForRendering = buf.readBoolean();
             scheduleRenderUpdate();
         }
     }

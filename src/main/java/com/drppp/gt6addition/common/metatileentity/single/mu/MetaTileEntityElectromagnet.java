@@ -33,7 +33,8 @@ public class MetaTileEntityElectromagnet extends BaseTieredEnergyOutputMetaTileE
         super(metaTileEntityId, tier, color, Gt6AdditionTextures.MU_ELECTROMAGNET);
         this.efficiency = efficiency;
         this.outPutRu = outPutRu;
-        this.minSteamUse = EnergyConversionHelper.minimumInputForNominalOutput(this.outPutRu, this.efficiency);
+        this.minSteamUse = EnergyConversionHelper.minimumInputForHalfNominalOutput(
+                this.outPutRu, this.efficiency, 1.0D);
         this.maxSteamUse = EnergyConversionHelper.maximumInputForDoubleOutput(this.outPutRu, this.efficiency);
     }
 

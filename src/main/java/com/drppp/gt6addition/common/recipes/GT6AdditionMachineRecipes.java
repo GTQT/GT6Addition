@@ -3,7 +3,6 @@ package com.drppp.gt6addition.common.recipes;
 import com.drppp.gt6addition.Tags;
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
 import com.drppp.gt6addition.common.item.GT6AdditionItems;
-import com.drppp.gt6addition.common.block.GT6AdditionBlocks;
 import com.drppp.gt6addition.common.material.GT6AdditionOrePrefixes;
 import com.drppp.gt6addition.common.material.GT6MachineMaterials;
 import gregtech.api.GTValues;
@@ -509,18 +508,6 @@ public final class GT6AdditionMachineRecipes {
     }
 
     private static void registerItemMachines() {
-        // GT6 Fire Bricks: 4 Clay dust, 4 Brick ingots, and a water bucket.
-        registerShaped("coke_oven_brick", new ItemStack(GT6AdditionBlocks.COKE_OVEN_BRICK_ITEM),
-                "CBC", "BWB", "CBC",
-                'C', OreDictUnifier.get(OrePrefix.dust, Materials.Clay),
-                'B', OreDictUnifier.get(OrePrefix.ingot, Materials.Brick),
-                'W', new ItemStack(Items.WATER_BUCKET));
-        registerShaped("coke_oven", MetaTileEntityHandler.COKE_OVEN.getStackForm(),
-                "IPI", "RBR", "IPI",
-                'I', OreDictUnifier.get(OrePrefix.ingot, Materials.Iron),
-                'P', OreDictUnifier.get(OrePrefix.plate, Materials.Iron),
-                'R', OreDictUnifier.get(OrePrefix.stick, Materials.Iron),
-                'B', new ItemStack(GT6AdditionBlocks.COKE_OVEN_BRICK_ITEM));
         registerShaped("mortar", MetaTileEntityHandler.MORTAR.getStackForm(),
                 " C ", "S S", "SSS",
                 'C', new ItemStack(Blocks.COBBLESTONE),

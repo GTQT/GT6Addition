@@ -5,6 +5,7 @@ import com.drppp.gt6addition.Tags;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucibleCrossing;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCruciblePouringSpout;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityMold;
+import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityTemperatureSensor;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.util.GTUtility;
 import net.minecraft.client.renderer.GlStateManager;
@@ -39,7 +40,8 @@ public final class CrucibleComponentHighlightHandler {
         MetaTileEntity metaTileEntity = GTUtility.getMetaTileEntity(event.getPlayer().world, blockPos);
         if (!(metaTileEntity instanceof MetaTileEntityMold)
                 && !(metaTileEntity instanceof MetaTileEntityCruciblePouringSpout)
-                && !(metaTileEntity instanceof MetaTileEntityCrucibleCrossing)) {
+                && !(metaTileEntity instanceof MetaTileEntityCrucibleCrossing)
+                && !(metaTileEntity instanceof MetaTileEntityTemperatureSensor)) {
             return;
         }
 

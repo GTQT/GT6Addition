@@ -4,7 +4,6 @@ import com.cleanroommc.modularui.drawable.UITexture;
 import gregtech.client.renderer.texture.cube.OrientedOverlayRenderer;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
-import gregtech.client.renderer.texture.cube.SidedCubeRenderer;
 
 import static com.cleanroommc.modularui.drawable.UITexture.fullImage;
 
@@ -19,14 +18,11 @@ public class Gt6AdditionTextures {
     public static final SimpleSidedCubeRenderer[] MACHINE_BASES = new SimpleSidedCubeRenderer[6];
     public static final SimpleSidedCubeRenderer BASE_RENDERER =
             new SimpleSidedCubeRenderer("gt6addition:machines/lu_machines/laser_engraver/colored");
-    public static final SidedCubeRenderer COKE_OVEN_BASE =
-            new SidedCubeRenderer("gt6addition:machines/basicmachines/cokeoven/colored");
-    public static OrientedOverlayRenderer COKE_OVEN_OVERLAY;
-    public static OrientedOverlayRenderer COKE_OVEN_ACTIVE_OVERLAY;
-
     public static OrientedOverlayRenderer RU_BENDER;
     public static OrientedOverlayRenderer RU_WIREMILL;
     public static OrientedOverlayRenderer RU_STEAM_TURBINE;
+    public static OrientedOverlayRenderer RU_STEAM_TURBINE_SLOW;
+    public static OrientedOverlayRenderer RU_STEAM_TURBINE_FAST;
     public static OrientedOverlayRenderer RU_ELECTRIC_MOTOR;
     public static OrientedOverlayRenderer RU_DIESEL_ENGINE;
     public static OrientedOverlayRenderer RU_KU_ENGINE;
@@ -56,8 +52,6 @@ public class Gt6AdditionTextures {
         HU_BASE_BURRING_BOX_LIQUID= new OrientedOverlayRenderer("machines/hu_base_burring_box_liquid");
         HU_BURRING_BOX_SIDE_OVERLAY = new SimpleOverlayRenderer("casings/hu_burring_box_side_overlay");
         HU_BURRING_BOX_SIDE_FULL_OVERLAY = new SimpleOverlayRenderer("casings/hu_burring_box_side_full_overlay");
-        COKE_OVEN_OVERLAY = new OrientedOverlayRenderer("gt6addition:machines/basicmachines/cokeoven");
-        COKE_OVEN_ACTIVE_OVERLAY = new OrientedOverlayRenderer("gt6addition:machines/basicmachines/cokeoven");
         RU_BENDER= new OrientedOverlayRenderer("machines/ru_machines/ru_bender");
         RU_WIREMILL= new OrientedOverlayRenderer("machines/ru_machines/ru_wiremill");
         MACHINE_BASES[1] = new SimpleSidedCubeRenderer("base/bronze");
@@ -66,6 +60,8 @@ public class Gt6AdditionTextures {
         MACHINE_BASES[4] = new SimpleSidedCubeRenderer("base/titanium");
         MACHINE_BASES[5] = new SimpleSidedCubeRenderer("base/tungsten_steel");
         RU_STEAM_TURBINE = new OrientedOverlayRenderer("machines/ru_machines/steam_turbine");
+        RU_STEAM_TURBINE_SLOW = new OrientedOverlayRenderer("machines/ru_machines/steam_turbine_slow");
+        RU_STEAM_TURBINE_FAST = new OrientedOverlayRenderer("machines/ru_machines/steam_turbine_fast");
         RU_ELECTRIC_MOTOR = new OrientedOverlayRenderer("machines/ru_machines/electric_motor");
         RU_DIESEL_ENGINE = new OrientedOverlayRenderer("machines/ru_machines/diesel_engine");
         RU_KU_ENGINE = new OrientedOverlayRenderer("machines/ku_machines/ru_ku_engine");

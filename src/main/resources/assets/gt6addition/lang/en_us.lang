@@ -80,6 +80,7 @@ gt6addition.machine.dense_tantalum_hafnium_carbide_fluidized_bed_burning_box.nam
 gt6addition.hu.fluidized_bed.info=Requires one Calcite Dust per solid-fuel item.
 gt6addition.material.arsenic_copper=Arsenic Copper
 gt6addition.material.arsenic_bronze=Arsenic Bronze
+gt6addition.material.ancient_debris=Ancient Debris
 gt6addition.material.netherite=Netherite
 gt6addition.material.tantalum_hafnium_carbide=Tantalum Hafnium Carbide
 gt6addition.machine.ru_bender_bronze.name=Rotational Energy Bender (Bronze)
@@ -577,5 +578,3 @@ gt6addition.machine.portal_end.tooltip.2=Activate with an Eye of Ender.
 gt6addition.machine.portal_twilight.tooltip.1=Links the Overworld and Twilight Forest.
 gt6addition.machine.portal_twilight.tooltip.2=Targets the nearest portal within 512 blocks; activate with one diamond.
 item.material.oreprefix.scrapGt=Scrap %s
-tile.gt6addition.coke_oven_brick.name=GT6 Coke Oven Brick
-gt6addition.machine.coke_oven.name=Coke Oven

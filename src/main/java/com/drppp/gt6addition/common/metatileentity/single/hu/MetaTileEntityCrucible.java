@@ -98,6 +98,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
     private static final String NBT_SPECIAL_FLUID = "SpecialFluid";
     private static final String NBT_SPECIAL_FLUID_AMOUNT = "SpecialFluidAmount";
     private static final String NBT_LAVA_CONDENSATION_PENDING = "LavaCondensationPending";
+    private static final String NBT_STORED_HEAT = "StoredHeat";
     private static final int SPECIAL_FLUID_CAPACITY = 16_000;
     private static final int PENDING_ITEM_CAPACITY = 64;
     private static final int LAVA_OBSIDIAN_MILLIBUCKETS = 1_000;
@@ -106,7 +107,9 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
     private static final long DEFAULT_ENVIRONMENT_TEMPERATURE = 293L;
     private static final int HEAT_COOLDOWN_TICKS = 100;
     private static final int PASSIVE_COOLDOWN_TICKS = 10;
-    private static final int KILOGRAMS_PER_HEAT_UNIT = 100;
+    // This is the single-block GT6 Smeltery, not the 3x3x3 Crucible.
+    private static final long GT6_VESSEL_MATERIAL_AMOUNT = 7L * GTValues.M;
+    private static final double DEFAULT_MATERIAL_DENSITY_KG_PER_CUBIC_METER = 1_000.0D;
     private static final int AIR_DENSITY_LIMIT = 200;
     private static final long SCRAP_MATERIAL_AMOUNT = GTValues.M / 9L;
     private static final int RAIN_FILL_INTERVAL = 600;
@@ -142,7 +145,9 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
     private boolean lavaCondensationPending;
     private long temperature = DEFAULT_ENVIRONMENT_TEMPERATURE;
     private long oldTemperature = DEFAULT_ENVIRONMENT_TEMPERATURE;
+    private long storedHeat;
     private int thermalCooldown = HEAT_COOLDOWN_TICKS;
+    private boolean heatedThisTick;
     private boolean active;
     private int displayHeight;
     private int oldDisplayHeight = -1;
@@ -258,39 +263,64 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
         processDroppedItems();
         processInputSlot();
         processSpecialFluids();
+        // GT6 calculates the crucible's thermal mass after the current tick's
+        // inputs, alloy conversion, and phase changes have updated the melt.
+        processAlloys();
+        removeEmptyContents();
+        if (processMaterialTemperatureState()) {
+            return;
+        }
+        oldTemperature = temperature;
+        processStoredHeat();
         if (processTemperature()) {
             return;
         }
         processContactDamage();
-        processAlloys();
-        removeEmptyContents();
         refreshDisplayState();
         setActive(mutiEnergyProxy != null && mutiEnergyProxy.getEnergy() > 0);
     }
 
     private void pullHeatFromBottom() {
-        if (mutiEnergyProxy == null) {
-            return;
-        }
-        TileEntity tileEntity = getWorld().getTileEntity(getPos().down());
-        if (tileEntity == null || !mutiEnergyProxy.getNearEnergyToMyself(tileEntity, EnumFacing.DOWN)) {
-            mutiEnergyProxy.setEnergy(0);
-            return;
+        heatedThisTick = false;
+        if (mutiEnergyProxy != null) {
+            TileEntity tileEntity = getWorld().getTileEntity(getPos().down());
+            if (tileEntity == null || !mutiEnergyProxy.getNearEnergyToMyself(tileEntity, EnumFacing.DOWN)) {
+                mutiEnergyProxy.setEnergy(0);
+            } else {
+                int heat = mutiEnergyProxy.getEnergy();
+                if (heat > 0) {
+                    long updatedStoredHeat = CrucibleTransferLogic.accumulateHeat(storedHeat, heat);
+                    int acceptedHeat = (int) Math.min(Integer.MAX_VALUE, updatedStoredHeat - storedHeat);
+                    storedHeat = updatedStoredHeat;
+                    // Buffer incoming HU locally. Heat containers are drained
+                    // once on transfer; continuous-output HU sources are
+                    // accumulated over ticks just like GT6's mEnergy buffer.
+                    if (acceptedHeat > 0) {
+                        markDirty();
+                        mutiEnergyProxy.changeEnergy(acceptedHeat);
+                    }
+                }
+            }
         }
 
-        int heat = mutiEnergyProxy.getEnergy();
-        if (heat <= 0) {
+    }
+
+    private void processStoredHeat() {
+        if (storedHeat <= 0L) {
             return;
         }
-        long requiredEnergyPerKelvin = 1L + (long) (getThermalMassKg() / KILOGRAMS_PER_HEAT_UNIT);
-        long temperatureGain = heat / requiredEnergyPerKelvin;
+        double thermalMassKg = getThermalMassKg();
+        long requiredEnergyPerKelvin = CrucibleTransferLogic.requiredEnergyPerKelvin(thermalMassKg);
+        long temperatureGain = CrucibleTransferLogic.temperatureGainForHeat(storedHeat, thermalMassKg);
         if (temperatureGain <= 0L) {
             return;
         }
         long consumedEnergy = temperatureGain * requiredEnergyPerKelvin;
+        storedHeat -= consumedEnergy;
         temperature += temperatureGain;
-        mutiEnergyProxy.changeEnergy((int) Math.min(Integer.MAX_VALUE, consumedEnergy));
+        markDirty();
         thermalCooldown = HEAT_COOLDOWN_TICKS;
+        heatedThisTick = true;
     }
 
     private void processRainFill() {
@@ -605,7 +635,10 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
     }
 
     private double getThermalMassKg() {
-        double mass = vesselMaterial == null ? 7.0D : getMaterialWeightKg(vesselMaterial, 7L * GTValues.M);
+        // GT6's single-block Smeltery includes its wall material at U * 7;
+        // the multiblock Crucible's U * 100 wall basis does not apply here.
+        // GT6's default material density is 1 g/cm^3 (1000 kg/m^3).
+        double mass = getMaterialWeightKg(vesselMaterial, GT6_VESSEL_MATERIAL_AMOUNT);
         for (StoredMaterial material : contents) {
             mass += getMaterialWeightKg(material.material, material.amount);
         }
@@ -616,17 +649,16 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
     }
 
     private double getMaterialWeightKg(Material material, long amount) {
+        double densityKgPerCubicMeter = DEFAULT_MATERIAL_DENSITY_KG_PER_CUBIC_METER;
         if (material != null && amount > 0L && material.hasFluid()) {
             Fluid fluid = material.getFluid();
-            int density = fluid.getDensity();
-            if (density > 0) {
-                // Convert GT material units (144 per litre) to mB before kg/m^3.
-                return amount * (double) density / (GTValues.M * 1_000.0D);
-            }
+            densityKgPerCubicMeter = CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter(
+                    material.getRegistryName(), fluid.getDensity());
+        } else if (material != null && amount > 0L) {
+            densityKgPerCubicMeter = CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter(
+                    material.getRegistryName(), 0.0D);
         }
-        // GTCEu does not expose GT6's material weight for solids; one ingot unit
-        // is used as the physical-mass fallback for non-fluid material forms.
-        return Math.max(0.0D, amount / (double) GTValues.M);
+        return CrucibleTransferLogic.materialWeightKg(amount, densityKgPerCubicMeter, GTValues.M);
     }
 
     private long getAmbientTemperature() {
@@ -651,22 +683,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
         return null;
     }
 
-    private boolean processTemperature() {
-        oldTemperature = temperature;
-        long ambientTemperature = getAmbientTemperature();
-        if (thermalCooldown > 0) {
-            thermalCooldown--;
-        }
-        if (thermalCooldown <= 0) {
-            thermalCooldown = PASSIVE_COOLDOWN_TICKS;
-            if (temperature > ambientTemperature) {
-                temperature--;
-            } else if (temperature < ambientTemperature) {
-                temperature++;
-            }
-        }
-        temperature = Math.max(temperature, Math.min(200L, ambientTemperature));
-
+    private boolean processMaterialTemperatureState() {
         boolean changed = false;
         for (StoredMaterial material : contents) {
             if (!material.molten && temperature >= getMeltingTemperature(material.material)) {
@@ -683,6 +700,21 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
         if (processHazards()) {
             return true;
         }
+        return false;
+    }
+
+    private boolean processTemperature() {
+        long ambientTemperature = getAmbientTemperature();
+        boolean wasHeatedThisTick = heatedThisTick;
+        heatedThisTick = false;
+        boolean adjustTowardAmbient = CrucibleTransferLogic.shouldPassivelyAdjustTemperature(
+                thermalCooldown, wasHeatedThisTick);
+        thermalCooldown = CrucibleTransferLogic.nextThermalCooldown(thermalCooldown, wasHeatedThisTick,
+                HEAT_COOLDOWN_TICKS, PASSIVE_COOLDOWN_TICKS);
+        if (adjustTowardAmbient) {
+            temperature = CrucibleTransferLogic.moveTemperatureTowardAmbient(temperature, ambientTemperature);
+        }
+        temperature = Math.max(temperature, Math.min(200L, ambientTemperature));
         if (temperature > maxTemperature) {
             meltDown();
             return true;
@@ -1155,7 +1187,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
             displayMaterialName = EMPTY_DISPLAY_MATERIAL;
             displayMolten = false;
         } else {
-            displayMaterialName = displayMaterial.material.getName();
+            displayMaterialName = getMaterialRegistryName(displayMaterial.material);
             displayMolten = displayMaterial.molten && temperature >= getMeltingTemperature(displayMaterial.material);
         }
         meltDownWarning = temperature + 100L > maxTemperature;
@@ -1200,10 +1232,32 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
 
     @Nullable
     private Material getDisplayedClientMaterial() {
-        if (displayMaterialName.isEmpty()) {
+        return resolveMaterial(displayMaterialName);
+    }
+
+    private static String getMaterialRegistryName(Material material) {
+        return material == null ? EMPTY_DISPLAY_MATERIAL : material.getRegistryName();
+    }
+
+    @Nullable
+    private static Material resolveMaterial(@Nullable String materialName) {
+        if (materialName == null || materialName.isEmpty()) {
             return null;
         }
-        return GregTechAPI.materialManager.getMaterial(displayMaterialName);
+
+        Material material = GregTechAPI.materialManager.getMaterial(materialName);
+        if (material != null) {
+            return material;
+        }
+
+        // Older saves stored only Material#getName(), which loses the registry
+        // namespace for materials supplied by other mods.
+        for (Material registeredMaterial : GregTechAPI.materialManager.getRegisteredMaterials()) {
+            if (registeredMaterial != null && materialName.equals(registeredMaterial.getName())) {
+                return registeredMaterial;
+            }
+        }
+        return null;
     }
 
     public long getCurrentTemperature() {
@@ -1587,6 +1641,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
         super.writeToNBT(data);
         data.setLong(NBT_TEMPERATURE, temperature);
         data.setLong(NBT_OLD_TEMPERATURE, oldTemperature);
+        data.setLong(NBT_STORED_HEAT, storedHeat);
         data.setInteger(NBT_SPECIAL_FLUID_AMOUNT, specialFluidAmount);
         data.setBoolean(NBT_LAVA_CONDENSATION_PENDING, lavaCondensationPending);
         if (specialFluid != null && specialFluidAmount > 0) {
@@ -1597,11 +1652,11 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
         NBTTagList contentList = new NBTTagList();
         for (StoredMaterial material : contents) {
             NBTTagCompound tag = new NBTTagCompound();
-            tag.setString(NBT_MATERIAL, material.material.getName());
+            tag.setString(NBT_MATERIAL, getMaterialRegistryName(material.material));
             tag.setLong(NBT_AMOUNT, material.amount);
             tag.setBoolean(NBT_MOLTEN, material.molten);
             if (material.solidifyingMaterial != null && material.solidifyingMaterial != Materials.NULL) {
-                tag.setString(NBT_SOLIDIFY_TARGET, material.solidifyingMaterial.getName());
+                tag.setString(NBT_SOLIDIFY_TARGET, getMaterialRegistryName(material.solidifyingMaterial));
             }
             contentList.appendTag(tag);
         }
@@ -1619,6 +1674,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
         super.readFromNBT(data);
         temperature = data.hasKey(NBT_TEMPERATURE) ? data.getLong(NBT_TEMPERATURE) : DEFAULT_ENVIRONMENT_TEMPERATURE;
         oldTemperature = data.hasKey(NBT_OLD_TEMPERATURE) ? data.getLong(NBT_OLD_TEMPERATURE) : temperature;
+        storedHeat = Math.max(0L, data.getLong(NBT_STORED_HEAT));
         thermalCooldown = HEAT_COOLDOWN_TICKS;
         contents.clear();
         pendingItems.clear();
@@ -1643,11 +1699,11 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
         NBTTagList contentList = data.getTagList(NBT_CONTENTS, Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < contentList.tagCount(); i++) {
             NBTTagCompound tag = contentList.getCompoundTagAt(i);
-            Material material = GregTechAPI.materialManager.getMaterial(tag.getString(NBT_MATERIAL));
+            Material material = resolveMaterial(tag.getString(NBT_MATERIAL));
             if (material != null && material != gregtech.api.unification.material.Materials.NULL) {
                 boolean molten = tag.getBoolean(NBT_MOLTEN);
                 Material solidifyingMaterial = tag.hasKey(NBT_SOLIDIFY_TARGET) ?
-                        GregTechAPI.materialManager.getMaterial(tag.getString(NBT_SOLIDIFY_TARGET)) :
+                        resolveMaterial(tag.getString(NBT_SOLIDIFY_TARGET)) :
                         (molten ? getSolidifyingTarget(material) : material);
                 if (solidifyingMaterial == Materials.NULL) {
                     solidifyingMaterial = material;

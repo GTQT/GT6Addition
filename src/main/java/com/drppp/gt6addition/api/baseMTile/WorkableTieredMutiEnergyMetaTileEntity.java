@@ -96,6 +96,15 @@ public abstract class WorkableTieredMutiEnergyMetaTileEntity extends TieredMutiE
         return new RecipeLogicMutiEnergy(this, recipeMap, this.mutiEnergyProxy,getMaxParallel());
     }
 
+    protected boolean isRunningForRendering() {
+        return false;
+    }
+
+    protected boolean hasEnoughPowerForRendering() {
+        return workable instanceof RecipeLogicMutiEnergy &&
+                ((RecipeLogicMutiEnergy) workable).hasEnoughPowerForRendering();
+    }
+
     private int getMaxParallel()
     {
         return this.parallel;
@@ -127,8 +136,11 @@ public abstract class WorkableTieredMutiEnergyMetaTileEntity extends TieredMutiE
     @Override
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         super.renderMetaTileEntity(renderState, translation, pipeline);
-        renderer.renderOrientedState(renderState, translation, pipeline, getFrontFacing(), workable.isActive(),
-                workable.isWorkingEnabled());
+        boolean running = isRunningForRendering();
+        // GT6 separates powered-idle (paused sprite) from active recipe processing.
+        renderer.renderOrientedState(renderState, translation, pipeline, getFrontFacing(),
+                running,
+                running && workable.isActive() && workable.isWorkingEnabled());
     }
 
     @Override

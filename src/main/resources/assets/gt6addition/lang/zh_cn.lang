@@ -80,6 +80,7 @@ gt6addition.machine.dense_tantalum_hafnium_carbide_fluidized_bed_burning_box.nam
 gt6addition.hu.fluidized_bed.info=每消耗一个固体燃料物品，需要一份方解石粉。
 gt6addition.material.arsenic_copper=砷铜
 gt6addition.material.arsenic_bronze=砷青铜
+gt6addition.material.ancient_debris=远古残骸
 gt6addition.material.netherite=下界合金
 gt6addition.material.tantalum_hafnium_carbide=钽铪碳化物
 gt6addition.machine.ru_bender_bronze.name=旋转能卷板机(青铜)
@@ -578,5 +579,3 @@ gt6addition.machine.portal_end.tooltip.2=使用末影之眼激活。
 gt6addition.machine.portal_twilight.tooltip.1=连接主世界与暮色森林。
 gt6addition.machine.portal_twilight.tooltip.2=连接 512 格范围内最近的门；使用一颗钻石激活。
 item.material.oreprefix.scrapGt=%s废料
-tile.gt6addition.coke_oven_brick.name=GT6焦炉砖
-gt6addition.machine.coke_oven.name=焦炉

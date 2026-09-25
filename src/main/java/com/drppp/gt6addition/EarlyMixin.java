@@ -15,7 +15,7 @@ public class EarlyMixin implements IEarlyMixinLoader, IFMLLoadingPlugin {
 
     @Override
     public List<String> getMixinConfigs() {
-        return java.util.Arrays.asList("mixins.gt6addition_early.json", "mixins.gt6addition_late.json");
+        return Collections.singletonList("mixins.gt6addition_early.json");
     }
 
     @Override

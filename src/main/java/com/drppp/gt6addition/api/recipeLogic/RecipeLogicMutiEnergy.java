@@ -4,6 +4,7 @@ import com.drppp.gt6addition.api.baseMTile.IMutiEnergyProxy;
 import gregtech.api.GTValues;
 import gregtech.api.capability.impl.AbstractRecipeLogic;
 import gregtech.api.metatileentity.MetaTileEntity;
+import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.logic.OCParams;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
@@ -60,6 +61,22 @@ public class RecipeLogicMutiEnergy extends AbstractRecipeLogic {
             return this.mutiEnergyProxy.getEnergy() >= recipeEUt;
         }
         return false;
+    }
+
+    public boolean hasEnoughPowerForRendering() {
+        if (this.mutiEnergyProxy == null || this.mutiEnergyProxy.getEnergy() <= 0) {
+            return false;
+        }
+
+        // Match the active recipe's power check; while idle, retain the last recipe's threshold.
+        long requiredEnergy = getRecipeEUt();
+        if (requiredEnergy == 0) {
+            Recipe previousRecipe = getPreviousRecipe();
+            if (previousRecipe != null) {
+                requiredEnergy = previousRecipe.getEUt();
+            }
+        }
+        return requiredEnergy == 0 || hasEnoughPower(requiredEnergy, Math.max(getMaxProgress(), 1));
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
+import gregtech.api.GTValues;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,6 +41,50 @@ class CrucibleTransferLogicTest {
         assertTrue(CrucibleTransferLogic.canMeltWithinLimit(1_800, 1_300, true));
         assertFalse(CrucibleTransferLogic.canMeltWithinLimit(1_299, 1_300, true));
         assertFalse(CrucibleTransferLogic.canMeltWithinLimit(2_000, 1_300, false));
+    }
+
+    @Test
+    void heatCapacityUsesTheGt6SingleBlockSmelteryVesselMassAndDensity() {
+        assertEquals(1L, CrucibleTransferLogic.requiredEnergyPerKelvin(99.9D));
+        assertEquals(2L, CrucibleTransferLogic.requiredEnergyPerKelvin(100.0D));
+        assertEquals(3L, CrucibleTransferLogic.requiredEnergyPerKelvin(200.0D));
+        double gt6DefaultDensityWallMass = CrucibleTransferLogic.materialWeightKg(7L * GTValues.M,
+                1_000.0D, GTValues.M);
+        assertEquals(777.777D, gt6DefaultDensityWallMass, 0.001D);
+        assertEquals(8L, CrucibleTransferLogic.requiredEnergyPerKelvin(gt6DefaultDensityWallMass));
+        assertEquals(8L, CrucibleTransferLogic.temperatureGainForHeat(64L, gt6DefaultDensityWallMass));
+
+        double carbideDensity = CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter("gregtech:tungsten_carbide", 1_000.0D);
+        assertEquals(15_600.0D, carbideDensity);
+        double carbideWallMass = CrucibleTransferLogic.materialWeightKg(7L * GTValues.M,
+                carbideDensity, GTValues.M);
+        assertEquals(12_133.333D, carbideWallMass, 0.001D);
+        assertEquals(122L, CrucibleTransferLogic.requiredEnergyPerKelvin(carbideWallMass));
+        assertEquals(0L, CrucibleTransferLogic.temperatureGainForHeat(64L, carbideWallMass));
+        assertEquals(1L, CrucibleTransferLogic.temperatureGainForHeat(122L, carbideWallMass));
+        assertEquals(112L, CrucibleTransferLogic.accumulateHeat(64L, 48L));
+        long accumulatedHeat = CrucibleTransferLogic.accumulateHeat(64L, 64L);
+        assertEquals(1L, CrucibleTransferLogic.temperatureGainForHeat(accumulatedHeat, carbideWallMass));
+        assertEquals(6L, accumulatedHeat - 122L);
+    }
+
+    @Test
+    void gt6CoolingResetsAfterHeatingThenMovesOneKelvinEveryTenTicks() {
+        int cooldown = CrucibleTransferLogic.nextThermalCooldown(1, true, 100, 10);
+        assertEquals(100, cooldown);
+        assertFalse(CrucibleTransferLogic.shouldPassivelyAdjustTemperature(1, true));
+
+        boolean cooled = false;
+        for (int tick = 0; tick < 99; tick++) {
+            cooled |= CrucibleTransferLogic.shouldPassivelyAdjustTemperature(cooldown, false);
+            cooldown = CrucibleTransferLogic.nextThermalCooldown(cooldown, false, 100, 10);
+        }
+        assertFalse(cooled);
+        assertTrue(CrucibleTransferLogic.shouldPassivelyAdjustTemperature(cooldown, false));
+        cooldown = CrucibleTransferLogic.nextThermalCooldown(cooldown, false, 100, 10);
+        assertEquals(10, cooldown);
+        assertEquals(499L, CrucibleTransferLogic.moveTemperatureTowardAmbient(500L, 293L));
+        assertEquals(294L, CrucibleTransferLogic.moveTemperatureTowardAmbient(293L, 294L));
     }
 
     @Test

@@ -8,6 +8,7 @@ import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
 import com.drppp.gt6addition.api.capability.impl.KineticEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IKineticEnergy;
+import com.drppp.gt6addition.api.utils.EnergyConversionHelper;
 import com.drppp.gt6addition.api.top.IEnergyOutShow;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.GregtechDataCodes;
@@ -170,14 +171,21 @@ public class MetaTileEntityKineticSteamEngine extends MetaTileEntity implements 
             return;
         }
         long conversions = steamTank.getFluidAmount() / STEAM_PER_WATER;
-        long freeConversions = Math.max(0L, (capacity - storedEnergy) / 2L);
+        long energyPerConversion = EnergyConversionHelper.convertedEnergyFromInput(
+                STEAM_PER_WATER, efficiency / 100.0D, 2.0D);
+        if (energyPerConversion <= 0L) {
+            return;
+        }
+        long freeConversions = Math.max(0L,
+                (capacity - storedEnergy + energyPerConversion - 1L) / energyPerConversion);
         conversions = Math.min(conversions, freeConversions);
         if (conversions <= 0L) {
             return;
         }
         int steamUsed = (int) Math.min(Integer.MAX_VALUE, conversions * STEAM_PER_WATER);
         steamTank.drain(steamUsed, true);
-        storedEnergy += conversions * 2L * efficiency / 100L;
+        storedEnergy += EnergyConversionHelper.convertedEnergyFromInput(
+                conversions * STEAM_PER_WATER, efficiency / 100.0D, 2.0D);
         if (waterTank != null) {
             waterTank.fill(Materials.DistilledWater.getFluid((int) Math.min(Integer.MAX_VALUE, conversions)), true);
         }

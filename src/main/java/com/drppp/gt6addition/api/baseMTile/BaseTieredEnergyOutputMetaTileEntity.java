@@ -140,13 +140,9 @@ public abstract class BaseTieredEnergyOutputMetaTileEntity extends TieredMetaTil
         }
 
         setActive(true);
-        if (stored >= maxEuUse) {
-            this.energyContainer.removeEnergy(maxEuUse);
-            return output * 2;
-        }
-
-        this.energyContainer.removeEnergy(stored);
-        return EnergyConversionHelper.scaledOutputFromInput(stored, output, efficiency);
+        long consumed = Math.min(stored, maxEuUse);
+        this.energyContainer.removeEnergy(consumed);
+        return EnergyConversionHelper.scaledOutputFromInput(consumed, output, efficiency);
     }
 
     protected void rotateEntitiesAbove(float rotationSpeed) {

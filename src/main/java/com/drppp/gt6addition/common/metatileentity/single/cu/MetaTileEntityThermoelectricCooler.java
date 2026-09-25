@@ -36,7 +36,8 @@ public class MetaTileEntityThermoelectricCooler extends BaseTieredEnergyOutputMe
         super(metaTileEntityId, tier, color, Gt6AdditionTextures.CU_THERMOELECTRIC_COOLER);
         this.efficiency = efficiency;
         this.outPutRu = outPutRu;
-        this.minEuUse = EnergyConversionHelper.minimumInputForNominalOutput(this.outPutRu, this.efficiency);
+        this.minEuUse = EnergyConversionHelper.minimumInputForHalfNominalOutput(
+                this.outPutRu, this.efficiency, 1.0D);
         this.maxEuUse = EnergyConversionHelper.maximumInputForDoubleOutput(this.outPutRu, this.efficiency);
     }
 

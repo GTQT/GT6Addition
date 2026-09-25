@@ -30,3 +30,15 @@
 *.cfg
 *.csv
 /.gradle
+.gradle/9.2.1/checksums/md5-checksums.bin
+.gradle/9.2.1/checksums/sha1-checksums.bin
+.gradle/9.2.1/fileHashes/resourceHashesCache.bin
+.gradle/buildOutputCleanup/outputFiles.bin
+gradle.properties
+run/config/AppliedEnergistics2/CustomRecipes.cfg
+run/config/AppliedEnergistics2/items.csv
+run/config/AppliedEnergistics2/VersionChecker.cfg
+run/config/gregtech/gregtech.cfg
+run/config/gregtech/modules.cfg
+run/config/gregtech/persistent_data.dat
+run/config/splash.properties
