@@ -6,7 +6,9 @@
   "minVersion": "0.8.3",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "gregtech.ElectricContainerInfoProviderMixin"
+    "gregtech.ElectricContainerInfoProviderMixin",
+    "gregtech.MetaItemLighterBehaviourMixin",
+    "gregtech.BlockMachineComparatorMixin"
   ],
   "server": [],
   "client":[]

@@ -25,3 +25,8 @@
 /run/usernamecache.json
 /build
 .gradle/9.2.1/checksums/checksums.lock
+*.bin
+*.bin
+*.cfg
+*.csv
+/.gradle

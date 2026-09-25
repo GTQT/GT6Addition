@@ -6,11 +6,15 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
+import com.drppp.gt6addition.api.IComparatorSignalProvider;
 import com.drppp.gt6addition.common.metatileentity.single.ku.KineticRenderHelper;
+import gregtech.api.capability.GregtechCapabilities;
+import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.state.BlockFaceShape;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -22,8 +26,10 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
@@ -39,7 +45,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
+public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements IComparatorSignalProvider {
 
     private static final String NBT_ACTIVE = "Active";
     private static final double PX = 1.0D / 16.0D;
@@ -78,9 +84,13 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
 
     private final SideItemHandler[] sideItemHandlers = new SideItemHandler[EnumFacing.VALUES.length];
     private final SideFluidHandler[] sideFluidHandlers = new SideFluidHandler[EnumFacing.VALUES.length];
+    private final SideEnergyContainer[] sideEnergyContainers = new SideEnergyContainer[EnumFacing.VALUES.length];
     private final int[] remoteRedstoneSignals = new int[EnumFacing.VALUES.length];
+    private final int[] remoteComparatorSignals = new int[EnumFacing.VALUES.length];
     private final int[] remoteSignalAges = new int[EnumFacing.VALUES.length];
+    private final int[] remoteComparatorAges = new int[EnumFacing.VALUES.length];
     private final boolean[] remoteSignalUpdated = new boolean[EnumFacing.VALUES.length];
+    private final boolean[] remoteComparatorUpdated = new boolean[EnumFacing.VALUES.length];
 
     protected MetaTileEntityMiniPortal targetPortal;
     private boolean active;
@@ -90,6 +100,7 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
         for (EnumFacing side : EnumFacing.VALUES) {
             sideItemHandlers[side.ordinal()] = new SideItemHandler(side);
             sideFluidHandlers[side.ordinal()] = new SideFluidHandler(side);
+            sideEnergyContainers[side.ordinal()] = new SideEnergyContainer(side);
         }
     }
 
@@ -246,7 +257,17 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
         for (EnumFacing side : EnumFacing.VALUES) {
             int signal = getInputRedstoneSignal(side, false);
             targetPortal.acceptRemoteRedstone(side.getOpposite(), signal);
+            targetPortal.acceptRemoteComparator(side.getOpposite(), getInputComparatorSignal(side));
         }
+    }
+
+    private int getInputComparatorSignal(EnumFacing side) {
+        World world = getWorld();
+        if (world == null || !world.isBlockLoaded(getPos().offset(side))) return 0;
+        BlockPos pos = getPos().offset(side);
+        IBlockState state = world.getBlockState(pos);
+        if (!state.getBlock().hasComparatorInputOverride(state)) return 0;
+        return Math.max(0, Math.min(15, state.getBlock().getComparatorInputOverride(state, world, pos)));
     }
 
     private void acceptRemoteRedstone(EnumFacing side, int signal) {
@@ -256,9 +277,17 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
         remoteSignalUpdated[index] = true;
     }
 
+    private void acceptRemoteComparator(EnumFacing side, int signal) {
+        int index = side.ordinal();
+        remoteComparatorSignals[index] = Math.max(remoteComparatorSignals[index], Math.max(0, Math.min(15, signal)));
+        remoteComparatorAges[index] = 0;
+        remoteComparatorUpdated[index] = true;
+    }
+
     private void updateRedstoneOutputs() {
         for (EnumFacing side : EnumFacing.VALUES) {
             int index = side.ordinal();
+            int previousComparator = remoteComparatorSignals[index];
             if (!active) {
                 remoteRedstoneSignals[index] = 0;
                 remoteSignalAges[index] = 0;
@@ -269,8 +298,23 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
                     remoteSignalAges[index]++;
                 }
             }
+            if (!active) {
+                remoteComparatorSignals[index] = 0;
+                remoteComparatorAges[index] = 0;
+            } else if (!remoteComparatorUpdated[index]) {
+                if (remoteComparatorAges[index] >= REDSTONE_HOLD_TICKS) {
+                    remoteComparatorSignals[index] = 0;
+                } else {
+                    remoteComparatorAges[index]++;
+                }
+            }
             setOutputRedstoneSignal(side, remoteRedstoneSignals[index]);
+            if (previousComparator != remoteComparatorSignals[index]) {
+                markDirty();
+                notifyBlockUpdate();
+            }
             remoteSignalUpdated[index] = false;
+            remoteComparatorUpdated[index] = false;
         }
     }
 
@@ -280,8 +324,18 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
             remoteRedstoneSignals[index] = 0;
             remoteSignalAges[index] = 0;
             remoteSignalUpdated[index] = false;
+            remoteComparatorSignals[index] = 0;
+            remoteComparatorAges[index] = 0;
+            remoteComparatorUpdated[index] = false;
             setOutputRedstoneSignal(side, 0);
         }
+    }
+
+    @Override
+    public int getComparatorSignal() {
+        int signal = 0;
+        for (int sideSignal : remoteComparatorSignals) signal = Math.max(signal, sideSignal);
+        return signal;
     }
 
     private void addToDimensionList() {
@@ -369,11 +423,19 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
 
     @Override
     public boolean hasCapability(@NotNull Capability<?> capability, @Nullable EnumFacing side) {
-        if (side != null && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
-            return true;
+        if (side != null && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
+            return getRemoteItemHandler(side) != null;
+        if (side != null && capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY)
+            return getRemoteFluidHandler(side) != null;
+        if (side != null && capability == GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER)
+            return getRemoteEnergyContainer(side) != null;
+        if (side != null && capability == CapabilityEnergy.ENERGY) {
+            TileEntity remote = getRemoteNeighborTile(side);
+            return remote != null && remote.hasCapability(CapabilityEnergy.ENERGY, side);
         }
-        if (side != null && capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
-            return true;
+        if (side != null && active && targetPortal != null) {
+            TileEntity remote = getRemoteNeighborTile(side);
+            return remote != null && remote.hasCapability(capability, side);
         }
         return super.hasCapability(capability, side);
     }
@@ -385,6 +447,15 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
         }
         if (side != null && capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(sideFluidHandlers[side.ordinal()]);
+        }
+        if (side != null && capability == GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER) {
+            return GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER.cast(sideEnergyContainers[side.ordinal()]);
+        }
+        if (side != null && active && targetPortal != null) {
+            TileEntity remote = getRemoteNeighborTile(side);
+            if (remote != null && remote.hasCapability(capability, side)) {
+                return remote.getCapability(capability, side);
+            }
         }
         return super.getCapability(capability, side);
     }
@@ -410,7 +481,8 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
                                  Cuboid6 cuboid, boolean[] sideMask) {
         for (EnumFacing side : EnumFacing.VALUES) {
             if (sideMask[side.ordinal()]) {
-                KineticRenderHelper.renderOverlayFace(renderState, translation, pipeline, side, cuboid, getFrameTextureId());
+                KineticRenderHelper.renderFace(renderState, translation, pipeline, side, cuboid,
+                        getFrameTextureId(), getFrameColor());
             }
         }
     }
@@ -523,10 +595,7 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
 
     @Nullable
     private IItemHandler getRemoteItemHandler(EnumFacing localSide) {
-        if (targetPortal == null) {
-            return null;
-        }
-        TileEntity tileEntity = targetPortal.getWorld().getTileEntity(targetPortal.getPos().offset(localSide.getOpposite()));
+        TileEntity tileEntity = getRemoteNeighborTile(localSide);
         if (tileEntity == null || !tileEntity.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, localSide)) {
             return null;
         }
@@ -535,14 +604,29 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
 
     @Nullable
     private IFluidHandler getRemoteFluidHandler(EnumFacing localSide) {
-        if (targetPortal == null) {
-            return null;
-        }
-        TileEntity tileEntity = targetPortal.getWorld().getTileEntity(targetPortal.getPos().offset(localSide.getOpposite()));
+        TileEntity tileEntity = getRemoteNeighborTile(localSide);
         if (tileEntity == null || !tileEntity.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, localSide)) {
             return null;
         }
         return tileEntity.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, localSide);
+    }
+
+    @Nullable
+    private IEnergyContainer getRemoteEnergyContainer(EnumFacing localSide) {
+        TileEntity tileEntity = getRemoteNeighborTile(localSide);
+        if (tileEntity == null || !tileEntity.hasCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER, localSide)) {
+            return null;
+        }
+        return tileEntity.getCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER, localSide);
+    }
+
+    @Nullable
+    private TileEntity getRemoteNeighborTile(EnumFacing localSide) {
+        if (!active || targetPortal == null || targetPortal.getWorld() == null) return null;
+        BlockPos remotePos = targetPortal.getPos().offset(localSide.getOpposite());
+        World remoteWorld = targetPortal.getWorld();
+        if (!remoteWorld.isBlockLoaded(remotePos)) return null;
+        return remoteWorld.getTileEntity(remotePos);
     }
 
     protected abstract int getRemoteDimensionId();
@@ -568,8 +652,85 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity {
 
     protected abstract String getFrameTextureId();
 
+    protected int getFrameColor() {
+        return 0xFFFFFF;
+    }
+
     protected boolean emitsPortalParticles() {
         return false;
+    }
+
+    private final class SideEnergyContainer implements IEnergyContainer {
+        private final EnumFacing side;
+
+        private SideEnergyContainer(EnumFacing side) {
+            this.side = side;
+        }
+
+        @Nullable
+        private IEnergyContainer remote() {
+            return getRemoteEnergyContainer(side);
+        }
+
+        @Override
+        public long acceptEnergyFromNetwork(EnumFacing ignored, long voltage, long amperage) {
+            IEnergyContainer target = remote();
+            return target == null ? 0L : target.acceptEnergyFromNetwork(side, voltage, amperage);
+        }
+
+        @Override
+        public boolean inputsEnergy(EnumFacing ignored) {
+            IEnergyContainer target = remote();
+            return target != null && target.inputsEnergy(side);
+        }
+
+        @Override
+        public boolean outputsEnergy(EnumFacing ignored) {
+            IEnergyContainer target = remote();
+            return target != null && target.outputsEnergy(side);
+        }
+
+        @Override
+        public long changeEnergy(long differenceAmount) {
+            IEnergyContainer target = remote();
+            return target == null ? 0L : target.changeEnergy(differenceAmount);
+        }
+
+        @Override
+        public long getEnergyStored() {
+            IEnergyContainer target = remote();
+            return target == null ? 0L : target.getEnergyStored();
+        }
+
+        @Override
+        public long getEnergyCapacity() {
+            IEnergyContainer target = remote();
+            return target == null ? 0L : target.getEnergyCapacity();
+        }
+
+        @Override
+        public long getInputAmperage() {
+            IEnergyContainer target = remote();
+            return target == null ? 0L : target.getInputAmperage();
+        }
+
+        @Override
+        public long getInputVoltage() {
+            IEnergyContainer target = remote();
+            return target == null ? 0L : target.getInputVoltage();
+        }
+
+        @Override
+        public long getOutputAmperage() {
+            IEnergyContainer target = remote();
+            return target == null ? 0L : target.getOutputAmperage();
+        }
+
+        @Override
+        public long getOutputVoltage() {
+            IEnergyContainer target = remote();
+            return target == null ? 0L : target.getOutputVoltage();
+        }
     }
 
     private final class SideItemHandler implements IItemHandler {

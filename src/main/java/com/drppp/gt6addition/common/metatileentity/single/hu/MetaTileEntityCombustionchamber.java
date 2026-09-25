@@ -5,6 +5,7 @@ import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
+import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
 import com.drppp.gt6addition.api.capability.impl.HeatEnergyHandler;
@@ -12,6 +13,7 @@ import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
 import com.drppp.gt6addition.api.machine.IAutomaticIgnitable;
 import com.drppp.gt6addition.api.utils.CraftingGetItemUtils;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
+import com.drppp.gt6addition.common.metatileentity.single.ku.KineticRenderHelper;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.IHeatable;
@@ -58,6 +60,7 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity implements I
     public final double efficiency;
     public final int outPutHu;
     public final int baseTier;
+    private final boolean brickModel;
     protected final ICubeRenderer rendererBASE = Gt6AdditionTextures.HU_BASE_BURRING_BOX;
     protected final SimpleOverlayRenderer renderer = Gt6AdditionTextures.HU_BURRING_BOX_SIDE_OVERLAY;
     protected final SimpleOverlayRenderer renderer_full = Gt6AdditionTextures.HU_BURRING_BOX_SIDE_FULL_OVERLAY;
@@ -70,12 +73,18 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity implements I
     IHeatEnergy hu = new HeatEnergyHandler();
     public MetaTileEntityCombustionchamber(ResourceLocation metaTileEntityId, int color, double efficiency,
                                            int outPutHu, boolean isDense, int baseTier) {
+        this(metaTileEntityId, color, efficiency, outPutHu, isDense, baseTier, false);
+    }
+
+    public MetaTileEntityCombustionchamber(ResourceLocation metaTileEntityId, int color, double efficiency,
+                                           int outPutHu, boolean isDense, int baseTier, boolean brickModel) {
         super(metaTileEntityId);
         this.color = color;
         this.efficiency = efficiency;
         this.outPutHu = outPutHu;
         this.isDense = isDense;
         this.baseTier = baseTier;
+        this.brickModel = brickModel;
     }
 
     @Override
@@ -108,7 +117,7 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity implements I
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity iGregTechTileEntity) {
         return new MetaTileEntityCombustionchamber(this.metaTileEntityId, this.color, this.efficiency,
-                this.outPutHu, this.isDense, this.baseTier);
+                this.outPutHu, this.isDense, this.baseTier, this.brickModel);
     }
 
     @Override
@@ -127,50 +136,35 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity implements I
 
     @SideOnly(Side.CLIENT)
     public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
-        return Pair.of(Gt6AdditionTextures.HU_BURRING_BOX_SIDE_FULL_OVERLAY.getParticleSprite(), this.color);
+        String texture = brickModel ?
+                "gt6addition:blocks/machines/generators/burning_brick/colored/top" :
+                "gt6addition:blocks/machines/generators/burning_solid/colored/top";
+        return Pair.of(KineticRenderHelper.getSprite(texture), this.color);
     }
 
     @Override
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         super.renderMetaTileEntity(renderState, translation, pipeline);
-        IVertexOperation[] colouredPipeline = ArrayUtils.add(pipeline, new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(this.getPaintingColorForRendering())));
-        IVertexOperation[] sidePipeline = ArrayUtils.add(pipeline,
-                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getSideAccentColor())));
-        IVertexOperation[] topPipeline = ArrayUtils.add(pipeline,
-                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getTopAccentColor())));
-        IVertexOperation[] frontPipeline = ArrayUtils.add(pipeline,
-                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getFrontAccentColor())));
-        this.getBaseRenderer().render(renderState, translation, colouredPipeline);
-        this.renderer_full.renderSided(EnumFacing.UP, renderState, translation, topPipeline);
-        for (EnumFacing facing : EnumFacing.HORIZONTALS) {
-        this.renderer.renderSided(facing, renderState, translation, sidePipeline);
-
+        if (brickModel) {
+            IVertexOperation[] brickPipeline = ArrayUtils.add(pipeline,
+                    new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(this.color)));
+            Cuboid6 bounds = new Cuboid6(0, 0, 0, 1, 1, 1);
+            String textureRoot = "gt6addition:blocks/machines/generators/burning_brick/";
+            KineticRenderHelper.renderGt6SixSidedCube(renderState, translation, brickPipeline,
+                    this.getFrontFacing(), bounds, textureRoot + "colored/");
+            KineticRenderHelper.renderGt6SixSidedCube(renderState, translation, pipeline,
+                    this.getFrontFacing(), bounds,
+                    textureRoot + (isActive ? "overlay_active/" : "overlay/"));
+            return;
         }
-        this.rendererBASE.renderOrientedState(renderState, translation, frontPipeline, this.getFrontFacing(), isActive, isActive);
-    }
-
-    @SideOnly(Side.CLIENT)
-    private int getSideAccentColor() {
-        return mixColors(this.color, isDense ? 0x342317 : 0x2B241E, isDense ? 0.58F : 0.42F);
-    }
-
-    @SideOnly(Side.CLIENT)
-    private int getTopAccentColor() {
-        return isActive ? mixColors(this.color, 0xC96A1A, 0.45F) : mixColors(this.color, 0x58463A, 0.35F);
-    }
-
-    @SideOnly(Side.CLIENT)
-    private int getFrontAccentColor() {
-        return isActive ? mixColors(this.color, 0xFF8A2A, 0.55F) : mixColors(this.color, 0x49362A, 0.40F);
-    }
-
-    private static int mixColors(int baseColor, int overlayColor, float overlayWeight) {
-        float clampedWeight = Math.max(0.0F, Math.min(1.0F, overlayWeight));
-        float baseWeight = 1.0F - clampedWeight;
-        int red = Math.min(255, Math.max(0, Math.round(((baseColor >> 16) & 0xFF) * baseWeight + ((overlayColor >> 16) & 0xFF) * clampedWeight)));
-        int green = Math.min(255, Math.max(0, Math.round(((baseColor >> 8) & 0xFF) * baseWeight + ((overlayColor >> 8) & 0xFF) * clampedWeight)));
-        int blue = Math.min(255, Math.max(0, Math.round((baseColor & 0xFF) * baseWeight + (overlayColor & 0xFF) * clampedWeight)));
-        return (red << 16) | (green << 8) | blue;
+        IVertexOperation[] materialPipeline = ArrayUtils.add(pipeline,
+                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(this.color)));
+        Cuboid6 bounds = new Cuboid6(0, 0, 0, 1, 1, 1);
+        String textureRoot = "gt6addition:blocks/machines/generators/burning_solid/";
+        KineticRenderHelper.renderGt6SixSidedCube(renderState, translation, materialPipeline,
+                this.getFrontFacing(), bounds, textureRoot + "colored/");
+        KineticRenderHelper.renderGt6SixSidedCube(renderState, translation, pipeline,
+                this.getFrontFacing(), bounds, textureRoot + (isActive ? "overlay_active/" : "overlay/"));
     }
 
     @Override
@@ -268,6 +262,10 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity implements I
                 this.hu.setHuEnergy(outPutHu);
                 this.currentItemHasBurnedTime += this.burnSpeed;
                 if (this.currentItemHasBurnedTime >= this.currentItemBurnTime && !importItems.getStackInSlot(0).isEmpty()) {
+                    if (!canStartFuelCycle()) {
+                        clearOut();
+                        return;
+                    }
                     if (getWorld().getBlockState(getPos().offset(getFrontFacing())).getBlock() != Blocks.AIR) {
                         clearOut();
                     }
@@ -297,6 +295,11 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity implements I
 //                }
             }
         }
+    }
+
+    /** Additional per-fuel-cycle condition used by specialised burning boxes. */
+    protected boolean canStartFuelCycle() {
+        return true;
     }
 
     private void attackPlayer(EntityPlayer playerIn) {

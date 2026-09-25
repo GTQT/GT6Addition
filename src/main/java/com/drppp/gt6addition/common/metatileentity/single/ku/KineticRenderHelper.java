@@ -15,6 +15,19 @@ import org.apache.commons.lang3.ArrayUtils;
 
 public final class KineticRenderHelper {
 
+    // GT6 texture indices are ordered bottom, top, left, front, right, back.
+    private static final String[] GT6_FACE_TEXTURES = {"bottom", "top", "left", "front", "right", "back"};
+    private static final int[][] GT6_FACING_ROTATIONS = {
+            {0, 1, 2, 3, 4, 5, 6, 6},
+            {0, 1, 2, 3, 4, 5, 6, 6},
+            {0, 1, 3, 5, 4, 2, 6, 6},
+            {0, 1, 5, 3, 2, 4, 6, 6},
+            {0, 1, 2, 4, 3, 5, 6, 6},
+            {0, 1, 4, 2, 5, 3, 6, 6},
+            {0, 1, 2, 3, 4, 5, 6, 6},
+            {0, 1, 2, 3, 4, 5, 6, 6}
+    };
+
     private KineticRenderHelper() {
     }
 
@@ -54,6 +67,19 @@ public final class KineticRenderHelper {
                                          EnumFacing face, Cuboid6 bounds, String spritePath) {
         Textures.renderFace(renderState, translation, pipeline, face, bounds, getSprite(spritePath),
                 BlockRenderLayer.CUTOUT_MIPPED);
+    }
+
+    /** Renders a six-texture GT6 cube, preserving its separate left/right faces and facing rotations. */
+    public static void renderGt6SixSidedCube(CCRenderState renderState, Matrix4 translation,
+                                              IVertexOperation[] pipeline, EnumFacing frontFacing,
+                                              Cuboid6 bounds, String textureRoot) {
+        int facingIndex = frontFacing.getIndex();
+        for (EnumFacing side : EnumFacing.VALUES) {
+            int textureIndex = GT6_FACING_ROTATIONS[facingIndex][side.getIndex()];
+            if (textureIndex < 0 || textureIndex >= GT6_FACE_TEXTURES.length) continue;
+            Textures.renderFace(renderState, translation, pipeline, side, bounds,
+                    getSprite(textureRoot + GT6_FACE_TEXTURES[textureIndex]), BlockRenderLayer.CUTOUT_MIPPED);
+        }
     }
 
     public static TextureAtlasSprite getSprite(String spritePath) {

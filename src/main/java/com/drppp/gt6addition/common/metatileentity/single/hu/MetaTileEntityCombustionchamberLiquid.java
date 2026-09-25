@@ -4,6 +4,7 @@ import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
+import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.capability.CapabilityHandler;
 import com.drppp.gt6addition.api.capability.impl.HeatEnergyHandler;
@@ -11,6 +12,7 @@ import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
 import com.drppp.gt6addition.api.machine.IAutomaticIgnitable;
 import com.drppp.gt6addition.api.utils.CraftingGetItemUtils;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
+import com.drppp.gt6addition.common.metatileentity.single.ku.KineticRenderHelper;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.IHeatable;
 import gregtech.api.capability.impl.FluidHandlerProxy;
@@ -138,50 +140,21 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity implem
 
     @SideOnly(Side.CLIENT)
     public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
-        return Pair.of(Gt6AdditionTextures.HU_BURRING_BOX_SIDE_FULL_OVERLAY.getParticleSprite(), this.color);
+        return Pair.of(KineticRenderHelper.getSprite(
+                "gt6addition:blocks/machines/generators/burning_liquid/colored/top"), this.color);
     }
 
     @Override
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         super.renderMetaTileEntity(renderState, translation, pipeline);
-        IVertexOperation[] colouredPipeline = ArrayUtils.add(pipeline, new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(this.getPaintingColorForRendering())));
-        IVertexOperation[] sidePipeline = ArrayUtils.add(pipeline,
-                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getSideAccentColor())));
-        IVertexOperation[] topPipeline = ArrayUtils.add(pipeline,
-                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getTopAccentColor())));
-        IVertexOperation[] frontPipeline = ArrayUtils.add(pipeline,
-                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getFrontAccentColor())));
-        this.getBaseRenderer().render(renderState, translation, colouredPipeline);
-        this.renderer_full.renderSided(EnumFacing.UP, renderState, translation, topPipeline);
-        for (EnumFacing facing : EnumFacing.HORIZONTALS) {
-         this.renderer.renderSided(facing, renderState, translation, sidePipeline);
-
-        }
-        this.rendererBASE.renderOrientedState(renderState, translation, frontPipeline, this.getFrontFacing(), isActive, isActive);
-    }
-
-    @SideOnly(Side.CLIENT)
-    private int getSideAccentColor() {
-        return mixColors(this.color, isDense ? 0x1F4450 : 0x203943, isDense ? 0.54F : 0.40F);
-    }
-
-    @SideOnly(Side.CLIENT)
-    private int getTopAccentColor() {
-        return isActive ? mixColors(this.color, 0x4AA39D, 0.40F) : mixColors(this.color, 0x51606A, 0.32F);
-    }
-
-    @SideOnly(Side.CLIENT)
-    private int getFrontAccentColor() {
-        return isActive ? mixColors(this.color, 0x6FD9CF, 0.48F) : mixColors(this.color, 0x325863, 0.36F);
-    }
-
-    private static int mixColors(int baseColor, int overlayColor, float overlayWeight) {
-        float clampedWeight = Math.max(0.0F, Math.min(1.0F, overlayWeight));
-        float baseWeight = 1.0F - clampedWeight;
-        int red = Math.min(255, Math.max(0, Math.round(((baseColor >> 16) & 0xFF) * baseWeight + ((overlayColor >> 16) & 0xFF) * clampedWeight)));
-        int green = Math.min(255, Math.max(0, Math.round(((baseColor >> 8) & 0xFF) * baseWeight + ((overlayColor >> 8) & 0xFF) * clampedWeight)));
-        int blue = Math.min(255, Math.max(0, Math.round((baseColor & 0xFF) * baseWeight + (overlayColor & 0xFF) * clampedWeight)));
-        return (red << 16) | (green << 8) | blue;
+        IVertexOperation[] materialPipeline = ArrayUtils.add(pipeline,
+                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(this.color)));
+        Cuboid6 bounds = new Cuboid6(0, 0, 0, 1, 1, 1);
+        String textureRoot = "gt6addition:blocks/machines/generators/burning_liquid/";
+        KineticRenderHelper.renderGt6SixSidedCube(renderState, translation, materialPipeline,
+                this.getFrontFacing(), bounds, textureRoot + "colored/");
+        KineticRenderHelper.renderGt6SixSidedCube(renderState, translation, pipeline,
+                this.getFrontFacing(), bounds, textureRoot + (isActive ? "overlay_active/" : "overlay/"));
     }
 
     @Override

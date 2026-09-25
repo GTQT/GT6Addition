@@ -18,11 +18,13 @@ import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCasti
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucibleCrossing;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCruciblePouringSpout;
+import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityFluidizedBed;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityMold;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityTemperatureSensor;
 import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityGt6Hopper;
 import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityMiniPortalEnd;
 import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityMiniPortalNether;
+import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityMiniPortalTwilight;
 import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityMortar;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticAxle;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticGearbox;
@@ -31,6 +33,7 @@ import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityRotat
 import com.drppp.gt6addition.common.metatileentity.single.lu.MetaTileEntityLaserEngraver;
 import com.drppp.gt6addition.common.metatileentity.single.lu.MetaTileEntityLaserWelder;
 import com.drppp.gt6addition.common.metatileentity.single.mu.MetaTileEntityElectromagnet;
+import com.drppp.gt6addition.common.metatileentity.multiblock.MetaTileEntityCokeOven;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityDieselEngine;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityElectricMotor;
 import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityRotationPump;
@@ -40,18 +43,24 @@ import com.drppp.gt6addition.common.recipes.GT6AdditionRecipeMaps;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
+import com.drppp.gt6addition.common.material.GT6MachineMaterials;
 import gregtech.client.renderer.texture.cube.OrientedOverlayRenderer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.Loader;
 import org.jetbrains.annotations.NotNull;
 
 import static gregtech.common.metatileentities.MetaTileEntities.registerMetaTileEntity;
 
 public class MetaTileEntityHandler {
 
-    public static MetaTileEntityCombustionchamber[] HU_BURRING_BOXS = new MetaTileEntityCombustionchamber[8];
-    public static MetaTileEntityCombustionchamber[] HU_DENSE_BURRING_BOXS = new MetaTileEntityCombustionchamber[8];
-    public static MetaTileEntityCombustionchamberLiquid[] HU_BURRING_BOXS_LIQUID = new MetaTileEntityCombustionchamberLiquid[8];
-    public static MetaTileEntityCombustionchamberLiquid[] HU_DENSE_BURRING_BOXS_LIQUID = new MetaTileEntityCombustionchamberLiquid[8];
+    public static MetaTileEntityCombustionchamber[] HU_BURRING_BOXS = new MetaTileEntityCombustionchamber[13];
+    public static MetaTileEntityCombustionchamber HU_BRICK_BURNING_BOX;
+    public static MetaTileEntityCokeOven COKE_OVEN;
+    public static MetaTileEntityCombustionchamber[] HU_DENSE_BURRING_BOXS = new MetaTileEntityCombustionchamber[13];
+    public static MetaTileEntityCombustionchamberLiquid[] HU_BURRING_BOXS_LIQUID = new MetaTileEntityCombustionchamberLiquid[13];
+    public static MetaTileEntityCombustionchamberLiquid[] HU_DENSE_BURRING_BOXS_LIQUID = new MetaTileEntityCombustionchamberLiquid[13];
+    public static MetaTileEntityFluidizedBed[] HU_FLUIDIZED_BEDS = new MetaTileEntityFluidizedBed[13];
+    public static MetaTileEntityFluidizedBed[] HU_DENSE_FLUIDIZED_BEDS = new MetaTileEntityFluidizedBed[13];
 
     public static MetaTileEntityMutiEnergyMachine[] METAL_BENDER_RU = new MetaTileEntityMutiEnergyMachine[5];
     public static MetaTileEntityMutiEnergyMachine[] WIREMILLS_RU = new MetaTileEntityMutiEnergyMachine[5];
@@ -78,6 +87,7 @@ public class MetaTileEntityHandler {
     public static MetaTileEntityMortar MORTAR;
     public static MetaTileEntityMiniPortalNether MINI_PORTAL_NETHER;
     public static MetaTileEntityMiniPortalEnd MINI_PORTAL_END;
+    public static MetaTileEntityMiniPortalTwilight MINI_PORTAL_TWILIGHT;
 
     public static MetaTileEntityColorOvenMachine[] OVEN_HU = new MetaTileEntityColorOvenMachine[4];
     public static MetaTileEntityColorMachine[] DISTILLERY_HU = new MetaTileEntityColorMachine[4];
@@ -85,11 +95,11 @@ public class MetaTileEntityHandler {
     public static MetaTileEntityColorMachine[] LAMINATOR_HU = new MetaTileEntityColorMachine[4];
     public static MetaTileEntityColorMachine[] ROASTER_HU = new MetaTileEntityColorMachine[4];
     public static MetaTileEntityColorMachine[] FERMENTER_HU = new MetaTileEntityColorMachine[4];
-    public static MetaTileEntityCrucible[] CRUCIBLE_HU = new MetaTileEntityCrucible[22];
-    public static MetaTileEntityCruciblePouringSpout[] CRUCIBLE_POURING_SPOUTS = new MetaTileEntityCruciblePouringSpout[22];
-    public static MetaTileEntityCrucibleCrossing[] CRUCIBLE_POURING_CHANNELS = new MetaTileEntityCrucibleCrossing[22];
-    public static MetaTileEntityCastingBasin[] CASTING_BASINS = new MetaTileEntityCastingBasin[22];
-    public static MetaTileEntityMold[] MOLDS = new MetaTileEntityMold[22];
+    public static MetaTileEntityCrucible[] CRUCIBLE_HU = new MetaTileEntityCrucible[23];
+    public static MetaTileEntityCruciblePouringSpout[] CRUCIBLE_POURING_SPOUTS = new MetaTileEntityCruciblePouringSpout[23];
+    public static MetaTileEntityCrucibleCrossing[] CRUCIBLE_POURING_CHANNELS = new MetaTileEntityCrucibleCrossing[23];
+    public static MetaTileEntityCastingBasin[] CASTING_BASINS = new MetaTileEntityCastingBasin[23];
+    public static MetaTileEntityMold[] MOLDS = new MetaTileEntityMold[23];
     public static MetaTileEntityTemperatureSensor TEMPERATURE_SENSOR;
 
     public static MetaTileEntitySteamTurbine[] STEAM_TURBINES = new MetaTileEntitySteamTurbine[8];
@@ -114,64 +124,92 @@ public class MetaTileEntityHandler {
     }
 
     public static void InitMte() {
-        String[] names = {"lead", "bronze", "steel", "invar", "chrome", "titanium", "tungsten", "tungstensteel"};
+        String[] names = {"lead", "bismuth", "bronze", "arsenic_copper", "arsenic_bronze", "invar", "steel",
+                "chrome", "titanium", "netherite", "tungsten", "tungstensteel", "tantalum_hafnium_carbide"};
+        Material[] burningMaterials = {Materials.Lead, Materials.Bismuth, Materials.Bronze,
+                GT6MachineMaterials.ARSENIC_COPPER, GT6MachineMaterials.ARSENIC_BRONZE, Materials.Invar,
+                Materials.Steel, Materials.Chrome, Materials.Titanium, GT6MachineMaterials.NETHERITE,
+                Materials.Tungsten, Materials.TungstenSteel, GT6MachineMaterials.TANTALUM_HAFNIUM_CARBIDE};
+        double[] burningEfficiency = {0.50D, 0.45D, 0.75D, 0.80D, 0.90D, 1.00D, 0.70D,
+                0.85D, 0.85D, 0.90D, 1.00D, 0.90D, 1.00D};
+        int[] burningOutput = {16, 20, 24, 24, 28, 16, 32, 112, 96, 96, 128, 128, 256};
+        int[] burningTier = {1, 1, 1, 1, 1, 1, 2, 3, 3, 3, 4, 5, 5};
 
         String[] crucibleNames = {
                 "stone", "basalt", "graniteblack", "granitered", "quartz", "carbon",
                 "bronze", "invar", "steel", "stainlesssteel", "titanium", "chrome",
                 "molybdenum", "niobium", "tantalum", "osmium", "iridium", "niobium_titanium",
-                "vanadium", "tungsten", "tungstensteel", "tungstencarbide"
+                "vanadium", "tungsten", "tungstensteel", "tungstencarbide", "ceramic"
         };
         Material[] crucibleMaterials = {
                 Materials.Stone, Materials.Basalt, Materials.GraniteBlack, Materials.GraniteRed, Materials.NetherQuartz, Materials.Carbon,
                 Materials.Bronze, Materials.Invar, Materials.Steel, Materials.StainlessSteel, Materials.Titanium, Materials.Chrome,
                 Materials.Molybdenum, Materials.Niobium, Materials.Tantalum, Materials.Osmium, Materials.Iridium, Materials.NiobiumTitanium,
-                Materials.Vanadium, Materials.Tungsten, Materials.TungstenSteel, Materials.TungstenCarbide
+                Materials.Vanadium, Materials.Tungsten, Materials.TungstenSteel, Materials.TungstenCarbide,
+                Materials.Clay
         };
-        int[] crucibleTiers = {1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5};
-        int[] crucibleFallbackColors = {
-                0x7A7A7A, 0x2F2F35, 0x1E1E1E, 0x9F4A3A, 0xE5E5D8, 0x141414,
-                0x815024, 0x87875C, 0x4F4F4E, 0x90A5B6, 0x896495, 0xA39393,
-                0xAAA7B8, 0x928FBC, 0x7D7181, 0x6E86A2, 0xDAD3CF, 0x464C5F,
-                0x506A56, 0x1D1D1D, 0x3C3C61, 0x4F4F4F
-        };
+        int[] crucibleTiers = {1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 1};
         boolean[] crucibleAcidProof = {
                 false, false, false, false, false, false,
                 false, false, false, true, false, true,
                 false, false, false, false, true, false,
-                false, true, false, true
+                false, true, false, true, false
         };
         float[] crucibleHardness = {
                 5.0F, 15.0F, 15.0F, 15.0F, 5.0F, 10.0F,
                 7.0F, 4.0F, 6.0F, 6.0F, 9.0F, 9.0F,
                 9.0F, 9.0F, 9.0F, 9.0F, 9.0F, 9.0F,
-                9.0F, 10.0F, 10.0F, 10.0F
+                9.0F, 10.0F, 10.0F, 10.0F, 5.0F
         };
         float[] crucibleResistance = crucibleHardness;
         for (int i = 0; i < STEAM_TURBINES.length; i++) {
-            int[] color = {0x251945, 0x815024, 0x4F4F4E, 0x87875C, 0xA39393, 0x896495, 0x1D1D1D, 0x3C3C61};
+            Material[] materials = {Materials.Lead, Materials.Bronze, Materials.Steel, Materials.Invar,
+                    Materials.Chrome, Materials.Titanium, Materials.Tungsten, Materials.TungstenSteel};
             int[] output = {8, 16, 64, 64, 96, 256, 384, 512};
             int[] outInventory = {8000, 8000, 8000, (int) (8000 * 1.5), 8000 * 2, 8000 * 2, 8000 * 2, 8000 * 2};
-            STEAM_TURBINES[i] = registerMetaTileEntity(getID(), new MetaTileEntitySteamTurbine(getMyId(names[i] + "_steam_turbine"), color[i], 0.66, output[i], outInventory[i]));
+            String[] turbineNames = {"lead", "bronze", "steel", "invar", "chrome", "titanium", "tungsten", "tungstensteel"};
+            STEAM_TURBINES[i] = registerMetaTileEntity(getID(), new MetaTileEntitySteamTurbine(
+                    getMyId(turbineNames[i] + "_steam_turbine"), getColor(materials[i]), 0.66, output[i], outInventory[i]));
         }
-        //闁绘洖鍟伴崕宕団偓?
+        // Keep each combustion-chamber family contiguous in the registry.
         for (int i = 0; i < HU_BURRING_BOXS.length; i++) {
-            int[] color = {0x251945, 0x815024, 0x4F4F4E, 0x87875C, 0xA39393, 0x896495, 0x1D1D1D, 0x3C3C61};
-            double[] efficiency = {0.5, 0.75, 0.7, 1, 0.85, 0.85, 1, 0.9};
-            int[] output = {16, 24, 32, 16, 112, 96, 128, 128};
-            int[] baseTier = {1, 1, 2, 3, 3, 4, 5, 5};
             HU_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(
-                    getMyId(names[i] + "_burring_box"), color[i], efficiency[i], output[i], false, baseTier[i]));
-            HU_DENSE_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(
-                    getMyId("dense_" + names[i] + "_burring_box"), color[i], efficiency[i], output[i] * 4, true, baseTier[i]));
-            HU_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(
-                    getMyId(names[i] + "_burring_box_liquid"), color[i], efficiency[i], (int) (output[i] * 1.5), false, baseTier[i]));
-            HU_DENSE_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(
-                    getMyId("dense_" + names[i] + "_burring_box_liquid"), color[i], efficiency[i], (int) (output[i] * 4 * 1.5), true, baseTier[i]));
+                    getMyId(names[i] + "_burring_box"), getColor(burningMaterials[i]), burningEfficiency[i],
+                    burningOutput[i], false, burningTier[i]));
         }
-        int[] electricMotorColor = {0x000000, MaterialColorUtil.MaterialColor.get(MaterialColorUtil.MaterialName.steel), 0x8bd4d2, 0x90a5b6, 0x896495, 0x3C3C61};
+        for (int i = 0; i < HU_DENSE_BURRING_BOXS.length; i++) {
+            HU_DENSE_BURRING_BOXS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(
+                    getMyId("dense_" + names[i] + "_burring_box"), getColor(burningMaterials[i]), burningEfficiency[i],
+                    burningOutput[i] * 4, true, burningTier[i]));
+        }
+        for (int i = 0; i < HU_BURRING_BOXS_LIQUID.length; i++) {
+            HU_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(
+                    getMyId(names[i] + "_burring_box_liquid"), getColor(burningMaterials[i]), burningEfficiency[i],
+                    burningOutput[i], false, burningTier[i]));
+        }
+        for (int i = 0; i < HU_DENSE_BURRING_BOXS_LIQUID.length; i++) {
+            HU_DENSE_BURRING_BOXS_LIQUID[i] = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamberLiquid(
+                    getMyId("dense_" + names[i] + "_burring_box_liquid"), getColor(burningMaterials[i]), burningEfficiency[i],
+                    burningOutput[i] * 4, true, burningTier[i]));
+        }
+        for (int i = 0; i < HU_FLUIDIZED_BEDS.length; i++) {
+            HU_FLUIDIZED_BEDS[i] = registerMetaTileEntity(getID(), new MetaTileEntityFluidizedBed(
+                    getMyId(names[i] + "_fluidized_bed_burning_box"), getColor(burningMaterials[i]), burningEfficiency[i],
+                    burningOutput[i] * 4, false, burningTier[i]));
+        }
+        for (int i = 0; i < HU_DENSE_FLUIDIZED_BEDS.length; i++) {
+            HU_DENSE_FLUIDIZED_BEDS[i] = registerMetaTileEntity(getID(), new MetaTileEntityFluidizedBed(
+                    getMyId("dense_" + names[i] + "_fluidized_bed_burning_box"), getColor(burningMaterials[i]),
+                    burningEfficiency[i], burningOutput[i] * 16, true, burningTier[i]));
+        }
+        HU_BRICK_BURNING_BOX = registerMetaTileEntity(getID(), new MetaTileEntityCombustionchamber(
+                getMyId("brick_burning_box_solid"), getColor(MaterialColorUtil.MaterialName.BRICK),
+                0.25D, 16, false, 0, true));
+        COKE_OVEN = registerMetaTileEntity(getID(), new MetaTileEntityCokeOven(getMyId("coke_oven")));
+        Material[] electricMaterials = {Materials.Steel, Materials.Aluminium, Materials.StainlessSteel,
+                Materials.Titanium, Materials.TungstenSteel};
         for (int i = 1; i <= 5; i++) {
-            ELECTRIC_MOTOR[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityElectricMotor(getMyId("electric_motor." + GTValues.VN[i]), i, electricMotorColor[i], 0.8, (int) GTValues.V[i]));
+            ELECTRIC_MOTOR[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityElectricMotor(getMyId("electric_motor." + GTValues.VN[i]), i, getColor(electricMaterials[i - 1]), 0.8, (int) GTValues.V[i]));
         }
         for (int i = 1; i <= 5; i++) {
             ELECTRIC_DYNAMO[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityElectricDynamo(getMyId("electric_dynamo." + GTValues.VN[i]), i));
@@ -180,83 +218,83 @@ public class MetaTileEntityHandler {
             ELECTRIC_CO2_LASER[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityElectricCo2Laser(getMyId("electric_co2_laser." + GTValues.VN[i]), i));
         }
         for (int i = 1; i <= 5; i++) {
-            DIESEL_ENGINE[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityDieselEngine(getMyId("diesel_engine." + GTValues.VN[i]), electricMotorColor[i], GTValues.VH[i] * 3));
+            DIESEL_ENGINE[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityDieselEngine(getMyId("diesel_engine." + GTValues.VN[i]), getColor(electricMaterials[i - 1]), GTValues.VH[i] * 3));
         }
 
         String[] levelNames = {"bronze", "steel", "stainlesssteel", "titanium", "tungstensteel"};
-        int[] ruKuEngineColor = {0x000000, 0x815024, 0x4F4F4E, 0x90a5b6, 0x896495, 0x3C3C61};
+        Material[] tierMaterials = {Materials.Bronze, Materials.Steel, Materials.StainlessSteel,
+                Materials.Titanium, Materials.TungstenSteel};
         for (int i = 1; i <= 5; i++) {
-            RU_KU_ENGINE[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityRotationEngine(getMyId("ru_ku_engine." + GTValues.VN[i]), ruKuEngineColor[i], (int) GTValues.V[i]));
+            RU_KU_ENGINE[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityRotationEngine(getMyId("ru_ku_engine." + GTValues.VN[i]), getColor(tierMaterials[i - 1]), (int) GTValues.V[i]));
         }
         for (int i = 1; i <= 5; i++) {
             int throughput = (int) GTValues.V[i];
-            KINETIC_STEAM_ENGINES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticSteamEngine(getMyId("kinetic_steam_engine." + GTValues.VN[i]), ruKuEngineColor[i], throughput, 80));
+            KINETIC_STEAM_ENGINES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticSteamEngine(getMyId("kinetic_steam_engine." + GTValues.VN[i]), getColor(tierMaterials[i - 1]), throughput, 80));
         }
         for (int i = 1; i <= 5; i++) {
             int throughput = (int) GTValues.V[i];
-            KINETIC_STEAM_ENGINES_STRONG[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticSteamEngine(getMyId("kinetic_steam_engine_strong." + GTValues.VN[i]), ruKuEngineColor[i], throughput*4, 80));
+            KINETIC_STEAM_ENGINES_STRONG[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticSteamEngine(getMyId("kinetic_steam_engine_strong." + GTValues.VN[i]), getColor(tierMaterials[i - 1]), throughput*4, 80));
         }
         for (int i = 1; i <= 5; i++) {
             int throughput = (int) GTValues.V[i];
-            KINETIC_GEARBOXES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticGearbox(getMyId("kinetic_gearbox." + GTValues.VN[i]), ruKuEngineColor[i], throughput * 2, false));
+            KINETIC_GEARBOXES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticGearbox(getMyId("kinetic_gearbox." + GTValues.VN[i]), getColor(tierMaterials[i - 1]), throughput * 2, false));
         }
         for (int i = 1; i <= 5; i++) {
             int throughput = (int) GTValues.V[i];
-            ADJUSTABLE_KINETIC_GEARBOXES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticGearbox(getMyId("adjustable_kinetic_gearbox." + GTValues.VN[i]), ruKuEngineColor[i], throughput * 2, true));
+            ADJUSTABLE_KINETIC_GEARBOXES[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityKineticGearbox(getMyId("adjustable_kinetic_gearbox." + GTValues.VN[i]), getColor(tierMaterials[i - 1]), throughput * 2, true));
         }
         int[] hopperSlots = {3, 5, 9, 12, 27};
         for (int i = 0; i < 5; i++) {
             GT6_HOPPERS[i] = registerMetaTileEntity(getID(), new MetaTileEntityGt6Hopper(
                     getMyId("gt6_hopper_" + levelNames[i]),
-                    ruKuEngineColor[i + 1],
+                    getColor(tierMaterials[i]),
                     hopperSlots[i],
                     false));
         }
         for (int i = 0; i < 5; i++) {
             GT6_QUEUE_HOPPERS[i] = registerMetaTileEntity(getID(), new MetaTileEntityGt6Hopper(
                     getMyId("gt6_queue_hopper_" + levelNames[i]),
-                    ruKuEngineColor[i + 1],
+                    getColor(tierMaterials[i]),
                     Math.max(2, hopperSlots[i]),
                     true));
         }
-        int[] rotationPumpColors = {
-                getColor(MaterialColorUtil.MaterialName.steel),
-                getColor(MaterialColorUtil.MaterialName.aluminum),
-                getColor(MaterialColorUtil.MaterialName.stain_steel),
-                getColor(MaterialColorUtil.MaterialName.titanium),
-                getColor(MaterialColorUtil.MaterialName.tungsten_steel)
-        };
         for (int i = 0; i < 5; i++) {
             ROTATION_PUMPS[i] = registerMetaTileEntity(getID(), new MetaTileEntityRotationPump(
                     getMyId("rotation_pump." + GTValues.VN[i + 1]),
                     i + 1,
-                    rotationPumpColors[i]));
+                    getColor(electricMaterials[i])));
         }
         MORTAR = registerMetaTileEntity(getID(), new MetaTileEntityMortar(
                 getMyId("mortar"),
-                0x7A7A7A,
-                getColor(MaterialColorUtil.MaterialName.steel)));
+                getColor(MaterialColorUtil.MaterialName.STONE),
+                getColor(MaterialColorUtil.MaterialName.STEEL)));
         MINI_PORTAL_NETHER = registerMetaTileEntity(getID(), new MetaTileEntityMiniPortalNether(
                 getMyId("mini_portal_nether")));
         MINI_PORTAL_END = registerMetaTileEntity(getID(), new MetaTileEntityMiniPortalEnd(
                 getMyId("mini_portal_end")));
+        if (Loader.isModLoaded("twilightforest")) {
+            MINI_PORTAL_TWILIGHT = registerMetaTileEntity(getID(), new MetaTileEntityMiniPortalTwilight(
+                    getMyId("mini_portal_twilight")));
+        }
         for (int i = 0; i < KINETIC_AXLES.length; i++) {
             Material material = crucibleMaterials[i];
             KINETIC_AXLES[i] = registerMetaTileEntity(getID(), new MetaTileEntityKineticAxle(
                     getMyId("kinetic_axle_" + crucibleNames[i]),
-                    getCrucibleColor(material, crucibleFallbackColors[i]),
+                    getColor(material),
                     getKineticTransferLimit(material, crucibleTiers[i])));
         }
 
-        int[] muColor = {getColor(MaterialColorUtil.MaterialName.galvanized_steel), getColor(MaterialColorUtil.MaterialName.aluminum), getColor(MaterialColorUtil.MaterialName.stain_steel), getColor(MaterialColorUtil.MaterialName.titanium), getColor(MaterialColorUtil.MaterialName.tungsten_steel)};
+        MaterialColorUtil.MaterialName[] muMaterials = {MaterialColorUtil.MaterialName.GALVANIZED_STEEL,
+                MaterialColorUtil.MaterialName.ALUMINIUM, MaterialColorUtil.MaterialName.STAINLESS_STEEL,
+                MaterialColorUtil.MaterialName.TITANIUM, MaterialColorUtil.MaterialName.TUNGSTEN_STEEL};
         for (int i = 0; i < 5; i++) {
-            ELECTROMAGNET[i] = registerMetaTileEntity(getID(), new MetaTileEntityElectromagnet(getMyId("electromagnet." + GTValues.VN[i + 1]), i + 1, muColor[i], 0.9, (int) GTValues.V[i + 1]));
+            ELECTROMAGNET[i] = registerMetaTileEntity(getID(), new MetaTileEntityElectromagnet(getMyId("electromagnet." + GTValues.VN[i + 1]), i + 1, getColor(muMaterials[i]), 0.9, (int) GTValues.V[i + 1]));
         }
         for (int i = 0; i < 5; i++) {
-            THERMOELECTRIC_COOLER[i] = registerMetaTileEntity(getID(), new MetaTileEntityThermoelectricCooler(getMyId("thermoelectric_cooler." + GTValues.VN[i + 1]), i + 1, muColor[i], 0.5, (int) GTValues.VH[i + 1]));
+            THERMOELECTRIC_COOLER[i] = registerMetaTileEntity(getID(), new MetaTileEntityThermoelectricCooler(getMyId("thermoelectric_cooler." + GTValues.VN[i + 1]), i + 1, getColor(muMaterials[i]), 0.5, (int) GTValues.VH[i + 1]));
         }
         AUTOMATIC_IGNITER_LV = registerMetaTileEntity(getID(), new MetaTileEntityAutomaticIgniter(
-                getMyId("automatic_igniter.lv"), GTValues.LV, MaterialColorUtil.MaterialColor.get(MaterialColorUtil.MaterialName.steel)));
+                getMyId("automatic_igniter.lv"), GTValues.LV, getColor(MaterialColorUtil.MaterialName.STEEL)));
         OrientedOverlayRenderer laserWelderRenderer = new OrientedOverlayRenderer("gt6addition:machines/lu_machines/laser_welder");
         OrientedOverlayRenderer laserEngraverRenderer = new OrientedOverlayRenderer("gt6addition:machines/lu_machines/laser_engraver");
         for (int i = 1; i <= 5; i++) {
@@ -314,91 +352,97 @@ public class MetaTileEntityHandler {
         }
 
         String[] huName = {"steel", "invar", "titanium", "tungstencarbide"};
-        int[] huColor = {0x4F4F4E, 0x87875C, 0x896495, 0x4F4F4F};
+        Material[] huMaterials = {Materials.Steel, Materials.Invar, Materials.Titanium, Materials.TungstenCarbide};
         for (int i = 1; i <= 4; i++) {
-            OVEN_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorOvenMachine(getMyId("hu_oven_" + huName[i - 1]), RecipeMaps.FURNACE_RECIPES, Gt6AdditionTextures.HU_OVEN, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, huColor[i - 1]));
+            OVEN_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorOvenMachine(getMyId("hu_oven_" + huName[i - 1]), RecipeMaps.FURNACE_RECIPES, Gt6AdditionTextures.HU_OVEN, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, getColor(huMaterials[i - 1])));
         }
         for (int i = 1; i <= 4; i++) {
-            DISTILLERY_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("hu_distillery_" + huName[i - 1]), RecipeMaps.DISTILLERY_RECIPES, Gt6AdditionTextures.HU_DISTILLERY, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, huColor[i - 1], 8));
+            DISTILLERY_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("hu_distillery_" + huName[i - 1]), RecipeMaps.DISTILLERY_RECIPES, Gt6AdditionTextures.HU_DISTILLERY, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, getColor(huMaterials[i - 1]), 8));
         }
         for (int i = 1; i <= 4; i++) {
-            EXTRUDER_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("hu_extruder_" + huName[i - 1]), RecipeMaps.EXTRUDER_RECIPES, Gt6AdditionTextures.HU_EXTRUDER, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, huColor[i - 1]));
+            EXTRUDER_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("hu_extruder_" + huName[i - 1]), RecipeMaps.EXTRUDER_RECIPES, Gt6AdditionTextures.HU_EXTRUDER, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, getColor(huMaterials[i - 1])));
         }
         for (int i = 1; i <= 4; i++) {
-            LAMINATOR_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("hu_laminator_" + huName[i - 1]), RecipeMaps.LAMINATOR_RECIPES, Gt6AdditionTextures.HU_LAMINATOR, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, huColor[i - 1]));
+            LAMINATOR_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("hu_laminator_" + huName[i - 1]), RecipeMaps.LAMINATOR_RECIPES, Gt6AdditionTextures.HU_LAMINATOR, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, getColor(huMaterials[i - 1])));
         }
         for (int i = 1; i <= 4; i++) {
-            ROASTER_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("hu_roaster_" + huName[i - 1]), RecipeMaps.ROASTER_RECIPES, Gt6AdditionTextures.HU_ROASTER, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, huColor[i - 1]));
+            ROASTER_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("hu_roaster_" + huName[i - 1]), RecipeMaps.ROASTER_RECIPES, Gt6AdditionTextures.HU_ROASTER, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, getColor(huMaterials[i - 1])));
         }
         for (int i = 1; i <= 4; i++) {
-            FERMENTER_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("hu_fermenter_" + huName[i - 1]), RecipeMaps.FERMENTING_RECIPES, Gt6AdditionTextures.HU_FERMENTER, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, huColor[i - 1]));
+            FERMENTER_HU[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("hu_fermenter_" + huName[i - 1]), RecipeMaps.FERMENTING_RECIPES, Gt6AdditionTextures.HU_FERMENTER, i, false, EnergyTypeList.HU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.DOWN}, getColor(huMaterials[i - 1])));
         }
 
 
-        for (int i = 0; i < CRUCIBLE_HU.length; i++) {
+        for (int i = 0; i < crucibleMaterials.length; i++) {
             Material material = crucibleMaterials[i];
+            boolean ceramic = i == crucibleMaterials.length - 1;
             CRUCIBLE_HU[i] = registerMetaTileEntity(getID(), new MetaTileEntityCrucible(
                     getMyId("hu_crucible_" + crucibleNames[i]),
                     crucibleTiers[i],
-                    getCrucibleColor(material, crucibleFallbackColors[i]),
-                    getCrucibleMaxTemperature(material),
+                    getCrucibleColor(material, ceramic),
+                    getCrucibleMaxTemperature(material, ceramic),
+                    material,
                     crucibleAcidProof[i],
                     crucibleHardness[i],
                     crucibleResistance[i]));
         }
-        for (int i = 0; i < CRUCIBLE_POURING_SPOUTS.length; i++) {
+        for (int i = 0; i < crucibleMaterials.length; i++) {
             Material material = crucibleMaterials[i];
+            boolean ceramic = i == crucibleMaterials.length - 1;
             CRUCIBLE_POURING_SPOUTS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCruciblePouringSpout(
                     getMyId("crucible_pouring_spout_" + crucibleNames[i]),
                     crucibleTiers[i],
-                    getCrucibleColor(material, crucibleFallbackColors[i]),
+                    getCrucibleColor(material, ceramic),
                     crucibleAcidProof[i],
                     crucibleHardness[i],
                     crucibleResistance[i],
-                    getCrucibleMaxTemperature(material)));
+                    getCrucibleMaxTemperature(material, ceramic)));
         }
-        for (int i = 0; i < CRUCIBLE_POURING_CHANNELS.length; i++) {
+        for (int i = 0; i < crucibleMaterials.length; i++) {
             Material material = crucibleMaterials[i];
+            boolean ceramic = i == crucibleMaterials.length - 1;
             CRUCIBLE_POURING_CHANNELS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCrucibleCrossing(
                     getMyId("crucible_pouring_channel_" + crucibleNames[i]),
                     crucibleTiers[i],
-                    getCrucibleColor(material, crucibleFallbackColors[i]),
+                    getCrucibleColor(material, ceramic),
                     crucibleHardness[i],
                     crucibleResistance[i]));
         }
-        for (int i = 0; i < CASTING_BASINS.length; i++) {
+        for (int i = 0; i < crucibleMaterials.length; i++) {
             Material material = crucibleMaterials[i];
+            boolean ceramic = i == crucibleMaterials.length - 1;
             CASTING_BASINS[i] = registerMetaTileEntity(getID(), new MetaTileEntityCastingBasin(
                     getMyId("casting_basin_" + crucibleNames[i]),
                     crucibleTiers[i],
-                    getCrucibleColor(material, crucibleFallbackColors[i]),
+                    getCrucibleColor(material, ceramic),
                     crucibleAcidProof[i],
                     crucibleHardness[i],
                     crucibleResistance[i],
-                    getCrucibleMaxTemperature(material)));
+                    getCrucibleMaxTemperature(material, ceramic)));
         }
-        for (int i = 0; i < MOLDS.length; i++) {
+        for (int i = 0; i < crucibleMaterials.length; i++) {
             Material material = crucibleMaterials[i];
+            boolean ceramic = i == crucibleMaterials.length - 1;
             MOLDS[i] = registerMetaTileEntity(getID(), new MetaTileEntityMold(
                     getMyId("mold_" + crucibleNames[i]),
                     crucibleTiers[i],
-                    getCrucibleColor(material, crucibleFallbackColors[i]),
+                    getCrucibleColor(material, ceramic),
                     crucibleAcidProof[i],
                     crucibleHardness[i],
                     crucibleResistance[i],
-                    getCrucibleMaxTemperature(material)));
+                    getCrucibleMaxTemperature(material, ceramic)));
         }
         TEMPERATURE_SENSOR = registerMetaTileEntity(getID(), new MetaTileEntityTemperatureSensor(
                 getMyId("temperature_sensor"),
-                getCrucibleColor(Materials.Steel, 0x4F4F4E),
+                getColor(Materials.Steel),
                 2.0F,
                 6.0F));
 
         for (int i = 1; i <= 5; i++) {
-            POLARIZER[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("mu_polarizer." + GTValues.VN[i]), RecipeMaps.POLARIZER_RECIPES, Gt6AdditionTextures.MU_POLARIZER, i, false, EnergyTypeList.MU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.UP, MachineEnergyAcceptFacing.DOWN}, muColor[i - 1], i * 2));
+            POLARIZER[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("mu_polarizer." + GTValues.VN[i]), RecipeMaps.POLARIZER_RECIPES, Gt6AdditionTextures.MU_POLARIZER, i, false, EnergyTypeList.MU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.UP, MachineEnergyAcceptFacing.DOWN}, getColor(muMaterials[i - 1]), i * 2));
         }
         for (int i = 1; i <= 5; i++) {
-            SEPARATOR[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("mu_separator." + GTValues.VN[i]), RecipeMaps.ELECTROMAGNETIC_SEPARATOR_RECIPES, Gt6AdditionTextures.MU_SEPARATOR, i, false, EnergyTypeList.MU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.UP, MachineEnergyAcceptFacing.DOWN}, muColor[i - 1], i * 2));
+            SEPARATOR[i - 1] = registerMetaTileEntity(getID(), new MetaTileEntityColorMachine(getMyId("mu_separator." + GTValues.VN[i]), RecipeMaps.ELECTROMAGNETIC_SEPARATOR_RECIPES, Gt6AdditionTextures.MU_SEPARATOR, i, false, EnergyTypeList.MU, new MachineEnergyAcceptFacing[]{MachineEnergyAcceptFacing.UP, MachineEnergyAcceptFacing.DOWN}, getColor(muMaterials[i - 1]), i * 2));
         }
     }
 
@@ -407,7 +451,11 @@ public class MetaTileEntityHandler {
     }
 
     private static int getColor(MaterialColorUtil.MaterialName name) {
-        return MaterialColorUtil.MaterialColor.get(name);
+        return MaterialColorUtil.get(name);
+    }
+
+    private static int getColor(Material material) {
+        return MaterialColorUtil.get(material);
     }
 
     private static int getCrucibleMaxTemperature(Material material) {
@@ -418,6 +466,10 @@ public class MetaTileEntityHandler {
         return (int) Math.ceil(baseTemperature * 1.25D);
     }
 
+    private static int getCrucibleMaxTemperature(Material material, boolean ceramic) {
+        return ceramic ? 2500 : getCrucibleMaxTemperature(material);
+    }
+
     private static int getKineticTransferLimit(Material material, int tier) {
         int safeTier = Math.min(5, Math.max(1, tier));
         long tierLimit = GTValues.V[safeTier];
@@ -425,9 +477,8 @@ public class MetaTileEntityHandler {
         return (int) Math.min(Integer.MAX_VALUE, Math.max(tierLimit, materialLimit));
     }
 
-    private static int getCrucibleColor(Material material, int fallback) {
-        int materialColor = material.getMaterialRGB() & 0xFFFFFF;
-        return materialColor == 0 ? fallback : materialColor;
+    private static int getCrucibleColor(Material material, boolean ceramic) {
+        return ceramic ? getColor(MaterialColorUtil.MaterialName.CERAMIC) : getColor(material);
     }
 }
 

@@ -1,12 +1,14 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
 import codechicken.lib.raytracer.IndexedCuboid6;
+import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.temperature.ITemperatureProvider;
+import com.drppp.gt6addition.common.metatileentity.single.ku.KineticRenderHelper;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.ModularUI;
@@ -17,18 +19,23 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
@@ -40,6 +47,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.nio.ByteBuffer;
 
 public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
 
@@ -59,6 +67,9 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
     private static final String NBT_CURRENT = "CurrentTemperature";
     private static final String NBT_MAX = "MaxTemperature";
     private static final String NBT_REDSTONE = "Redstone";
+    private static final String NBT_AVERAGING = "Averaging";
+    private static final String NBT_SAMPLES = "TemperatureSamples";
+    private static final int MAX_AVERAGING_VALUES = Short.MAX_VALUE;
     private static final int MAX_SET_TEMPERATURE = 99999;
     private static final String[] MODE_KEYS = {
             "gt6addition.machine.temperature_sensor.mode.display",
@@ -80,6 +91,11 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
     private int setTemperature = 1200;
     private long currentTemperature;
     private long maxTemperature;
+    private int averagingCount = 1;
+    private long[] temperatureSamples = new long[1];
+    private int sampleIndex;
+    private int sampleCount;
+    private long sampleTotal;
     private int redstoneOutput;
     private boolean initializedTarget;
     private boolean updatingRedstoneSignals;
@@ -141,7 +157,8 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
         long oldMax = maxTemperature;
         int oldOutput = redstoneOutput;
         TemperatureReading reading = readTargetTemperature();
-        currentTemperature = reading.current;
+        addTemperatureSample(reading.current);
+        currentTemperature = sampleTotal / Math.max(1, sampleCount);
         maxTemperature = reading.max;
         redstoneOutput = calculateRedstoneOutput();
         applyRedstoneSignals();
@@ -165,7 +182,44 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
                     Math.max(0L, provider.getTemperatureValue(side)),
                     Math.max(0L, provider.getTemperatureMax(side)));
         }
-        return TemperatureReading.EMPTY;
+        return readAmbientTemperature(world, targetPos);
+    }
+
+    private void addTemperatureSample(long value) {
+        if (temperatureSamples.length != averagingCount) {
+            temperatureSamples = new long[averagingCount];
+            sampleIndex = sampleCount = 0;
+            sampleTotal = 0L;
+        }
+        if (sampleCount == temperatureSamples.length) {
+            sampleTotal -= temperatureSamples[sampleIndex];
+        } else {
+            sampleCount++;
+        }
+        temperatureSamples[sampleIndex] = value;
+        sampleTotal += value;
+        sampleIndex = (sampleIndex + 1) % temperatureSamples.length;
+    }
+
+    private TemperatureReading readAmbientTemperature(World world, BlockPos pos) {
+        float biomeTemperature = world.getBiome(pos).getTemperature(pos);
+        long temperature = Math.max(1L, (long) (273.0F - 3.0F + biomeTemperature * 20.0F));
+        for (EnumFacing facing : EnumFacing.VALUES) {
+            BlockPos checkPos = pos.offset(facing);
+            if (!world.isBlockLoaded(checkPos)) continue;
+            IBlockState state = world.getBlockState(checkPos);
+            temperature = getTemperatureNearBlock(temperature, state.getBlock());
+        }
+        if (world.isBlockLoaded(pos)) {
+            temperature = getTemperatureNearBlock(temperature, world.getBlockState(pos).getBlock());
+        }
+        return new TemperatureReading(temperature, 0L);
+    }
+
+    private long getTemperatureNearBlock(long current, Block block) {
+        if (block == Blocks.LAVA || block == Blocks.FLOWING_LAVA) return Math.max(current, 773L);
+        if (block == Blocks.FIRE) return Math.max(current, 473L);
+        return current;
     }
 
     private int calculateRedstoneOutput() {
@@ -230,6 +284,41 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
         this.mode = Math.max(0, Math.min(MODE_KEYS.length - 1, mode));
         markDirty();
         updateReadingAndRedstone();
+    }
+
+    private void setAveragingCount(int count) {
+        averagingCount = MathHelper.clamp(count, 1, MAX_AVERAGING_VALUES);
+        temperatureSamples = new long[averagingCount];
+        sampleIndex = sampleCount = 0;
+        sampleTotal = 0L;
+        markDirty();
+        updateReadingAndRedstone();
+        if (getWorld() != null && !getWorld().isRemote) writeCustomData(DATA_STATE, this::writeState);
+    }
+
+    @Override
+    public boolean onScrewdriverClick(EntityPlayer player, EnumHand hand, EnumFacing side,
+                                     CuboidRayTraceResult hitResult) {
+        if (getWorld() == null || getWorld().isRemote) return true;
+        setMode((mode + 1) % MODE_KEYS.length);
+        player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(
+                "Temperature sensor mode: " + getModeDisplayName()), true);
+        return true;
+    }
+
+    @Override
+    public boolean onSoftMalletClick(EntityPlayer player, EnumHand hand, EnumFacing side,
+                                    CuboidRayTraceResult hitResult) {
+        if (getWorld() == null || getWorld().isRemote) return true;
+        mode = MODE_DISPLAY;
+        setTemperature = 0;
+        setAveragingCount(1);
+        currentTemperature = maxTemperature = 0L;
+        redstoneOutput = 0;
+        applyRedstoneSignals();
+        markDirty();
+        writeCustomData(DATA_STATE, this::writeState);
+        return true;
     }
 
     private void setSetTemperature(int temperature) {
@@ -300,7 +389,7 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
 
     @Override
     protected ModularUI createUI(EntityPlayer entityPlayer) {
-        ModularUI.Builder builder = ModularUI.defaultBuilder(176, 124);
+        ModularUI.Builder builder = ModularUI.defaultBuilder(176, 146);
         builder.label(8, 8, "gt6addition.machine.temperature_sensor.gui.title");
         builder.dynamicLabel(8, 22, () -> "Current: " + currentTemperature + " / " + maxTemperature + " K", 0xFFFFFF);
         builder.dynamicLabel(8, 34, () -> "Redstone: " + redstoneOutput + "  Target side: " + targetFacing.getName(), 0xFFFFFF);
@@ -320,6 +409,11 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
                 .setButtonTexture(GuiTextures.BUTTON));
         builder.label(8, 112, "gt6addition.machine.temperature_sensor.gui.target");
         builder.widget(new CycleButtonWidget(54, 108, 114, 18, EnumFacing.class, this::getTargetFacing, this::setTargetFacing)
+                .setButtonTexture(GuiTextures.BUTTON));
+        builder.dynamicLabel(8, 132, () -> "Averaging: " + averagingCount, 0xFFFFFF);
+        builder.widget(new ClickButtonWidget(112, 128, 26, 18, "-", data -> setAveragingCount(averagingCount - 1))
+                .setButtonTexture(GuiTextures.BUTTON));
+        builder.widget(new ClickButtonWidget(142, 128, 26, 18, "+", data -> setAveragingCount(averagingCount + 1))
                 .setButtonTexture(GuiTextures.BUTTON));
         return builder.build(getHolder(), entityPlayer);
     }
@@ -345,10 +439,15 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         IVertexOperation[] shellPipeline = ArrayUtils.add(pipeline,
                 new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(casingColor)));
-        Textures.SOLID_STEEL_CASING.render(renderState, translation, shellPipeline, getBodyBox());
-        IVertexOperation[] displayPipeline = ArrayUtils.add(pipeline,
-                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(redstoneOutput > 0 ? 0xD84B2A : 0x243447)));
-        Textures.SOLID_STEEL_CASING.render(renderState, translation, displayPipeline, getDisplayBox());
+        String textureRoot = "gt6addition:blocks/machines/redstone/sensors/thermometer/";
+        for (EnumFacing face : EnumFacing.VALUES) {
+            String name = face == getFrontFacing() ? "front" :
+                    face == getFrontFacing().getOpposite() ? "back" : "side";
+            KineticRenderHelper.renderFace(renderState, translation, shellPipeline, face, getBodyBox(),
+                    textureRoot + "colored/" + name, 0xFFFFFF);
+            KineticRenderHelper.renderOverlayFace(renderState, translation, pipeline, face, getBodyBox(),
+                    textureRoot + "overlay/" + name);
+        }
     }
 
     private Cuboid6 getBodyBox() {
@@ -366,24 +465,6 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
             case NORTH:
             default:
                 return new Cuboid6(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 0.125D);
-        }
-    }
-
-    private Cuboid6 getDisplayBox() {
-        switch (getFrontFacing()) {
-            case SOUTH:
-                return new Cuboid6(0.25D, 0.25D, 0.9375D, 0.75D, 0.75D, 1.0D);
-            case WEST:
-                return new Cuboid6(0.0D, 0.25D, 0.25D, 0.0625D, 0.75D, 0.75D);
-            case EAST:
-                return new Cuboid6(0.9375D, 0.25D, 0.25D, 1.0D, 0.75D, 0.75D);
-            case UP:
-                return new Cuboid6(0.25D, 0.9375D, 0.25D, 0.75D, 1.0D, 0.75D);
-            case DOWN:
-                return new Cuboid6(0.25D, 0.0D, 0.25D, 0.75D, 0.0625D, 0.75D);
-            case NORTH:
-            default:
-                return new Cuboid6(0.25D, 0.25D, 0.0D, 0.75D, 0.75D, 0.0625D);
         }
     }
 
@@ -446,6 +527,12 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
         data.setLong(NBT_CURRENT, currentTemperature);
         data.setLong(NBT_MAX, maxTemperature);
         data.setByte(NBT_REDSTONE, (byte) redstoneOutput);
+        data.setInteger(NBT_AVERAGING, averagingCount);
+        ByteBuffer sampleBuffer = ByteBuffer.allocate(temperatureSamples.length * Long.BYTES);
+        for (long sample : temperatureSamples) sampleBuffer.putLong(sample);
+        data.setByteArray(NBT_SAMPLES, sampleBuffer.array());
+        data.setInteger("TemperatureSampleCount", sampleCount);
+        data.setInteger("TemperatureSampleIndex", sampleIndex);
         return data;
     }
 
@@ -462,6 +549,17 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
         currentTemperature = data.getLong(NBT_CURRENT);
         maxTemperature = data.getLong(NBT_MAX);
         redstoneOutput = clampRedstone(data.getByte(NBT_REDSTONE));
+        averagingCount = MathHelper.clamp(data.getInteger(NBT_AVERAGING), 1, MAX_AVERAGING_VALUES);
+        byte[] sampleBytes = data.getByteArray(NBT_SAMPLES);
+        temperatureSamples = new long[averagingCount];
+        if (sampleBytes.length == averagingCount * Long.BYTES) {
+            ByteBuffer sampleBuffer = ByteBuffer.wrap(sampleBytes);
+            for (int i = 0; i < averagingCount; i++) temperatureSamples[i] = sampleBuffer.getLong();
+        }
+        sampleCount = MathHelper.clamp(data.getInteger("TemperatureSampleCount"), 0, averagingCount);
+        sampleIndex = Math.floorMod(data.getInteger("TemperatureSampleIndex"), averagingCount);
+        sampleTotal = 0L;
+        for (int i = 0; i < sampleCount; i++) sampleTotal += temperatureSamples[i];
     }
 
     @Override
@@ -492,6 +590,7 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
         buf.writeLong(currentTemperature);
         buf.writeLong(maxTemperature);
         buf.writeVarInt(redstoneOutput);
+        buf.writeVarInt(averagingCount);
     }
 
     private void readState(PacketBuffer buf) {
@@ -505,6 +604,13 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
         currentTemperature = buf.readLong();
         maxTemperature = buf.readLong();
         redstoneOutput = clampRedstone(buf.readVarInt());
+        int synchronizedAveraging = MathHelper.clamp(buf.readVarInt(), 1, MAX_AVERAGING_VALUES);
+        if (averagingCount != synchronizedAveraging) {
+            averagingCount = synchronizedAveraging;
+            temperatureSamples = new long[averagingCount];
+            sampleIndex = sampleCount = 0;
+            sampleTotal = 0L;
+        }
     }
 
     private static class TemperatureReading {

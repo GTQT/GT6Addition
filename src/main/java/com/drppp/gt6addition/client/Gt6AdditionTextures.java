@@ -4,6 +4,7 @@ import com.cleanroommc.modularui.drawable.UITexture;
 import gregtech.client.renderer.texture.cube.OrientedOverlayRenderer;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
+import gregtech.client.renderer.texture.cube.SidedCubeRenderer;
 
 import static com.cleanroommc.modularui.drawable.UITexture.fullImage;
 
@@ -18,6 +19,10 @@ public class Gt6AdditionTextures {
     public static final SimpleSidedCubeRenderer[] MACHINE_BASES = new SimpleSidedCubeRenderer[6];
     public static final SimpleSidedCubeRenderer BASE_RENDERER =
             new SimpleSidedCubeRenderer("gt6addition:machines/lu_machines/laser_engraver/colored");
+    public static final SidedCubeRenderer COKE_OVEN_BASE =
+            new SidedCubeRenderer("gt6addition:machines/basicmachines/cokeoven/colored");
+    public static OrientedOverlayRenderer COKE_OVEN_OVERLAY;
+    public static OrientedOverlayRenderer COKE_OVEN_ACTIVE_OVERLAY;
 
     public static OrientedOverlayRenderer RU_BENDER;
     public static OrientedOverlayRenderer RU_WIREMILL;
@@ -51,6 +56,8 @@ public class Gt6AdditionTextures {
         HU_BASE_BURRING_BOX_LIQUID= new OrientedOverlayRenderer("machines/hu_base_burring_box_liquid");
         HU_BURRING_BOX_SIDE_OVERLAY = new SimpleOverlayRenderer("casings/hu_burring_box_side_overlay");
         HU_BURRING_BOX_SIDE_FULL_OVERLAY = new SimpleOverlayRenderer("casings/hu_burring_box_side_full_overlay");
+        COKE_OVEN_OVERLAY = new OrientedOverlayRenderer("gt6addition:machines/basicmachines/cokeoven");
+        COKE_OVEN_ACTIVE_OVERLAY = new OrientedOverlayRenderer("gt6addition:machines/basicmachines/cokeoven");
         RU_BENDER= new OrientedOverlayRenderer("machines/ru_machines/ru_bender");
         RU_WIREMILL= new OrientedOverlayRenderer("machines/ru_machines/ru_wiremill");
         MACHINE_BASES[1] = new SimpleSidedCubeRenderer("base/bronze");

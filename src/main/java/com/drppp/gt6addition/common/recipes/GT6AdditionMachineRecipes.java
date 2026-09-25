@@ -2,7 +2,13 @@ package com.drppp.gt6addition.common.recipes;
 
 import com.drppp.gt6addition.Tags;
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
+import com.drppp.gt6addition.common.item.GT6AdditionItems;
+import com.drppp.gt6addition.common.block.GT6AdditionBlocks;
+import com.drppp.gt6addition.common.material.GT6AdditionOrePrefixes;
+import com.drppp.gt6addition.common.material.GT6MachineMaterials;
 import gregtech.api.GTValues;
+import gregtech.api.GregTechAPI;
+import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
@@ -10,6 +16,7 @@ import gregtech.api.unification.ore.OrePrefix;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.FurnaceRecipes;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.oredict.ShapedOreRecipe;
@@ -28,8 +35,10 @@ public final class GT6AdditionMachineRecipes {
             Materials.Chrome, Materials.Titanium, Materials.Tungsten, Materials.TungstenSteel
     };
     private static final Material[] COMBUSTION_MATERIALS = {
-            Materials.Lead, Materials.Bronze, Materials.Steel, Materials.Invar,
-            Materials.Chrome, Materials.Titanium, Materials.Tungsten, Materials.TungstenSteel
+            Materials.Lead, Materials.Bismuth, Materials.Bronze, GT6MachineMaterials.ARSENIC_COPPER,
+            GT6MachineMaterials.ARSENIC_BRONZE, Materials.Invar, Materials.Steel, Materials.Chrome,
+            Materials.Titanium, GT6MachineMaterials.NETHERITE, Materials.Tungsten, Materials.TungstenSteel,
+            GT6MachineMaterials.TANTALUM_HAFNIUM_CARBIDE
     };
     private static final Material[] HU_MACHINE_MATERIALS = {
             Materials.Steel, Materials.Invar, Materials.Titanium, Materials.TungstenCarbide
@@ -59,6 +68,26 @@ public final class GT6AdditionMachineRecipes {
         registerCrucibleSeries();
         registerItemMachines();
         registerMuSeries();
+        registerScrapMaceratorRecipes();
+    }
+
+    private static void registerScrapMaceratorRecipes() {
+        for (Material material : GregTechAPI.materialManager.getRegisteredMaterials()) {
+            if (material == null) {
+                continue;
+            }
+            ItemStack scrap = GT6AdditionOrePrefixes.SCRAP_GT.getItemForm(material);
+            ItemStack tinyDust = OrePrefix.dustTiny.getItemForm(material);
+            if (scrap.isEmpty() || tinyDust.isEmpty()) {
+                continue;
+            }
+            RecipeMaps.MACERATOR_RECIPES.recipeBuilder()
+                    .inputs(scrap)
+                    .outputs(tinyDust)
+                    .duration(200)
+                    .EUt(2)
+                    .buildAndRegister();
+        }
     }
 
     private static void registerEnergyMachines() {
@@ -344,6 +373,20 @@ public final class GT6AdditionMachineRecipes {
                     MetaTileEntityHandler.HU_BURRING_BOXS_LIQUID[i].getStackForm(),
                     plate(material, 2),
                     gear(material, 1));
+
+            registerShaped("fluidized_bed_burning_box_" + i,
+                    MetaTileEntityHandler.HU_FLUIDIZED_BEDS[i].getStackForm(),
+                    "PCP", "PXP", "BBB",
+                    'P', plate(material, 1),
+                    'C', plate(Materials.Copper, 2),
+                    'X', rotor(material, 1),
+                    'B', new ItemStack(Blocks.BRICK_BLOCK));
+
+            registerShapeless("dense_fluidized_bed_burning_box_" + i,
+                    MetaTileEntityHandler.HU_DENSE_FLUIDIZED_BEDS[i].getStackForm(),
+                    MetaTileEntityHandler.HU_FLUIDIZED_BEDS[i].getStackForm(),
+                    plate(material, 4),
+                    plate(Materials.Copper, 2));
         }
 
         for (int i = 0; i < HU_MACHINE_MATERIALS.length; i++) {
@@ -398,11 +441,19 @@ public final class GT6AdditionMachineRecipes {
                 'P', plate(Materials.Steel, 1),
                 'R', new ItemStack(Items.REDSTONE),
                 'C', new ItemStack(Items.COMPARATOR));
+
+        // GT6's Brick Burning Box (Solid): eight fired bricks around a fire starter.
+        registerShaped("brick_burning_box_solid", MetaTileEntityHandler.HU_BRICK_BURNING_BOX.getStackForm(),
+                "BBB", "BBB", "BFB",
+                'B', new ItemStack(Items.BRICK),
+                'F', new ItemStack(Items.FLINT_AND_STEEL));
     }
 
     private static void registerCrucibleSeries() {
         for (int i = 0; i < CRUCIBLE_MATERIALS.length; i++) {
-            ItemStack core = baseMaterial(CRUCIBLE_MATERIALS[i], 1);
+            Material material = CRUCIBLE_MATERIALS[i];
+            ItemStack core = baseMaterial(material, 1);
+            ItemStack conduit = pipe(material, 1);
 
             registerShaped("crucible_" + i, MetaTileEntityHandler.CRUCIBLE_HU[i].getStackForm(),
                     "MMM", "MFM", "MMM",
@@ -412,13 +463,13 @@ public final class GT6AdditionMachineRecipes {
             registerShaped("crucible_pouring_spout_" + i, MetaTileEntityHandler.CRUCIBLE_POURING_SPOUTS[i].getStackForm(),
                     "  M", " PL", "M  ",
                     'M', core,
-                    'P', pipe(CRUCIBLE_MATERIALS[i], 1),
+                    'P', conduit,
                     'L', new ItemStack(Blocks.LEVER));
 
             registerShaped("crucible_pouring_channel_" + i, MetaTileEntityHandler.CRUCIBLE_POURING_CHANNELS[i].getStackForm(),
                     "M M", " P ", "M M",
                     'M', core,
-                    'P', pipe(CRUCIBLE_MATERIALS[i], 1));
+                    'P', conduit);
 
             registerShaped("casting_basin_" + i, MetaTileEntityHandler.CASTING_BASINS[i].getStackForm(),
                     "M M", "M M", "MMM",
@@ -429,9 +480,47 @@ public final class GT6AdditionMachineRecipes {
                     'M', core,
                     'C', new ItemStack(Blocks.CLAY));
         }
+
+        // GT6: seven clay balls form an unfired crucible, then a furnace hardens it.
+        // GT6's knife and rolling pin occupy tool slots; the 1.12 recipe uses the same clay layout.
+        registerShaped("clay_crucible", new ItemStack(GT6AdditionItems.CLAY_CRUCIBLE),
+                "C C", "C C", "CCC", 'C', new ItemStack(Items.CLAY_BALL));
+        FurnaceRecipes.instance().addSmeltingRecipe(new ItemStack(GT6AdditionItems.CLAY_CRUCIBLE),
+                MetaTileEntityHandler.CRUCIBLE_HU[22].getStackForm(), 0.7F);
+
+        ItemStack clay = new ItemStack(Items.CLAY_BALL);
+        registerShaped("clay_spout", new ItemStack(GT6AdditionItems.CLAY_SPOUT),
+                "C C", " C ", 'C', clay);
+        registerShaped("clay_channel", new ItemStack(GT6AdditionItems.CLAY_CHANNEL),
+                " C ", "CCC", " C ", 'C', clay);
+        registerShaped("clay_basin", new ItemStack(GT6AdditionItems.CLAY_BASIN),
+                "C C", "C C", " C ", 'C', clay);
+        registerShaped("clay_mold", new ItemStack(GT6AdditionItems.CLAY_MOLD),
+                "C C", "CCC", 'C', clay);
+        FurnaceRecipes.instance().addSmeltingRecipe(new ItemStack(GT6AdditionItems.CLAY_SPOUT),
+                MetaTileEntityHandler.CRUCIBLE_POURING_SPOUTS[22].getStackForm(), 0.7F);
+        FurnaceRecipes.instance().addSmeltingRecipe(new ItemStack(GT6AdditionItems.CLAY_CHANNEL),
+                MetaTileEntityHandler.CRUCIBLE_POURING_CHANNELS[22].getStackForm(), 0.7F);
+        FurnaceRecipes.instance().addSmeltingRecipe(new ItemStack(GT6AdditionItems.CLAY_BASIN),
+                MetaTileEntityHandler.CASTING_BASINS[22].getStackForm(), 0.7F);
+        FurnaceRecipes.instance().addSmeltingRecipe(new ItemStack(GT6AdditionItems.CLAY_MOLD),
+                MetaTileEntityHandler.MOLDS[22].getStackForm(), 0.7F);
+
     }
 
     private static void registerItemMachines() {
+        // GT6 Fire Bricks: 4 Clay dust, 4 Brick ingots, and a water bucket.
+        registerShaped("coke_oven_brick", new ItemStack(GT6AdditionBlocks.COKE_OVEN_BRICK_ITEM),
+                "CBC", "BWB", "CBC",
+                'C', OreDictUnifier.get(OrePrefix.dust, Materials.Clay),
+                'B', OreDictUnifier.get(OrePrefix.ingot, Materials.Brick),
+                'W', new ItemStack(Items.WATER_BUCKET));
+        registerShaped("coke_oven", MetaTileEntityHandler.COKE_OVEN.getStackForm(),
+                "IPI", "RBR", "IPI",
+                'I', OreDictUnifier.get(OrePrefix.ingot, Materials.Iron),
+                'P', OreDictUnifier.get(OrePrefix.plate, Materials.Iron),
+                'R', OreDictUnifier.get(OrePrefix.stick, Materials.Iron),
+                'B', new ItemStack(GT6AdditionBlocks.COKE_OVEN_BRICK_ITEM));
         registerShaped("mortar", MetaTileEntityHandler.MORTAR.getStackForm(),
                 " C ", "S S", "SSS",
                 'C', new ItemStack(Blocks.COBBLESTONE),
