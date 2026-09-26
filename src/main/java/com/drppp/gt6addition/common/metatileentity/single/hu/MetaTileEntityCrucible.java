@@ -81,9 +81,12 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity implements ITemperatureProvider {
 
@@ -649,16 +652,60 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
     }
 
     private double getMaterialWeightKg(Material material, long amount) {
-        double densityKgPerCubicMeter = DEFAULT_MATERIAL_DENSITY_KG_PER_CUBIC_METER;
-        if (material != null && amount > 0L && material.hasFluid()) {
-            Fluid fluid = material.getFluid();
-            densityKgPerCubicMeter = CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter(
-                    material.getRegistryName(), fluid.getDensity());
-        } else if (material != null && amount > 0L) {
-            densityKgPerCubicMeter = CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter(
-                    material.getRegistryName(), 0.0D);
+        double densityKgPerCubicMeter = getGt6MaterialDensityKgPerCubicMeter(material,
+                Collections.newSetFromMap(new IdentityHashMap<Material, Boolean>()));
+        double ceuMolecularMass = material == null ? 0.0D : material.getMass();
+        return CrucibleTransferLogic.materialWeightKgFromMolecularMass(
+                amount, GTValues.M, ceuMolecularMass, densityKgPerCubicMeter);
+    }
+
+    private double getGt6MaterialDensityKgPerCubicMeter(Material material, Set<Material> visiting) {
+        if (material == null) {
+            return DEFAULT_MATERIAL_DENSITY_KG_PER_CUBIC_METER;
         }
-        return CrucibleTransferLogic.materialWeightKg(amount, densityKgPerCubicMeter, GTValues.M);
+
+        if (CrucibleTransferLogic.hasKnownGt6MaterialDensity(material.getRegistryName())) {
+            return CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter(material.getRegistryName());
+        }
+
+        if (!visiting.add(material)) {
+            return getRegisteredOrDefaultDensity(material);
+        }
+        try {
+            MaterialStack[] components = material.getMaterialComponentsCt();
+            if (components != null && components.length > 0) {
+                double[] componentAmounts = new double[components.length];
+                double[] componentDensities = new double[components.length];
+                boolean hasValidComponent = false;
+                for (int i = 0; i < components.length; i++) {
+                    MaterialStack component = components[i];
+                    if (component == null || component.amount <= 0L || component.material == null) {
+                        continue;
+                    }
+                    hasValidComponent = true;
+                    componentAmounts[i] = component.amount;
+                    componentDensities[i] = getGt6MaterialDensityKgPerCubicMeter(component.material, visiting);
+                }
+                double compositionDensity = CrucibleTransferLogic.gt6MoleculeDensityKgPerCubicMeter(
+                        componentAmounts, componentDensities);
+                if (hasValidComponent) {
+                    return compositionDensity;
+                }
+            }
+            return getRegisteredOrDefaultDensity(material);
+        } finally {
+            visiting.remove(material);
+        }
+    }
+
+    private double getRegisteredOrDefaultDensity(Material material) {
+        if (material != null && material.hasFluid()) {
+            Fluid fluid = material.getFluid();
+            if (fluid != null && fluid.getDensity() > 0) {
+                return fluid.getDensity();
+            }
+        }
+        return DEFAULT_MATERIAL_DENSITY_KG_PER_CUBIC_METER;
     }
 
     private long getAmbientTemperature() {

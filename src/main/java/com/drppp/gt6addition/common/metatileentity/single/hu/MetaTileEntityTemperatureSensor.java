@@ -464,9 +464,8 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
             KineticRenderHelper.renderOverlayFace(renderState, translation, pipeline, face, bodyBox,
                     textureRoot + "overlay/" + name);
         }
-        if (mode == MODE_DISPLAY) {
-            renderTemperatureDisplay(renderState, translation, pipeline, bodyBox);
-        }
+        // The selected mode controls redstone behavior, not whether the measured temperature is visible.
+        renderTemperatureDisplay(renderState, translation, pipeline, bodyBox);
     }
 
     /** Draw the same six 2x2-pixel character cells used by GT6's sensor face. */

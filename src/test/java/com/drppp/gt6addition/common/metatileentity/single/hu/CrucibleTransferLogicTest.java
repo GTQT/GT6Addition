@@ -69,6 +69,73 @@ class CrucibleTransferLogicTest {
     }
 
     @Test
+    void osmiumCrucibleWithSixteenIronUnitsMatchesGt6HeatRate() {
+        double osmiumDensity = CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter(
+                "gtceu:osmium", 1_000.0D);
+        double ironDensity = CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter(
+                "gtceu:iron", 1_000.0D);
+        double osmiumVesselMass = CrucibleTransferLogic.materialWeightKg(
+                7L * GTValues.M, osmiumDensity, GTValues.M);
+        double ironMeltMass = CrucibleTransferLogic.materialWeightKg(
+                16L * GTValues.M, ironDensity, GTValues.M);
+        double totalThermalMass = osmiumVesselMass + ironMeltMass;
+
+        assertEquals(22_610.0D, osmiumDensity);
+        assertEquals(7_874.0D, ironDensity);
+        assertEquals(31_583.778D, totalThermalMass, 0.001D);
+        assertEquals(316L, CrucibleTransferLogic.requiredEnergyPerKelvin(totalThermalMass));
+
+        long storedHeat = 0L;
+        long temperatureGain = 0L;
+        long requiredHeatPerKelvin = CrucibleTransferLogic.requiredEnergyPerKelvin(totalThermalMass);
+        for (int tick = 0; tick < 20; tick++) {
+            storedHeat = CrucibleTransferLogic.accumulateHeat(storedHeat, 128L);
+            long tickGain = CrucibleTransferLogic.temperatureGainForHeat(storedHeat, totalThermalMass);
+            storedHeat -= tickGain * requiredHeatPerKelvin;
+            temperatureGain += tickGain;
+        }
+
+        assertEquals(8L, temperatureGain);
+        assertEquals(32L, storedHeat);
+    }
+
+    @Test
+    void materialWeightConversionUsesEachMaterialsMolecularMassAndGt6ReferenceWeight() {
+        double ironDensity = CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:iron");
+        double osmiumDensity = CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:osmium");
+        assertEquals(7_874.0D, ironDensity);
+        assertEquals(22_610.0D, osmiumDensity);
+
+        double ironIngotWeight = CrucibleTransferLogic.materialWeightKgFromMolecularMass(
+                GTValues.M, GTValues.M, 55.845D, ironDensity);
+        double osmiumIngotWeight = CrucibleTransferLogic.materialWeightKgFromMolecularMass(
+                GTValues.M, GTValues.M, 190.23D, osmiumDensity);
+        assertEquals(ironDensity / 9.0D, ironIngotWeight, 0.0001D);
+        assertEquals(osmiumDensity / 9.0D, osmiumIngotWeight, 0.0001D);
+
+        assertEquals(2_698.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:aluminum"));
+        assertEquals(1_873.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:cesium"));
+        assertEquals(1_000.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:water"));
+        assertEquals(3_530.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:diamond"));
+        assertEquals(929.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:coal"));
+        assertTrue(CrucibleTransferLogic.hasKnownGt6MaterialDensity("gtceu:fermium"));
+        assertEquals(0.0D, CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter("gtceu:fermium", 1_000.0D));
+    }
+
+    @Test
+    void compoundDensityUsesTheCeuComponentMoleculeRatiosLikeGt6() {
+        double density = CrucibleTransferLogic.gt6MoleculeDensityKgPerCubicMeter(
+                new double[]{3.0D, 1.0D}, new double[]{8_960.0D, 5_776.0D});
+
+        // GT6 computes a compound's density as the component amount-weighted average.
+        assertEquals(8_164.0D, density, 0.0001D);
+        assertEquals(6_720.0D, CrucibleTransferLogic.gt6MoleculeDensityKgPerCubicMeter(
+                new double[]{3.0D, 1.0D}, new double[]{8_960.0D, 0.0D}), 0.0001D);
+        assertEquals(density / 9.0D, CrucibleTransferLogic.materialWeightKgFromMolecularMass(
+                GTValues.M, GTValues.M, 66.0D, density), 0.0001D);
+    }
+
+    @Test
     void gt6CoolingResetsAfterHeatingThenMovesOneKelvinEveryTenTicks() {
         int cooldown = CrucibleTransferLogic.nextThermalCooldown(1, true, 100, 10);
         assertEquals(100, cooldown);
