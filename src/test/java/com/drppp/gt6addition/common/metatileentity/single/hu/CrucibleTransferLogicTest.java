@@ -123,6 +123,34 @@ class CrucibleTransferLogicTest {
     }
 
     @Test
+    void unknownMaterialUsesSlightlyHeavierDefaultDensityWithoutOverridingRegisteredFluidDensity() {
+        assertEquals(1_200.0D, CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter("gtqtcore:unknown", 0.0D));
+        assertEquals(1_500.0D, CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter("gtqtcore:unknown", 1_500.0D));
+    }
+
+    @Test
+    void realWorldAlloyOverridesPreserveGradeNumbersAndUseBulkDensities() {
+        assertEquals(8_890.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:hastelloy_c_276"));
+        assertEquals(8_860.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:hastelloy_n"));
+        assertEquals(9_000.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:hastelloy_w"));
+        assertEquals(8_220.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:hastelloy_x"));
+        assertEquals(8_193.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:inconel_718"));
+        assertEquals(7_250.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:incoloy_ma_956"));
+        assertEquals(8_000.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:maraging_steel_250"));
+        assertEquals(8_000.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:maraging_steel_300"));
+        assertEquals(8_083.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:maraging_steel_350"));
+        assertEquals(7_840.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:zeron_100"));
+        assertEquals(6_560.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:zircaloy_4"));
+        assertEquals(8_193.0D, CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter("gtceu:inconel_718", 1_200.0D));
+    }
+
+    @Test
+    void trailingDigitsFallBackToElementOnlyAfterExactMaterialLookup() {
+        assertEquals(18_950.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:uranium_235"));
+        assertEquals(0.0D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("gtceu:unmapped_grade_718"));
+    }
+
+    @Test
     void compoundDensityUsesTheCeuComponentMoleculeRatiosLikeGt6() {
         double density = CrucibleTransferLogic.gt6MoleculeDensityKgPerCubicMeter(
                 new double[]{3.0D, 1.0D}, new double[]{8_960.0D, 5_776.0D});

@@ -7,10 +7,12 @@ import java.util.Map;
 /** Pure boundary calculations shared by the crucible transfer code and tests. */
 public final class CrucibleTransferLogic {
     public static final int OBSIDIAN_MELTING_TEMPERATURE = 1_300;
+    public static final double DEFAULT_UNKNOWN_MATERIAL_DENSITY_KG_PER_CUBIC_METER = 1_200.0D;
     public static final double GT6_IRON_DENSITY_KG_PER_CUBIC_METER = 7_874.0D;
     public static final double GT6_OSMIUM_DENSITY_KG_PER_CUBIC_METER = 22_610.0D;
     public static final double GT6_TUNGSTEN_CARBIDE_DENSITY_KG_PER_CUBIC_METER = 15_600.0D;
     private static final Map<String, Double> GT6_MATERIAL_DENSITIES = createGt6MaterialDensities();
+    private static final Map<String, Double> REAL_WORLD_MATERIAL_DENSITIES = createRealWorldMaterialDensities();
 
     private CrucibleTransferLogic() {}
 
@@ -131,16 +133,13 @@ public final class CrucibleTransferLogic {
         if (name.isEmpty()) {
             return 0.0D;
         }
-        if ("tungstencarbide".equals(name)) {
-            return GT6_TUNGSTEN_CARBIDE_DENSITY_KG_PER_CUBIC_METER;
-        }
-        Double density = GT6_MATERIAL_DENSITIES.get(name);
+        Double density = knownMaterialDensity(name);
         return density == null ? 0.0D : density;
     }
 
     public static boolean hasKnownGt6MaterialDensity(String materialName) {
         String name = normalizeMaterialName(materialName);
-        return "tungstencarbide".equals(name) || GT6_MATERIAL_DENSITIES.containsKey(name);
+        return knownMaterialDensity(name) != null;
     }
 
     public static double gt6MaterialDensityKgPerCubicMeter(String materialName,
@@ -148,7 +147,8 @@ public final class CrucibleTransferLogic {
         if (hasKnownGt6MaterialDensity(materialName)) {
             return knownGt6MaterialDensityKgPerCubicMeter(materialName);
         }
-        return registeredFluidDensity > 0.0D ? registeredFluidDensity : 1_000.0D;
+        return registeredFluidDensity > 0.0D ? registeredFluidDensity :
+                DEFAULT_UNKNOWN_MATERIAL_DENSITY_KG_PER_CUBIC_METER;
     }
 
     private static String normalizeMaterialName(String materialName) {
@@ -161,15 +161,77 @@ public final class CrucibleTransferLogic {
             normalized = normalized.substring(namespaceSeparator + 1);
         }
         normalized = normalized.replace("_", "").replace("-", "").replace(" ", "");
-        while (!normalized.isEmpty() && Character.isDigit(normalized.charAt(normalized.length() - 1))) {
-            normalized = normalized.substring(0, normalized.length() - 1);
-        }
         if ("aluminum".equals(normalized)) return "aluminium";
         if ("cesium".equals(normalized)) return "caesium";
         if ("lanthanum".equals(normalized)) return "lanthanium";
         if ("phosphorus".equals(normalized)) return "phosphor";
         if ("deuterium".equals(normalized) || "tritium".equals(normalized)) return "hydrogen";
         return normalized;
+    }
+
+    private static Double knownMaterialDensity(String normalizedName) {
+        if (normalizedName == null || normalizedName.isEmpty()) {
+            return null;
+        }
+        if ("tungstencarbide".equals(normalizedName)) {
+            return GT6_TUNGSTEN_CARBIDE_DENSITY_KG_PER_CUBIC_METER;
+        }
+
+        // Look up full grade/material IDs first: inconel_718 and maraging_steel_250
+        // are distinct alloys, not element isotope suffixes.
+        Double density = REAL_WORLD_MATERIAL_DENSITIES.get(normalizedName);
+        if (density == null) {
+            density = GT6_MATERIAL_DENSITIES.get(normalizedName);
+        }
+        if (density != null) {
+            return density;
+        }
+
+        // GTCEu isotope IDs append the mass number (for example uranium_235),
+        // while most existing GT6 reference densities are element-level.
+        String elementName = normalizedName;
+        while (!elementName.isEmpty() && Character.isDigit(elementName.charAt(elementName.length() - 1))) {
+            elementName = elementName.substring(0, elementName.length() - 1);
+        }
+        if (elementName.equals(normalizedName) || elementName.isEmpty()) {
+            return null;
+        }
+        density = REAL_WORLD_MATERIAL_DENSITIES.get(elementName);
+        return density != null ? density : GT6_MATERIAL_DENSITIES.get(elementName);
+    }
+
+    private static Map<String, Double> createRealWorldMaterialDensities() {
+        Map<String, Double> densities = new HashMap<>();
+        // Room-temperature bulk densities in kg/m^3. Values are explicit overrides
+        // only for identifiable commercial alloys; unspecified/process mixtures
+        // continue through their CEu component estimate or the configured fallback.
+        // Haynes technical data: C-276 8.89, N 8.86, W 9.00 and X 8.22 g/cm^3.
+        // https://haynesintl.com/en/alloys/alloy-portfolio/corrosion-resistant-alloys/hastelloy-c-276/
+        // https://haynesintl.com/en/alloys/alloy-portfolio/corrosion-resistant-alloys/hastelloy-n/
+        // https://haynesintl.com/wp-content/uploads/2023/09/w-brochure.pdf
+        // https://haynesintl.com/wp-content/uploads/2024/08/x-brochure.pdf
+        String[] entries = {
+                "hastelloyc276=8890 hastelloyn=8860 hastelloyw=9000 hastelloyx=8220",
+                // Special Metals: INCONEL 718 annealed density 0.296 lb/in^3 = 8.193 g/cm^3.
+                // https://www.specialmetals.com/documents/technical-bulletins/inconel/inconel-alloy-718.pdf
+                "inconel718=8193",
+                // Special Metals: INCOLOY MA956, 7.25 g/cm^3.
+                "incoloyma956=7250",
+                // Carpenter Technology: NiMark 250/300 and Marage 350, converted from lb/in^3.
+                // https://www.carpentertechnology.com/blog/toughness-index-for-alloy-comparisons
+                "maragingsteel250=8000 maragingsteel300=8000 maragingsteel350=8083",
+                // Rolled Alloys datasheet: ZERON 100 7.84 g/cm^3; NASA handbook: Zircaloy-4 6.56 g/cm^3.
+                // https://www.rolledalloys.com/wp-content/uploads/2022/07/ZERON-100_data-book-rolled-alloys.pdf
+                // https://ntrs.nasa.gov/api/citations/20240004217/downloads/SNP-HDBK-0008_SNP-Material-Handbook.pdf
+                "zeron100=7840 zircaloy=6560 zircaloy4=6560"
+        };
+        for (String entryLine : entries) {
+            for (String entry : entryLine.split("\\s+")) {
+                int separator = entry.indexOf('=');
+                densities.put(entry.substring(0, separator), Double.parseDouble(entry.substring(separator + 1)));
+            }
+        }
+        return Collections.unmodifiableMap(densities);
     }
 
     private static Map<String, Double> createGt6MaterialDensities() {

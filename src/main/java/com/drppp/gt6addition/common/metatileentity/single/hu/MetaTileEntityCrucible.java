@@ -112,7 +112,11 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
     private static final int PASSIVE_COOLDOWN_TICKS = 10;
     // This is the single-block GT6 Smeltery, not the 3x3x3 Crucible.
     private static final long GT6_VESSEL_MATERIAL_AMOUNT = 7L * GTValues.M;
-    private static final double DEFAULT_MATERIAL_DENSITY_KG_PER_CUBIC_METER = 1_000.0D;
+    // Preserve GT6's 1 g/cm^3 baseline for a missing vessel material. Unknown registered
+    // materials use a slightly heavier fallback until they receive explicit density data.
+    private static final double GT6_DEFAULT_MATERIAL_DENSITY_KG_PER_CUBIC_METER = 1_000.0D;
+    private static final double DEFAULT_UNKNOWN_MATERIAL_DENSITY_KG_PER_CUBIC_METER =
+            CrucibleTransferLogic.DEFAULT_UNKNOWN_MATERIAL_DENSITY_KG_PER_CUBIC_METER;
     private static final int AIR_DENSITY_LIMIT = 200;
     private static final long SCRAP_MATERIAL_AMOUNT = GTValues.M / 9L;
     private static final int RAIN_FILL_INTERVAL = 600;
@@ -661,7 +665,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
 
     private double getGt6MaterialDensityKgPerCubicMeter(Material material, Set<Material> visiting) {
         if (material == null) {
-            return DEFAULT_MATERIAL_DENSITY_KG_PER_CUBIC_METER;
+            return GT6_DEFAULT_MATERIAL_DENSITY_KG_PER_CUBIC_METER;
         }
 
         if (CrucibleTransferLogic.hasKnownGt6MaterialDensity(material.getRegistryName())) {
@@ -705,7 +709,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
                 return fluid.getDensity();
             }
         }
-        return DEFAULT_MATERIAL_DENSITY_KG_PER_CUBIC_METER;
+        return DEFAULT_UNKNOWN_MATERIAL_DENSITY_KG_PER_CUBIC_METER;
     }
 
     private long getAmbientTemperature() {
