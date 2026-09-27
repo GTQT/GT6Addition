@@ -30,6 +30,7 @@ public class ClientProxy extends CommonProxy {
         registerItemModel(GT6AdditionItems.CLAY_CHANNEL);
         registerItemModel(GT6AdditionItems.CLAY_BASIN);
         registerItemModel(GT6AdditionItems.CLAY_MOLD);
+        registerItemModel(GT6AdditionItems.ANTHRACITE_ORE);
     }
 
     private static void registerItemModel(Item item) {

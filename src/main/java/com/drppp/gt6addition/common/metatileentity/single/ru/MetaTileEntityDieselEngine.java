@@ -103,7 +103,7 @@ public class MetaTileEntityDieselEngine extends BaseEnergyOutputMetaTileEntity {
     public void addInformation(ItemStack stack, @Nullable World world, @NotNull List<String> tooltip,
                                boolean advanced) {
         super.addInformation(stack, world, tooltip, advanced);
-        tooltip.add(I18n.format("gt6addition.ru.de_generator.info.1", 100 + "%"));
+        tooltip.add(I18n.format("gt6addition.ru.de_generator.info.1"));
         tooltip.add(I18n.format("gt6addition.ru.de_generator.info.2", this.outPutRu));
         tooltip.add(I18n.format("gt6addition.ru.de_generator.info.3"));
         tooltip.add(I18n.format("gt6addition.ru.de_generator.info.4"));

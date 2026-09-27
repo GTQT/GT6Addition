@@ -11,6 +11,7 @@ import com.drppp.gt6addition.api.capability.impl.HeatEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
 import com.drppp.gt6addition.api.machine.IAutomaticIgnitable;
 import com.drppp.gt6addition.api.utils.CraftingGetItemUtils;
+import com.drppp.gt6addition.api.utils.GTIgnitionHelper;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import com.drppp.gt6addition.common.metatileentity.single.ku.KineticRenderHelper;
 import gregtech.api.capability.GregtechDataCodes;
@@ -33,7 +34,6 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -198,6 +198,7 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity implem
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, @NotNull List<String> tooltip, boolean advanced) {
         super.addInformation(stack, world, tooltip, advanced);
+        tooltip.add(I18n.format("gt6addition.energy_output.tooltip.section"));
         tooltip.add(I18n.format("gt6addition.hu.generator.info.7"));
         tooltip.add(I18n.format("gt6addition.hu.generator.info.2", this.efficiency * 100 + "%"));
         tooltip.add(I18n.format("gt6addition.hu.generator.info.3", this.outPutHu));
@@ -332,13 +333,14 @@ public class MetaTileEntityCombustionchamberLiquid extends MetaTileEntity implem
             if (!playerIn.getHeldItem(hand).isEmpty())
             {
                 ItemStack item = playerIn.getHeldItem(hand);
-                if (item.getItem() == Items.FLINT_AND_STEEL)
+                if (GTIgnitionHelper.isIgnitionItem(item))
                 {
-                    item.damageItem(1, playerIn);
+                    GTIgnitionHelper.consumeIgnitionUse(playerIn, item);
                     if (random.nextInt(4) == 1 && canActive())
                     {
                         this.setActive(true);
                     }
+                    return true;
                 }
                 if(  playerIn.getHeldItem(hand).getItem()!=filleditem.getItem() && playerIn.getHeldItem(hand).hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,null))
                 {

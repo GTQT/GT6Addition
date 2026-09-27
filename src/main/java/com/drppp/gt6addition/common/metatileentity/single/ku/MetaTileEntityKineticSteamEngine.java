@@ -462,10 +462,12 @@ public class MetaTileEntityKineticSteamEngine extends MetaTileEntity implements 
     public void addInformation(ItemStack stack, @Nullable World world, @NotNull List<String> tooltip,
                                boolean advanced) {
         super.addInformation(stack, world, tooltip, advanced);
+        tooltip.add(I18n.format("gt6addition.energy_output.tooltip.section"));
         tooltip.add(I18n.format("gt6addition.machine.kinetic_steam_engine.tooltip.1", efficiency + "%"));
         tooltip.add(I18n.format("gt6addition.machine.kinetic_steam_engine.tooltip.2", outputKu / 2, outputKu * 2));
         tooltip.add(I18n.format("gt6addition.machine.kinetic_steam_engine.tooltip.3", tankCapacity));
         tooltip.add(I18n.format("gt6addition.machine.kinetic_steam_engine.tooltip.4"));
+        tooltip.add(I18n.format("gt6addition.machine.kinetic_steam_engine.tooltip.5"));
     }
 
     public int getSteamAmount() {

@@ -86,6 +86,9 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
         implements IActiveOutputSide, IGhostSlotConfigurable {
 
     private static final int UPDATE_RUNNING_VISUAL = 0x47543652; // GT6A-specific custom sync id
+    private static final String[] TIER_MATERIAL_SUFFIXES = {
+            "_tungstencarbide", "_tungstensteel", "_stainlesssteel", "_titanium", "_bronze", "_invar", "_steel"
+    };
 
     public static final int FONT_HEIGHT = 9; // Minecraft's FontRenderer FONT_HEIGHT value
     @Nullable // particle run every tick when the machine is active
@@ -1082,34 +1085,65 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
     @Override
     public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, boolean advanced) {
         super.addInformation(stack, player, tooltip, advanced);
-        String key = this.metaTileEntityId.getPath().split("\\.")[0];
-        String mainKey = String.format("gregtech.machine.%s.tooltip", key);
-        if (I18n.hasKey(mainKey)) {
-            tooltip.add(1, mainKey);
+        String family = getMachineTooltipFamily();
+        String descriptionKey = String.format("gt6addition.machine.%s.tooltip", family);
+        int descriptionIndex = 1;
+        if (I18n.hasKey(descriptionKey)) {
+            tooltip.add(descriptionIndex++, I18n.format(descriptionKey));
         }
-        tooltip.add( I18n.format("gt6addition.accept_facing",getAcceptFacingString()));
+        String path = this.metaTileEntityId.getPath();
+        int variantSeparator = path.indexOf('.');
+        String legacyFamily = variantSeparator < 0 ? path : path.substring(0, variantSeparator);
+        String legacyDescriptionKey = String.format("gregtech.machine.%s.tooltip", legacyFamily);
+        if (I18n.hasKey(legacyDescriptionKey)) {
+            tooltip.add(descriptionIndex++, I18n.format(legacyDescriptionKey));
+        }
+        String familyDescriptionKey = String.format("gregtech.machine.%s.tooltip", family);
+        if (!familyDescriptionKey.equals(legacyDescriptionKey) && I18n.hasKey(familyDescriptionKey)) {
+            tooltip.add(descriptionIndex, I18n.format(familyDescriptionKey));
+        }
+        tooltip.add(I18n.format("gt6addition.multienergy.tooltip.input_sides", getAcceptFacingString()));
     }
-    private String getAcceptFacingString()
-    {
-        StringBuilder res= new StringBuilder();
-        for (MachineEnergyAcceptFacing s : acceptFacing)
-        {
-            switch (s){
-                case UP : res.append(I18n.format("gt6addition.up"));
+
+    private String getMachineTooltipFamily() {
+        String path = this.metaTileEntityId.getPath();
+        for (String suffix : TIER_MATERIAL_SUFFIXES) {
+            if (path.endsWith(suffix)) {
+                return path.substring(0, path.length() - suffix.length());
+            }
+        }
+        int variantSeparator = path.indexOf('.');
+        return variantSeparator < 0 ? path : path.substring(0, variantSeparator);
+    }
+
+    private String getAcceptFacingString() {
+        StringBuilder res = new StringBuilder();
+        for (MachineEnergyAcceptFacing s : acceptFacing) {
+            if (res.length() > 0) {
+                res.append(I18n.format("gt6addition.multienergy.tooltip.list_separator"));
+            }
+            switch (s) {
+                case UP:
+                    res.append(I18n.format("gt6addition.up"));
                     break;
-                case DOWN : res.append(I18n.format("gt6addition.down"));
+                case DOWN:
+                    res.append(I18n.format("gt6addition.down"));
                     break;
-                case LEFT : res.append(I18n.format("gt6addition.left"));
+                case LEFT:
+                    res.append(I18n.format("gt6addition.left"));
                     break;
-                case RIGHT : res.append(I18n.format("gt6addition.right"));
+                case RIGHT:
+                    res.append(I18n.format("gt6addition.right"));
                     break;
-                case FRONT : res.append(I18n.format("gt6addition.front"));
+                case FRONT:
+                    res.append(I18n.format("gt6addition.front"));
                     break;
-                case BACK : res.append(I18n.format("gt6addition.back"));
+                case BACK:
+                    res.append(I18n.format("gt6addition.back"));
                     break;
             }
         }
-        return res.toString().substring(0,res.length()-1);
+        return res.toString();
     }
     @Override
     public boolean needsSneakToRotate() {

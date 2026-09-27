@@ -7,8 +7,9 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "gregtech.ElectricContainerInfoProviderMixin",
-    "gregtech.MetaItemLighterBehaviourMixin"
+    "gregtech.MetaItemLighterBehaviourMixin",
+    "gregtech.GTFlintAndSteelToolBehaviorMixin"
   ],
   "server": [],
-  "client":[]
+  "client":["gregtech.AnthraciteOreByProductMixin"]
 }

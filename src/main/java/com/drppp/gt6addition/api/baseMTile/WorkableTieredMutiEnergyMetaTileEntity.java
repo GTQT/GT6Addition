@@ -180,12 +180,13 @@ public abstract class WorkableTieredMutiEnergyMetaTileEntity extends TieredMutiE
     @Override
     public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, boolean advanced) {
         super.addInformation(stack, player, tooltip, advanced);
-        tooltip.add(I18n.format("gt6addition.universal.tooltip.voltage_in", energyContainer.getInputVoltage(),
+        tooltip.add(I18n.format("gt6addition.multienergy.tooltip.energy_section"));
+        tooltip.add(I18n.format("gt6addition.multienergy.tooltip.input_energy", energyContainer.getInputVoltage(),
                 this.EnergyType+"/t",GTValues.VNF[getTier()]));
         tooltip.add(
-                I18n.format("gt6addition.universal.tooltip.energy_storage_capacity"));
+                I18n.format("gt6addition.multienergy.tooltip.energy_buffer"));
         if (workable.getRecipeMap().getMaxFluidInputs() != 0)
-            tooltip.add(I18n.format("gt6addition.universal.tooltip.fluid_storage_capacity",
+            tooltip.add(I18n.format("gt6addition.multienergy.tooltip.fluid_capacity",
                     this.tankScalingFunction.apply(getTier())));
     }
 

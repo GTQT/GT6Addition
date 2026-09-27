@@ -1,8 +1,10 @@
 package com.drppp.gt6addition.common.item;
 
 import com.drppp.gt6addition.Tags;
+import com.drppp.gt6addition.common.block.GT6AdditionBlocks;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.util.ResourceLocation;
 
 public final class GT6AdditionItems {
@@ -12,6 +14,7 @@ public final class GT6AdditionItems {
     public static final Item CLAY_CHANNEL = clayItem("clay_channel");
     public static final Item CLAY_BASIN = clayItem("clay_basin");
     public static final Item CLAY_MOLD = clayItem("clay_mold");
+    public static final ItemBlock ANTHRACITE_ORE = createAnthraciteOreItem();
 
     private GT6AdditionItems() {
     }
@@ -21,5 +24,11 @@ public final class GT6AdditionItems {
                 .setRegistryName(new ResourceLocation(Tags.MOD_ID, name))
                 .setTranslationKey(Tags.MOD_ID + "." + name)
                 .setCreativeTab(CreativeTabs.MISC);
+    }
+
+    private static ItemBlock createAnthraciteOreItem() {
+        ItemBlock item = new ItemBlock(GT6AdditionBlocks.ANTHRACITE_ORE);
+        item.setRegistryName(GT6AdditionBlocks.ANTHRACITE_ORE.getRegistryName());
+        return item;
     }
 }

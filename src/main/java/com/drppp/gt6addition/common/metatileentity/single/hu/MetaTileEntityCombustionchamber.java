@@ -12,6 +12,7 @@ import com.drppp.gt6addition.api.capability.impl.HeatEnergyHandler;
 import com.drppp.gt6addition.api.capability.interfaces.IHeatEnergy;
 import com.drppp.gt6addition.api.machine.IAutomaticIgnitable;
 import com.drppp.gt6addition.api.utils.CraftingGetItemUtils;
+import com.drppp.gt6addition.api.utils.GTIgnitionHelper;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import com.drppp.gt6addition.common.metatileentity.single.ku.KineticRenderHelper;
 import gregtech.api.capability.GregtechCapabilities;
@@ -34,7 +35,6 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -210,6 +210,7 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity implements I
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, @NotNull List<String> tooltip, boolean advanced) {
         super.addInformation(stack, world, tooltip, advanced);
+        tooltip.add(I18n.format("gt6addition.energy_output.tooltip.section"));
         tooltip.add(I18n.format("gt6addition.hu.generator.info.1"));
         tooltip.add(I18n.format("gt6addition.hu.generator.info.2", this.efficiency * 100 + "%"));
         tooltip.add(I18n.format("gt6addition.hu.generator.info.3", this.outPutHu));
@@ -340,8 +341,8 @@ public class MetaTileEntityCombustionchamber extends MetaTileEntity implements I
             }
             if (!playerIn.getHeldItem(hand).isEmpty()) {
                 ItemStack item = playerIn.getHeldItem(hand);
-                if (item.getItem() == Items.FLINT_AND_STEEL) {
-                    item.damageItem(1, playerIn);
+                if (GTIgnitionHelper.isIgnitionItem(item)) {
+                    GTIgnitionHelper.consumeIgnitionUse(playerIn, item);
                     if (random.nextInt(4) == 1 && !importItems.getStackInSlot(0).isEmpty()) {
                         this.setActive(true);
                     }

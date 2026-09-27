@@ -10,17 +10,20 @@ import net.minecraft.util.ResourceLocation;
 import java.util.Arrays;
 
 public final class GT6MachineMaterials {
+    public static final int ANTHRACITE_BURN_TIME = 3200;
     static final String FORMULA_ARSENIC_COPPER = "Cu3As";
     static final String FORMULA_ARSENIC_BRONZE = "AsBronze4";
     static final String FORMULA_ANCIENT_DEBRIS = "AncientDebris";
     static final String FORMULA_NETHERITE = "Au4AncientDebris4";
     static final String FORMULA_TANTALUM_HAFNIUM_CARBIDE = "Ta4HfC5";
+    static final String FORMULA_ANTHRACITE = "C";
 
     public static Material ARSENIC_COPPER;
     public static Material ARSENIC_BRONZE;
     public static Material ANCIENT_DEBRIS;
     public static Material NETHERITE;
     public static Material TANTALUM_HAFNIUM_CARBIDE;
+    public static Material ANTHRACITE;
 
     private GT6MachineMaterials() {}
 
@@ -48,6 +51,19 @@ public final class GT6MachineMaterials {
                 .ingot().color(32, 128, 32).iconSet(MaterialIconSet.METALLIC).blast(4263)
                 .components(componentStacks(tantalumHafniumCarbideFormula())).build();
         TANTALUM_HAFNIUM_CARBIDE.setFormula(FORMULA_TANTALUM_HAFNIUM_CARBIDE, true);
+        // GT6-style solid fuel form; world generation uses our own block, not CEu's ore-vein registry.
+        ANTHRACITE = new Material.Builder(8362, id("anthracite"))
+                .gem().dust().ore(2, 1).burnTime(ANTHRACITE_BURN_TIME).color(90, 90, 90).iconSet(MaterialIconSet.LIGNITE)
+                .flags(gregtech.api.unification.material.info.MaterialFlags.FLAMMABLE,
+                        gregtech.api.unification.material.info.MaterialFlags.NO_SMELTING,
+                        gregtech.api.unification.material.info.MaterialFlags.NO_SMASHING,
+                        gregtech.api.unification.material.info.MaterialFlags.MORTAR_GRINDABLE,
+                        gregtech.api.unification.material.info.MaterialFlags.EXCLUDE_BLOCK_CRAFTING_BY_HAND_RECIPES,
+                        gregtech.api.unification.material.info.MaterialFlags.DISABLE_DECOMPOSITION)
+                .components(new MaterialStack(Materials.Carbon, 1)).build();
+        ANTHRACITE.setFormula(FORMULA_ANTHRACITE, true);
+        ANTHRACITE.getProperty(gregtech.api.unification.material.properties.PropertyKey.ORE)
+                .setOreByProducts(Materials.Coal);
     }
 
     static ComponentPart[] arsenicCopperFormula() {

@@ -90,5 +90,6 @@ public class MetaTileEntityMiniPortalEnd extends MetaTileEntityMiniPortal {
         tooltip.add(I18n.format("gt6addition.machine.portal_end.tooltip.1"));
         tooltip.add(I18n.format("gt6addition.machine.portal_end.tooltip.2"));
         tooltip.add(I18n.format("gt6addition.machine.portal.tooltip.common"));
+        tooltip.add(I18n.format("gt6addition.machine.portal.tooltip.config"));
     }
 }

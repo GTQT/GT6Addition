@@ -1,10 +1,10 @@
 package com.drppp.gt6addition.common.metatileentity.single.item;
 
+import com.drppp.gt6addition.api.utils.GTIgnitionHelper;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
@@ -56,14 +56,12 @@ public class MetaTileEntityMiniPortalNether extends MetaTileEntityMiniPortal {
 
     @Override
     protected boolean canActivateWithItem(ItemStack heldStack) {
-        return !heldStack.isEmpty() && heldStack.getItem() == Items.FLINT_AND_STEEL;
+        return GTIgnitionHelper.isIgnitionItem(heldStack);
     }
 
     @Override
     protected void onActivationItemUsed(EntityPlayer player, EnumHand hand, ItemStack heldStack) {
-        if (!player.capabilities.isCreativeMode) {
-            heldStack.damageItem(1, player);
-        }
+        GTIgnitionHelper.consumeIgnitionUse(player, heldStack);
     }
 
     @Override
@@ -88,5 +86,6 @@ public class MetaTileEntityMiniPortalNether extends MetaTileEntityMiniPortal {
         tooltip.add(I18n.format("gt6addition.machine.portal_nether.tooltip.1"));
         tooltip.add(I18n.format("gt6addition.machine.portal_nether.tooltip.2"));
         tooltip.add(I18n.format("gt6addition.machine.portal.tooltip.common"));
+        tooltip.add(I18n.format("gt6addition.machine.portal.tooltip.config"));
     }
 }

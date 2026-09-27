@@ -7,6 +7,7 @@ import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.IComparatorSignalProvider;
+import com.drppp.gt6addition.common.config.GT6AdditionConfig;
 import com.drppp.gt6addition.common.metatileentity.single.ku.KineticRenderHelper;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IEnergyContainer;
@@ -27,6 +28,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
@@ -48,6 +50,16 @@ import java.util.List;
 public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements IComparatorSignalProvider {
 
     private static final String NBT_ACTIVE = "Active";
+    private static final String NBT_RELAY_ITEMS = "RelayItems";
+    private static final String NBT_RELAY_FLUIDS = "RelayFluids";
+    private static final String NBT_RELAY_ENERGY = "RelayEnergy";
+    private static final String NBT_RELAY_SIGNALS = "RelayRedstoneComparator";
+    private static final int DATA_RELAY_CONFIGURATION = 0x4703;
+    private static final int CONFIG_ITEMS = 0;
+    private static final int CONFIG_FLUIDS = 1;
+    private static final int CONFIG_ENERGY = 2;
+    private static final int CONFIG_SIGNALS = 3;
+    private static final int CONFIG_COUNT = 4;
     private static final double PX = 1.0D / 16.0D;
     private static final int REDSTONE_HOLD_TICKS = 20;
     // GT6 MultiTileEntityMiniPortal pass 0: one 14 px portal core, not three thin planes.
@@ -94,6 +106,12 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
 
     protected MetaTileEntityMiniPortal targetPortal;
     private boolean active;
+    // Defaults preserve the portal's existing behaviour for worlds saved before these options existed.
+    private boolean relayItems = true;
+    private boolean relayFluids = true;
+    private boolean relayEnergy = true;
+    private boolean relayRedstoneComparator = true;
+    private int selectedRelayConfiguration;
 
     protected MetaTileEntityMiniPortal(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId);
@@ -195,6 +213,120 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
         scheduleRenderUpdate();
     }
 
+    private void syncRelayConfiguration() {
+        markDirty();
+        writeCustomData(DATA_RELAY_CONFIGURATION, this::writeRelayConfiguration);
+        notifyBlockUpdate();
+        notifyCapabilityNeighbors();
+        if (targetPortal != null) {
+            targetPortal.notifyBlockUpdate();
+            targetPortal.notifyCapabilityNeighbors();
+        }
+    }
+
+    private void notifyCapabilityNeighbors() {
+        World world = getWorld();
+        if (world == null) {
+            return;
+        }
+        BlockPos pos = getPos();
+        IBlockState state = world.getBlockState(pos);
+        world.notifyNeighborsOfStateChange(pos, state.getBlock(), false);
+    }
+
+    private void writeRelayConfiguration(PacketBuffer buffer) {
+        buffer.writeBoolean(relayItems);
+        buffer.writeBoolean(relayFluids);
+        buffer.writeBoolean(relayEnergy);
+        buffer.writeBoolean(relayRedstoneComparator);
+    }
+
+    private void readRelayConfiguration(PacketBuffer buffer) {
+        relayItems = buffer.readBoolean();
+        relayFluids = buffer.readBoolean();
+        relayEnergy = buffer.readBoolean();
+        relayRedstoneComparator = buffer.readBoolean();
+    }
+
+    private void setSelectedRelayConfigurationEnabled(boolean enabled) {
+        switch (selectedRelayConfiguration) {
+            case CONFIG_ITEMS:
+                relayItems = enabled;
+                break;
+            case CONFIG_FLUIDS:
+                relayFluids = enabled;
+                break;
+            case CONFIG_ENERGY:
+                relayEnergy = enabled;
+                break;
+            case CONFIG_SIGNALS:
+                relayRedstoneComparator = enabled;
+                if (!enabled) {
+                    clearRemoteSignals();
+                }
+                break;
+            default:
+                throw new IllegalStateException("Unknown mini portal relay configuration " + selectedRelayConfiguration);
+        }
+    }
+
+    private boolean isSelectedRelayConfigurationEnabled() {
+        switch (selectedRelayConfiguration) {
+            case CONFIG_ITEMS:
+                return relayItems;
+            case CONFIG_FLUIDS:
+                return relayFluids;
+            case CONFIG_ENERGY:
+                return relayEnergy;
+            case CONFIG_SIGNALS:
+                return relayRedstoneComparator;
+            default:
+                return false;
+        }
+    }
+
+    private boolean isRelayEnabledForLink(int configuration) {
+        if (!active || targetPortal == null || !targetPortal.active) {
+            return false;
+        }
+        switch (configuration) {
+            case CONFIG_ITEMS:
+                return GT6AdditionConfig.portalRelayItems && relayItems && targetPortal.relayItems;
+            case CONFIG_FLUIDS:
+                return GT6AdditionConfig.portalRelayFluids && relayFluids && targetPortal.relayFluids;
+            case CONFIG_ENERGY:
+                return GT6AdditionConfig.portalRelayGtEnergy && relayEnergy && targetPortal.relayEnergy;
+            case CONFIG_SIGNALS:
+                return GT6AdditionConfig.portalRelayRedstoneComparator && relayRedstoneComparator && targetPortal.relayRedstoneComparator;
+            default:
+                return false;
+        }
+    }
+
+    private String getSelectedRelayConfigurationKey() {
+        switch (selectedRelayConfiguration) {
+            case CONFIG_ITEMS:
+                return "gt6addition.machine.portal.config.items";
+            case CONFIG_FLUIDS:
+                return "gt6addition.machine.portal.config.fluids";
+            case CONFIG_ENERGY:
+                return "gt6addition.machine.portal.config.energy";
+            case CONFIG_SIGNALS:
+                return "gt6addition.machine.portal.config.signals";
+            default:
+                return "gt6addition.machine.portal.config.items";
+        }
+    }
+
+    private void sendRelayConfigurationStatus(EntityPlayer player, boolean changed) {
+        player.sendStatusMessage(new TextComponentTranslation(
+                changed ? "gt6addition.machine.portal.config.changed" : "gt6addition.machine.portal.config.selected",
+                new TextComponentTranslation(getSelectedRelayConfigurationKey()),
+                new TextComponentTranslation(isSelectedRelayConfigurationEnabled()
+                        ? "gt6addition.machine.portal.config.enabled"
+                        : "gt6addition.machine.portal.config.disabled")), true);
+    }
+
     private void refreshPortalLinks() {
         findTargetPortal();
         List<MetaTileEntityMiniPortal> local = getCurrentDimensionList();
@@ -254,6 +386,9 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
     }
 
     private void relayRedstoneToTarget() {
+        if (!isRelayEnabledForLink(CONFIG_SIGNALS)) {
+            return;
+        }
         for (EnumFacing side : EnumFacing.VALUES) {
             int signal = getInputRedstoneSignal(side, false);
             targetPortal.acceptRemoteRedstone(side.getOpposite(), signal);
@@ -285,10 +420,16 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
     }
 
     private void updateRedstoneOutputs() {
+        boolean relaySignals = isRelayEnabledForLink(CONFIG_SIGNALS);
         for (EnumFacing side : EnumFacing.VALUES) {
             int index = side.ordinal();
             int previousComparator = remoteComparatorSignals[index];
-            if (!active) {
+            if (!relaySignals) {
+                remoteRedstoneSignals[index] = 0;
+                remoteSignalAges[index] = 0;
+                remoteComparatorSignals[index] = 0;
+                remoteComparatorAges[index] = 0;
+            } else if (!active) {
                 remoteRedstoneSignals[index] = 0;
                 remoteSignalAges[index] = 0;
             } else if (!remoteSignalUpdated[index]) {
@@ -333,6 +474,9 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
 
     @Override
     public int getComparatorSignal() {
+        if (!isRelayEnabledForLink(CONFIG_SIGNALS)) {
+            return 0;
+        }
         int signal = 0;
         for (int sideSignal : remoteComparatorSignals) signal = Math.max(signal, sideSignal);
         return signal;
@@ -400,7 +544,7 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
 
     @Override
     protected boolean canMachineConnectRedstone(EnumFacing side) {
-        return true;
+        return GT6AdditionConfig.portalRelayRedstoneComparator && relayRedstoneComparator;
     }
 
     @Override
@@ -414,10 +558,44 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
             deactivatePortal(true);
             return true;
         }
-        if (canActivateWithItem(heldStack) && activatePortal()) {
-            onActivationItemUsed(player, hand, heldStack);
+        tryActivateFromIgnitionItem(player, hand, heldStack);
+        return true;
+    }
+
+    /**
+     * Handles firestarter items whose item-use callback runs before this machine's right-click callback.
+     *
+     * @return true when this item is accepted and the activation was handled (or predicted client-side)
+     */
+    public boolean tryActivateFromIgnitionItem(EntityPlayer player, EnumHand hand, ItemStack heldStack) {
+        if (getWorld() == null || active || !isSupportedDimension() || !canActivateWithItem(heldStack)) {
+            return false;
+        }
+        if (getWorld().isRemote) {
             return true;
         }
+        if (!activatePortal()) {
+            return false;
+        }
+        onActivationItemUsed(player, hand, heldStack);
+        return true;
+    }
+
+    @Override
+    public boolean onScrewdriverClick(EntityPlayer player, EnumHand hand, EnumFacing side,
+                                     CuboidRayTraceResult hitResult) {
+        if (getWorld() == null || getWorld().isRemote) {
+            return true;
+        }
+        if (player.isSneaking()) {
+            selectedRelayConfiguration = (selectedRelayConfiguration + 1) % CONFIG_COUNT;
+            sendRelayConfigurationStatus(player, false);
+            return true;
+        }
+
+        setSelectedRelayConfigurationEnabled(!isSelectedRelayConfigurationEnabled());
+        sendRelayConfigurationStatus(player, true);
+        syncRelayConfiguration();
         return true;
     }
 
@@ -430,6 +608,7 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
         if (side != null && capability == GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER)
             return getRemoteEnergyContainer(side) != null;
         if (side != null && capability == CapabilityEnergy.ENERGY) {
+            if (!isRelayEnabledForLink(CONFIG_ENERGY)) return false;
             TileEntity remote = getRemoteNeighborTile(side);
             return remote != null && remote.hasCapability(CapabilityEnergy.ENERGY, side);
         }
@@ -443,13 +622,24 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
     @Override
     public <T> T getCapability(Capability<T> capability, EnumFacing side) {
         if (side != null && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
-            return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(sideItemHandlers[side.ordinal()]);
+            return isRelayEnabledForLink(CONFIG_ITEMS)
+                    ? CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(sideItemHandlers[side.ordinal()]) : null;
         }
         if (side != null && capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
-            return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(sideFluidHandlers[side.ordinal()]);
+            return isRelayEnabledForLink(CONFIG_FLUIDS)
+                    ? CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(sideFluidHandlers[side.ordinal()]) : null;
         }
         if (side != null && capability == GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER) {
-            return GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER.cast(sideEnergyContainers[side.ordinal()]);
+            return isRelayEnabledForLink(CONFIG_ENERGY)
+                    ? GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER.cast(sideEnergyContainers[side.ordinal()]) : null;
+        }
+        if (side != null && capability == CapabilityEnergy.ENERGY) {
+            if (!isRelayEnabledForLink(CONFIG_ENERGY)) return null;
+            TileEntity remote = getRemoteNeighborTile(side);
+            if (remote != null && remote.hasCapability(CapabilityEnergy.ENERGY, side)) {
+                return remote.getCapability(capability, side);
+            }
+            return null;
         }
         if (side != null && active && targetPortal != null) {
             TileEntity remote = getRemoteNeighborTile(side);
@@ -537,12 +727,14 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
     public void writeInitialSyncData(PacketBuffer buf) {
         super.writeInitialSyncData(buf);
         buf.writeBoolean(active);
+        writeRelayConfiguration(buf);
     }
 
     @Override
     public void receiveInitialSyncData(PacketBuffer buf) {
         super.receiveInitialSyncData(buf);
         active = buf.readBoolean();
+        readRelayConfiguration(buf);
     }
 
     @Override
@@ -551,6 +743,8 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
         if (dataId == gregtech.api.capability.GregtechDataCodes.WORKABLE_ACTIVE) {
             active = buf.readBoolean();
             scheduleRenderUpdate();
+        } else if (dataId == DATA_RELAY_CONFIGURATION) {
+            readRelayConfiguration(buf);
         }
     }
 
@@ -558,6 +752,10 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
     public NBTTagCompound writeToNBT(NBTTagCompound data) {
         super.writeToNBT(data);
         data.setBoolean(NBT_ACTIVE, active);
+        data.setBoolean(NBT_RELAY_ITEMS, relayItems);
+        data.setBoolean(NBT_RELAY_FLUIDS, relayFluids);
+        data.setBoolean(NBT_RELAY_ENERGY, relayEnergy);
+        data.setBoolean(NBT_RELAY_SIGNALS, relayRedstoneComparator);
         return data;
     }
 
@@ -565,6 +763,10 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
         active = data.getBoolean(NBT_ACTIVE);
+        relayItems = !data.hasKey(NBT_RELAY_ITEMS) || data.getBoolean(NBT_RELAY_ITEMS);
+        relayFluids = !data.hasKey(NBT_RELAY_FLUIDS) || data.getBoolean(NBT_RELAY_FLUIDS);
+        relayEnergy = !data.hasKey(NBT_RELAY_ENERGY) || data.getBoolean(NBT_RELAY_ENERGY);
+        relayRedstoneComparator = !data.hasKey(NBT_RELAY_SIGNALS) || data.getBoolean(NBT_RELAY_SIGNALS);
     }
 
     @Override
@@ -595,6 +797,7 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
 
     @Nullable
     private IItemHandler getRemoteItemHandler(EnumFacing localSide) {
+        if (!isRelayEnabledForLink(CONFIG_ITEMS)) return null;
         TileEntity tileEntity = getRemoteNeighborTile(localSide);
         if (tileEntity == null || !tileEntity.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, localSide)) {
             return null;
@@ -604,6 +807,7 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
 
     @Nullable
     private IFluidHandler getRemoteFluidHandler(EnumFacing localSide) {
+        if (!isRelayEnabledForLink(CONFIG_FLUIDS)) return null;
         TileEntity tileEntity = getRemoteNeighborTile(localSide);
         if (tileEntity == null || !tileEntity.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, localSide)) {
             return null;
@@ -613,6 +817,7 @@ public abstract class MetaTileEntityMiniPortal extends MetaTileEntity implements
 
     @Nullable
     private IEnergyContainer getRemoteEnergyContainer(EnumFacing localSide) {
+        if (!isRelayEnabledForLink(CONFIG_ENERGY)) return null;
         TileEntity tileEntity = getRemoteNeighborTile(localSide);
         if (tileEntity == null || !tileEntity.hasCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER, localSide)) {
             return null;

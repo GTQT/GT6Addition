@@ -1,6 +1,8 @@
 package com.drppp.gt6addition.mixin.gregtech;
 
 import com.drppp.gt6addition.api.machine.IAutomaticIgnitable;
+import com.drppp.gt6addition.api.utils.GTIgnitionHelper;
+import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityMiniPortal;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.util.GTUtility;
 import gregtech.common.items.behaviors.LighterBehaviour;
@@ -30,7 +32,17 @@ public abstract class MetaItemLighterBehaviourMixin {
         }
 
         MetaTileEntity metaTileEntity = GTUtility.getMetaTileEntity(world, pos);
+        if (metaTileEntity instanceof MetaTileEntityMiniPortal
+                && GTIgnitionHelper.isIgnitionItem(heldStack)) {
+            if (((MetaTileEntityMiniPortal) metaTileEntity).tryActivateFromIgnitionItem(player, hand, heldStack)) {
+                callback.setReturnValue(EnumActionResult.SUCCESS);
+            }
+            return;
+        }
         if (!(metaTileEntity instanceof IAutomaticIgnitable)) {
+            return;
+        }
+        if (!GTIgnitionHelper.isIgnitionItem(heldStack)) {
             return;
         }
         if (world.isRemote) {
