@@ -42,3 +42,15 @@ run/config/gregtech/gregtech.cfg
 run/config/gregtech/modules.cfg
 run/config/gregtech/persistent_data.dat
 run/config/splash.properties
+.gradle/9.2.1/checksums/sha1-checksums.bin
+.gradle/9.2.1/fileHashes/resourceHashesCache.bin
+.gradle/buildOutputCleanup/outputFiles.bin
+AGENTS.md
+run/config/AppliedEnergistics2/CustomRecipes.cfg
+run/config/AppliedEnergistics2/items.csv
+run/config/AppliedEnergistics2/VersionChecker.cfg
+run/config/forgeChunkLoading.cfg
+run/config/gregtech/gregtech.cfg
+run/config/gregtech/modules.cfg
+run/config/gregtech/persistent_data.dat
+run/config/splash.properties
