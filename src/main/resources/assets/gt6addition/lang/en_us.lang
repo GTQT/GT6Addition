@@ -477,6 +477,16 @@ gt6addition.machine.hu_fermenter.tooltip=§6Use: §fRuns fermenting recipes; see
 gt6addition.machine.mu_polarizer.tooltip=§6Use: §fRuns polarizer recipes; see JEI for available recipes.
 gt6addition.machine.mu_separator.tooltip=§6Use: §fRuns electromagnetic-separator recipes; see JEI for available recipes.
 gt6addition.jei.crucible.title=Crucible Smelting
+gt6addition.jei.crucible.alloy_title=Crucible Alloying
+gt6addition.jei.crucible.input=Ingredients
+gt6addition.jei.crucible.output=Melt
+gt6addition.jei.crucible.yield=Batch output: %s L
+gt6addition.jei.crucible.ratio_component=Ratio: %s
+gt6addition.jei.crucible.alternatives=Rotating items in this slot are equal-amount alternatives; choose one
+gt6addition.jei.crucible.ratio_hint=Hover for ratios and conditions
+gt6addition.jei.crucible.melting_hint=Choose one alternative per slot
+gt6addition.jei.crucible.ratio_unit=Material ratio: 1 part = 1 ingot = 144 L
+gt6addition.jei.crucible.heat_note=Requires external heat and a crucible rated above the required temperature
 gt6addition.jei.crucible.temperature=Temperature: %s K
 gt6addition.jei.crucible.melting=Melting
 gt6addition.jei.crucible.alloying=Alloying

@@ -14,22 +14,30 @@ import net.minecraft.client.resources.I18n;
 public class CrucibleJeiCategory implements IRecipeCategory<CrucibleJeiRecipe> {
 
     public static final String UID = Tags.MOD_ID + ".crucible_smelting";
-    private static final int INPUT_SLOT_COUNT = 6;
+    public static final String ALLOY_UID = Tags.MOD_ID + ".crucible_alloying";
 
     private final IDrawable background;
+    private final IDrawable slot;
+    private final boolean alloying;
 
     public CrucibleJeiCategory(IGuiHelper guiHelper) {
-        this.background = guiHelper.createBlankDrawable(160, 84);
+        this(guiHelper, false);
+    }
+
+    public CrucibleJeiCategory(IGuiHelper guiHelper, boolean alloying) {
+        this.alloying = alloying;
+        this.background = guiHelper.createBlankDrawable(176, 138);
+        this.slot = guiHelper.getSlotDrawable();
     }
 
     @Override
     public String getUid() {
-        return UID;
+        return alloying ? ALLOY_UID : UID;
     }
 
     @Override
     public String getTitle() {
-        return I18n.format("gt6addition.jei.crucible.title");
+        return I18n.format(alloying ? "gt6addition.jei.crucible.alloy_title" : "gt6addition.jei.crucible.title");
     }
 
     @Override
@@ -44,19 +52,31 @@ public class CrucibleJeiCategory implements IRecipeCategory<CrucibleJeiRecipe> {
 
     @Override
     public void drawExtras(Minecraft minecraft) {
-        minecraft.fontRenderer.drawString("->", 112, 27, 0x404040);
+        minecraft.fontRenderer.drawString(I18n.format("gt6addition.jei.crucible.input"), 4, 4, 0x404040);
+        minecraft.fontRenderer.drawString(I18n.format("gt6addition.jei.crucible.output"), 130, 4, 0x404040);
+        minecraft.fontRenderer.drawString("->", 94, 43, 0x806040);
+        net.minecraft.client.gui.Gui.drawRect(128, 19, 152, 79, 0xFF555555);
+        net.minecraft.client.gui.Gui.drawRect(129, 20, 151, 78, 0xFFDDDDDD);
     }
 
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, CrucibleJeiRecipe recipeWrapper, IIngredients ingredients) {
         IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
-        for (int i = 0; i < INPUT_SLOT_COUNT; i++) {
-            itemStacks.init(i, true, 3 + (i % 3) * 20, 8 + (i / 3) * 20);
+        for (int i = 0; i < recipeWrapper.getInputCount(); i++) {
+            itemStacks.init(i, true, 4 + (i % 3) * 22, 20 + (i / 3) * 20);
+            itemStacks.setBackground(i, slot);
         }
         itemStacks.set(ingredients);
+        itemStacks.addTooltipCallback((index, input, stack, tooltip) -> {
+            if (input && index < recipeWrapper.getComponentInfo().size()) {
+                tooltip.add(I18n.format("gt6addition.jei.crucible.ratio_component",
+                        recipeWrapper.getComponentInfo().get(index)));
+            }
+            if (input) tooltip.add(I18n.format("gt6addition.jei.crucible.alternatives"));
+        });
 
         IGuiFluidStackGroup fluidStacks = recipeLayout.getFluidStacks();
-        fluidStacks.init(0, false, 134, 8, 16, 48, recipeWrapper.getOutputFluid().amount, false, null);
+        fluidStacks.init(0, false, 132, 23, 16, 52, recipeWrapper.getOutputFluid().amount, false, null);
         fluidStacks.set(ingredients);
     }
 }

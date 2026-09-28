@@ -35,6 +35,10 @@ public class CrucibleJeiRecipe implements IRecipeWrapper {
         return outputFluid;
     }
 
+    public boolean isAlloying() { return alloying; }
+    public int getInputCount() { return inputs.size(); }
+    public List<String> getComponentInfo() { return componentInfo; }
+
     @Override
     public void getIngredients(IIngredients ingredients) {
         ingredients.setInputLists(ItemStack.class, inputs);
@@ -44,20 +48,34 @@ public class CrucibleJeiRecipe implements IRecipeWrapper {
     @Override
     public void drawInfo(Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
         String typeKey = alloying ? "gt6addition.jei.crucible.alloying" : "gt6addition.jei.crucible.melting";
-        minecraft.fontRenderer.drawString(I18n.format(typeKey), 3, 58, 0x404040);
-        minecraft.fontRenderer.drawString(I18n.format("gt6addition.jei.crucible.temperature", temperature), 3, 70, 0x404040);
-        if (alloying) {
-            drawComponentInfo(minecraft);
-        }
+        drawLine(minecraft, I18n.format(typeKey) + " · " + outputFluid.getLocalizedName(), 84, 0x404040);
+        drawLine(minecraft, I18n.format("gt6addition.jei.crucible.temperature", temperature), 97, 0xA04420);
+        drawLine(minecraft, I18n.format("gt6addition.jei.crucible.yield", outputFluid.amount), 110, 0x404040);
+        drawLine(minecraft, I18n.format(alloying ? "gt6addition.jei.crucible.ratio_hint" :
+                "gt6addition.jei.crucible.melting_hint"), 123, 0x606060);
     }
 
-    private void drawComponentInfo(Minecraft minecraft) {
-        String text = componentInfo.isEmpty() ?
-                I18n.format("gt6addition.jei.crucible.alloy_note") :
-                I18n.format("gt6addition.jei.crucible.components", String.join(" + ", componentInfo));
-        List<String> lines = minecraft.fontRenderer.listFormattedStringToWidth(text, 92);
-        for (int i = 0; i < Math.min(2, lines.size()); i++) {
-            minecraft.fontRenderer.drawString(lines.get(i), 66, 58 + i * 10, 0x606060);
+    private void drawLine(Minecraft minecraft, String text, int y, int color) {
+        if (minecraft.fontRenderer.getStringWidth(text) > 168) {
+            text = minecraft.fontRenderer.trimStringToWidth(text, 156) + "...";
         }
+        minecraft.fontRenderer.drawString(text, 4, y, color);
+    }
+
+    @Override
+    public List<String> getTooltipStrings(int mouseX, int mouseY) {
+        if (mouseX < 0 || mouseX >= 176 || mouseY < 82 || mouseY >= 138) return Collections.emptyList();
+        List<String> tooltip = new java.util.ArrayList<>();
+        tooltip.add(outputFluid.getLocalizedName());
+        tooltip.add(I18n.format("gt6addition.jei.crucible.temperature", temperature));
+        tooltip.add(I18n.format("gt6addition.jei.crucible.yield", outputFluid.amount));
+        if (alloying) {
+            tooltip.add(I18n.format("gt6addition.jei.crucible.components", ""));
+            tooltip.addAll(componentInfo);
+            tooltip.add(I18n.format("gt6addition.jei.crucible.ratio_unit"));
+            tooltip.add(I18n.format("gt6addition.jei.crucible.alloy_note"));
+        }
+        tooltip.add(I18n.format("gt6addition.jei.crucible.heat_note"));
+        return tooltip;
     }
 }

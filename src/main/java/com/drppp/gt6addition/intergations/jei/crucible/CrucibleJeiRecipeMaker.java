@@ -17,7 +17,7 @@ import java.util.List;
 
 public final class CrucibleJeiRecipeMaker {
 
-    private static final int MAX_COMPONENT_SLOTS = 6;
+    private static final int MAX_COMPONENT_SLOTS = 9;
 
     private CrucibleJeiRecipeMaker() {}
 
@@ -35,7 +35,8 @@ public final class CrucibleJeiRecipeMaker {
 
     private static void addMeltingRecipe(List<CrucibleJeiRecipe> recipes, Material material) {
         List<ItemStack> input = getMaterialInputs(material, GTValues.M);
-        FluidStack output = material.getFluid(GTValues.L);
+        Material target = getSmeltingTarget(material);
+        FluidStack output = target.hasFluid() ? target.getFluid(GTValues.L) : null;
         if (input.isEmpty() || output == null) {
             return;
         }
@@ -53,19 +54,28 @@ public final class CrucibleJeiRecipeMaker {
 
         List<List<ItemStack>> inputs = new ArrayList<>();
         List<String> componentInfo = new ArrayList<>();
+        long divisor = 0;
+        for (MaterialStack component : components) {
+            divisor = gcd(divisor, Math.max(1L, component.amount));
+        }
         long outputUnits = 0;
+        List<Integer> meltingPoints = new ArrayList<>();
         for (MaterialStack component : components) {
             Material componentMaterial = getSmeltingTarget(component.material);
             if (componentMaterial == null || componentMaterial == Materials.NULL) {
                 return;
             }
-            long componentAmount = Math.max(1L, component.amount);
+            // Material components are ratios, not GTValues.M-based stored quantities.
+            long parts = Math.max(1L, component.amount) / divisor;
+            if (parts > 64) return;
+            long componentAmount = parts * GTValues.M;
             List<ItemStack> input = getMaterialInputs(componentMaterial, componentAmount);
             if (input.isEmpty()) {
                 return;
             }
             inputs.add(input);
-            componentInfo.add(componentMaterial.getLocalizedName() + " " + formatAmount(componentAmount));
+            componentInfo.add(componentMaterial.getLocalizedName() + " × " + parts);
+            meltingPoints.add(getMeltingTemperature(componentMaterial));
             outputUnits += componentAmount;
         }
 
@@ -73,17 +83,23 @@ public final class CrucibleJeiRecipeMaker {
         if (output == null || output.amount <= 0) {
             return;
         }
-        recipes.add(new CrucibleJeiRecipe(inputs, output, getMeltingTemperature(alloy), true, componentInfo));
+        // Runtime alloying requires the product melting point and at most one solid component.
+        java.util.Collections.sort(meltingPoints);
+        int temperature = Math.max(getMeltingTemperature(alloy), meltingPoints.get(meltingPoints.size() - 2));
+        recipes.add(new CrucibleJeiRecipe(inputs, output, temperature, true, componentInfo));
+    }
+
+    static long gcd(long a, long b) {
+        while (b != 0) {
+            long remainder = a % b;
+            a = b;
+            b = remainder;
+        }
+        return a;
     }
 
     private static boolean isUsableOutputMaterial(Material material) {
         return material != null && material != Materials.NULL && material.hasFluid() && material.getFluid(GTValues.L) != null;
-    }
-
-    private static List<ItemStack> singleInput(ItemStack stack) {
-        List<ItemStack> inputs = new ArrayList<>();
-        inputs.add(stack);
-        return inputs;
     }
 
     private static List<ItemStack> getMaterialInputs(Material material, long amount) {
@@ -142,15 +158,7 @@ public final class CrucibleJeiRecipeMaker {
         return blastTemperature > 0 ? blastTemperature : 1811;
     }
 
-    private static int toFluidAmount(long materialAmount) {
+    static int toFluidAmount(long materialAmount) {
         return (int) Math.min(Integer.MAX_VALUE, materialAmount * GTValues.L / GTValues.M);
-    }
-
-    private static String formatAmount(long materialAmount) {
-        int fluidAmount = toFluidAmount(materialAmount);
-        if (fluidAmount > 0) {
-            return fluidAmount + " L";
-        }
-        return materialAmount + " units";
     }
 }

@@ -18,15 +18,20 @@ public class GT6AdditionJeiPlugin implements IModPlugin {
     @Override
     public void registerCategories(IRecipeCategoryRegistration registry) {
         registry.addRecipeCategories(new CrucibleJeiCategory(registry.getJeiHelpers().getGuiHelper()));
+        registry.addRecipeCategories(new CrucibleJeiCategory(registry.getJeiHelpers().getGuiHelper(), true));
     }
 
     @Override
     public void register(IModRegistry registry) {
         List<CrucibleJeiRecipe> crucibleRecipes = CrucibleJeiRecipeMaker.createRecipes();
-        registry.addRecipes(crucibleRecipes, CrucibleJeiCategory.UID);
+        registry.addRecipes(crucibleRecipes.stream().filter(recipe -> !recipe.isAlloying())
+                .collect(java.util.stream.Collectors.toList()), CrucibleJeiCategory.UID);
+        registry.addRecipes(crucibleRecipes.stream().filter(CrucibleJeiRecipe::isAlloying)
+                .collect(java.util.stream.Collectors.toList()), CrucibleJeiCategory.ALLOY_UID);
         for (MetaTileEntityCrucible crucible : MetaTileEntityHandler.CRUCIBLE_HU) {
             if (crucible != null) {
                 registry.addRecipeCatalyst(crucible.getStackForm(), CrucibleJeiCategory.UID);
+                registry.addRecipeCatalyst(crucible.getStackForm(), CrucibleJeiCategory.ALLOY_UID);
             }
         }
     }

@@ -477,6 +477,16 @@ gt6addition.machine.hu_fermenter.tooltip=§6用途：§f运行发酵配方；使
 gt6addition.machine.mu_polarizer.tooltip=§6用途：§f运行电磁偏振配方；使用 JEI 查看可用配方。
 gt6addition.machine.mu_separator.tooltip=§6用途：§f运行电磁分选配方；使用 JEI 查看可用配方。
 gt6addition.jei.crucible.title=坩埚冶炼
+gt6addition.jei.crucible.alloy_title=坩埚合金
+gt6addition.jei.crucible.input=投入材料
+gt6addition.jei.crucible.output=熔体
+gt6addition.jei.crucible.yield=本批产出：%s L
+gt6addition.jei.crucible.ratio_component=配比：%s
+gt6addition.jei.crucible.alternatives=本槽轮换物品为等量替代品，无需全部投入
+gt6addition.jei.crucible.ratio_hint=悬停查看完整配比与条件
+gt6addition.jei.crucible.melting_hint=同槽材料任选一种
+gt6addition.jei.crucible.ratio_unit=配比按材料量计算：1 份 = 1 锭 = 144 L
+gt6addition.jei.crucible.heat_note=需要外部热源，且坩埚耐温须高于所需温度
 gt6addition.jei.crucible.temperature=温度：%s K
 gt6addition.jei.crucible.melting=熔化
 gt6addition.jei.crucible.alloying=合金化
