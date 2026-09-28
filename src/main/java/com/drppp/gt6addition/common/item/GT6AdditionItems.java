@@ -14,6 +14,7 @@ public final class GT6AdditionItems {
     public static final Item CLAY_CHANNEL = clayItem("clay_channel");
     public static final Item CLAY_BASIN = clayItem("clay_basin");
     public static final Item CLAY_MOLD = clayItem("clay_mold");
+    public static final ItemDrainCover DRAIN_COVER = new ItemDrainCover();
     public static final ItemBlock ANTHRACITE_ORE = createAnthraciteOreItem();
     public static final ItemBlock[] TREE_LOGS = createBlockItems(GT6AdditionBlocks.TREE_LOGS);
     public static final ItemBlock[] TREE_LEAVES = createBlockItems(GT6AdditionBlocks.TREE_LEAVES);

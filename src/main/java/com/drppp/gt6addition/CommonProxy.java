@@ -4,6 +4,7 @@ import com.drppp.gt6addition.api.capability.CapabilityHandler;
 import com.drppp.gt6addition.api.utils.MaterialColorUtil;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import com.drppp.gt6addition.common.material.GT6AdditionOrePrefixes;
+import com.drppp.gt6addition.common.cover.GT6AdditionCovers;
 import com.drppp.gt6addition.common.item.GT6AdditionItems;
 import com.drppp.gt6addition.common.block.GT6AdditionBlocks;
 import com.drppp.gt6addition.common.material.GT6MachineMaterials;
@@ -79,6 +80,7 @@ public class CommonProxy {
     }
 
     public void postInit(FMLPostInitializationEvent event) {
+        GT6AdditionCovers.register();
         LiquidBurringInfo.init();
         GT6AdditionRecipeMaps.init();
         GT6AdditionMachineRecipes.init();
@@ -95,6 +97,7 @@ public class CommonProxy {
         event.getRegistry().register(GT6AdditionItems.CLAY_CHANNEL);
         event.getRegistry().register(GT6AdditionItems.CLAY_BASIN);
         event.getRegistry().register(GT6AdditionItems.CLAY_MOLD);
+        event.getRegistry().register(GT6AdditionItems.DRAIN_COVER);
         event.getRegistry().register(GT6AdditionItems.ANTHRACITE_ORE);
         for (Item item : GT6AdditionItems.getTreeItems()) event.getRegistry().register(item);
         OreDictUnifier.registerOre(new ItemStack(GT6AdditionItems.ANTHRACITE_ORE),

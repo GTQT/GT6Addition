@@ -1615,19 +1615,47 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity imple
 
     @SideOnly(Side.CLIENT)
     private void renderDisplayedContent(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
-        if (displayHeight <= 0) {
+        if (displayHeight > 0) {
+            Material material = getDisplayedClientMaterial();
+            if (material != null) {
+                double top = WALL_SIZE + displayHeight / CONTENT_HEIGHT_SCALE;
+                Cuboid6 contentBounds = new Cuboid6(WALL_SIZE, WALL_SIZE, WALL_SIZE,
+                        1.0D - WALL_SIZE, top, 1.0D - WALL_SIZE);
+                IVertexOperation[] contentPipeline = ArrayUtils.add(pipeline,
+                        new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getContentRenderColor(material))));
+                Textures.renderFace(renderState, translation, contentPipeline, EnumFacing.UP, contentBounds,
+                        getContentSprite(material), BlockRenderLayer.CUTOUT_MIPPED);
+            }
+        }
+
+        renderSpecialFluid(renderState, translation, pipeline);
+    }
+
+    @SideOnly(Side.CLIENT)
+    private void renderSpecialFluid(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
+        if (displaySpecialFluidAmount <= 0 || displaySpecialFluidName.isEmpty()) {
             return;
         }
-        Material material = getDisplayedClientMaterial();
-        if (material == null) {
+        Fluid fluid = FluidRegistry.getFluid(displaySpecialFluidName);
+        if (fluid == null) {
             return;
         }
-        double top = WALL_SIZE + displayHeight / CONTENT_HEIGHT_SCALE;
-        Cuboid6 contentBounds = new Cuboid6(0.0D, 0.0D, 0.0D, 1.0D, top, 1.0D);
-        IVertexOperation[] contentPipeline = ArrayUtils.add(pipeline,
-                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getContentRenderColor(material))));
-        Textures.renderFace(renderState, translation, contentPipeline, EnumFacing.UP, contentBounds,
-                getContentSprite(material), BlockRenderLayer.CUTOUT_MIPPED);
+        FluidStack fluidStack = new FluidStack(fluid, displaySpecialFluidAmount);
+        ResourceLocation still = fluid.getStill(fluidStack);
+        if (still == null) {
+            return;
+        }
+
+        double fill = Math.min(1.0D, displaySpecialFluidAmount / (double) SPECIAL_FLUID_CAPACITY);
+        double top = WALL_SIZE + (1.0D - WALL_SIZE) * fill;
+        Cuboid6 fluidBounds = new Cuboid6(WALL_SIZE, WALL_SIZE, WALL_SIZE,
+                1.0D - WALL_SIZE, top, 1.0D - WALL_SIZE);
+        int fluidColor = fluid.getColor(fluidStack) & 0xFFFFFF;
+        IVertexOperation[] fluidPipeline = ArrayUtils.add(pipeline,
+                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(fluidColor)));
+        TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(still.toString());
+        Textures.renderFace(renderState, translation, fluidPipeline, EnumFacing.UP, fluidBounds,
+                sprite, BlockRenderLayer.CUTOUT_MIPPED);
     }
 
     @SideOnly(Side.CLIENT)

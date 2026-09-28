@@ -508,6 +508,10 @@ public final class GT6AdditionMachineRecipes {
     }
 
     private static void registerItemMachines() {
+        registerShaped("drain_cover", new ItemStack(GT6AdditionItems.DRAIN_COVER),
+                "RRR", "R R", "RRR",
+                'R', component(Materials.Iron, 1, OrePrefix.stick, OrePrefix.stickLong, OrePrefix.plate));
+
         registerShaped("mortar", MetaTileEntityHandler.MORTAR.getStackForm(),
                 " C ", "S S", "SSS",
                 'C', new ItemStack(Blocks.COBBLESTONE),
