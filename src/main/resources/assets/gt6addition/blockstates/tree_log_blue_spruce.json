@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "gt6addition:tree_log_blue_spruce"
+    },
+    "axis=z": {
+      "model": "gt6addition:tree_log_blue_spruce",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "gt6addition:tree_log_blue_spruce",
+      "x": 90,
+      "y": 90
+    },
+    "axis=none": {
+      "model": "gt6addition:tree_log_blue_spruce_bark"
+    }
+  }
+}

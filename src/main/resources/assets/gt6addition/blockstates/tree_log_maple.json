@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "gt6addition:tree_log_maple"
+    },
+    "axis=z": {
+      "model": "gt6addition:tree_log_maple",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "gt6addition:tree_log_maple",
+      "x": 90,
+      "y": 90
+    },
+    "axis=none": {
+      "model": "gt6addition:tree_log_maple_bark"
+    }
+  }
+}

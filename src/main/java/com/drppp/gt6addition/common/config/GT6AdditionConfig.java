@@ -15,6 +15,7 @@ public final class GT6AdditionConfig {
     public static boolean portalRelayGtEnergy = true;
     public static boolean portalRelayRedstoneComparator = true;
     public static boolean generateAnthraciteVeins = true;
+    public static boolean generateGT6Trees = true;
 
     private GT6AdditionConfig() {
     }
@@ -38,6 +39,10 @@ public final class GT6AdditionConfig {
                 "是否生成 GT6 风格的无烟煤矿层。\nWhether to generate GT6-style anthracite ore layers.");
         anthraciteVeins.setLanguageKey("gt6addition.config.world_generation.generate_anthracite_veins");
         generateAnthraciteVeins = anthraciteVeins.getBoolean(true);
+        Property gt6Trees = configuration.get("world_generation", "generateGT6Trees", true,
+                "是否生成 GT6 的榛树、柳树、枫树、椰子树和蓝云杉。\nWhether to generate GT6 Hazel, Willow, Maple, Coconut, and Blue Spruce trees.");
+        gt6Trees.setLanguageKey("gt6addition.config.world_generation.generate_gt6_trees");
+        generateGT6Trees = gt6Trees.getBoolean(true);
         if (configuration.hasChanged()) {
             configuration.save();
         }

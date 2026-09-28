@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "gt6addition:blocks/trees/sapling_willow"
+  }
+}

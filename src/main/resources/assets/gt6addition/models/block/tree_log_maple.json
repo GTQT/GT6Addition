@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "gt6addition:blocks/trees/log_maple_top",
+    "side": "gt6addition:blocks/trees/log_maple_side"
+  }
+}

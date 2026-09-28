@@ -15,6 +15,9 @@ public final class GT6AdditionItems {
     public static final Item CLAY_BASIN = clayItem("clay_basin");
     public static final Item CLAY_MOLD = clayItem("clay_mold");
     public static final ItemBlock ANTHRACITE_ORE = createAnthraciteOreItem();
+    public static final ItemBlock[] TREE_LOGS = createBlockItems(GT6AdditionBlocks.TREE_LOGS);
+    public static final ItemBlock[] TREE_LEAVES = createBlockItems(GT6AdditionBlocks.TREE_LEAVES);
+    public static final ItemBlock[] TREE_SAPLINGS = createBlockItems(GT6AdditionBlocks.TREE_SAPLINGS);
 
     private GT6AdditionItems() {
     }
@@ -30,5 +33,23 @@ public final class GT6AdditionItems {
         ItemBlock item = new ItemBlock(GT6AdditionBlocks.ANTHRACITE_ORE);
         item.setRegistryName(GT6AdditionBlocks.ANTHRACITE_ORE.getRegistryName());
         return item;
+    }
+
+    private static ItemBlock[] createBlockItems(net.minecraft.block.Block[] blocks) {
+        ItemBlock[] items = new ItemBlock[blocks.length];
+        for (int i = 0; i < blocks.length; i++) {
+            items[i] = new ItemBlock(blocks[i]);
+            items[i].setRegistryName(blocks[i].getRegistryName());
+        }
+        return items;
+    }
+
+    public static ItemBlock[] getTreeItems() {
+        ItemBlock[] items = new ItemBlock[TREE_LOGS.length + TREE_LEAVES.length + TREE_SAPLINGS.length];
+        int index = 0;
+        for (ItemBlock item : TREE_LOGS) items[index++] = item;
+        for (ItemBlock item : TREE_LEAVES) items[index++] = item;
+        for (ItemBlock item : TREE_SAPLINGS) items[index++] = item;
+        return items;
     }
 }
