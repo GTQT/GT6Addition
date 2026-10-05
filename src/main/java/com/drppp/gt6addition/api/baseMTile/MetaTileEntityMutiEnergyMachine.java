@@ -345,6 +345,29 @@ public class MetaTileEntityMutiEnergyMachine extends WorkableTieredMutiEnergyMet
     }
 
     @Override
+    protected void reinitializeEnergyContainer() {
+        long voltage = GTValues.V[getTier()];
+        boolean emitter = isEnergyEmitter();
+        this.energyContainer = new EnergyContainerHandler(this, voltage * 64L,
+                emitter ? 0L : voltage, emitter ? 0L : 2L,
+                emitter ? voltage : 0L, emitter ? getMaxInputOutputAmperage() : 0L) {
+            @Override
+            public long getInputAmperage() {
+                if (emitter) return super.getInputAmperage();
+                // Preserve the workable parent class's existing input behavior.
+                return getEnergyCapacity() / 2 > getEnergyStored() &&
+                        workable != null && workable.isActive() ? 2L : 1L;
+            }
+
+            @Override
+            public boolean isOneProbeHidden() {
+                // This mod's TOP provider displays the actual HU/KU/etc. proxy.
+                return true;
+            }
+        };
+    }
+
+    @Override
     public <T> T getCapability(Capability<T> capability, EnumFacing side) {
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             IFluidHandler fluidHandler = (side == getOutputFacingFluids() && !isAllowInputFromOutputSideFluids()) ?

@@ -14,13 +14,13 @@ import codechicken.lib.vec.uv.UVTranslation;
 import com.drppp.gt6addition.api.crucible.ICrucibleMold;
 import com.drppp.gt6addition.api.temperature.ITemperatureProvider;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
+import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
-import gregtech.api.unification.material.properties.IngotProperty;
-import gregtech.api.unification.material.properties.PropertyKey;
+import gregtech.api.unification.material.Materials;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
@@ -170,13 +170,13 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
             OrePrefix recipe = getMoldRecipe(shape);
             Material solidifyingMaterial = getSolidifyingMaterial(contentMaterial);
             ItemStack result = createOutput(recipe, solidifyingMaterial, contentAmount);
-            contentMaterial = null;
-            contentAmount = 0L;
             if (!result.isEmpty()) {
                 output = result;
+                contentMaterial = null;
+                contentAmount = 0L;
+                changed = true;
+                solidified = true;
             }
-            changed = true;
-            solidified = true;
         }
 
         if (changed) {
@@ -487,31 +487,15 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
 
     @Nullable
     private Material getSolidifyingMaterial(@Nullable Material material) {
-        if (material == null) {
-            return null;
-        }
-        if (material.hasProperty(PropertyKey.INGOT)) {
-            IngotProperty property = material.getProperty(PropertyKey.INGOT);
-            if (property.getSmeltingInto() != null) {
-                return property.getSmeltingInto();
-            }
-        }
-        return material;
+        return MetaTileEntityCrucible.getSolidifyingTarget(material);
     }
 
     private long getMaterialMeltingTemperature(Material material) {
-        if (material.hasFluid()) {
-            return material.getFluid().getTemperature();
-        }
-        return material.getBlastTemperature() > 0 ? material.getBlastTemperature() : 1811L;
+        return CrucibleMaterialPhaseData.meltingPoint(material);
     }
 
     private boolean isAcidMaterial(Material material) {
-        String materialName = material.getName();
-        if (materialName != null && materialName.toLowerCase(java.util.Locale.ROOT).contains("acid")) {
-            return true;
-        }
-        return material.hasFluid() && material.getFluid().getName().toLowerCase(java.util.Locale.ROOT).contains("acid");
+        return GT6MaterialHazardData.isAcidMaterial(material);
     }
 
     private ItemStack createOutput(@Nullable OrePrefix prefix, @Nullable Material material, long materialAmount) {
@@ -802,6 +786,17 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
     @Override
     public long getMoldRequiredMaterialUnits(@Nullable Material material) {
         Material solidifyingMaterial = getSolidifyingMaterial(material);
+        return getRequiredInputMaterialUnits(material, getRequiredOutputMaterialUnits(solidifyingMaterial));
+    }
+
+    private long getRequiredInputMaterialUnits(@Nullable Material material, long outputAmount) {
+        // GT6 keeps output units in mContent but returns the converted source
+        // consumption. Lava uses this project's 1000 mB per obsidian unit rule.
+        return material == Materials.Lava
+                ? CrucibleTransferLogic.requiredMoldInput(outputAmount, 1000L, GTValues.L) : outputAmount;
+    }
+
+    private long getRequiredOutputMaterialUnits(@Nullable Material solidifyingMaterial) {
         OrePrefix prefix = getMoldRecipe(shape);
         if (solidifyingMaterial == null || prefix == null) {
             return 0L;
@@ -818,7 +813,8 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
     public long fillMold(Material material, long materialAmount, long temperature, @Nullable EnumFacing side,
                          boolean simulate) {
         if (material == null || materialAmount <= 0L || !isMoldInputSide(side)
-                || contentMaterial != null || contentAmount > 0L || !output.isEmpty()) {
+                || contentMaterial != null || contentAmount > 0L || !output.isEmpty()
+                || temperature < getMaterialMeltingTemperature(material)) {
             return 0L;
         }
         if (!acidProof && isAcidMaterial(material)) {
@@ -826,10 +822,11 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
         }
         Material solidifyingMaterial = getSolidifyingMaterial(material);
         OrePrefix prefix = getMoldRecipe(shape);
-        long requiredAmount = getMoldRequiredMaterialUnits(solidifyingMaterial);
+        long outputAmount = getRequiredOutputMaterialUnits(solidifyingMaterial);
+        long requiredAmount = getRequiredInputMaterialUnits(material, outputAmount);
         if (solidifyingMaterial == null || prefix == null || requiredAmount <= 0L
                 || materialAmount < requiredAmount
-                || createOutput(prefix, solidifyingMaterial, requiredAmount).isEmpty()) {
+                || createOutput(prefix, solidifyingMaterial, outputAmount).isEmpty()) {
             return 0L;
         }
 
@@ -839,7 +836,9 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
             // target at the phase transition; resolving the output material
             // here can discard the molten texture (e.g. lava -> obsidian).
             contentMaterial = material;
-            contentAmount = requiredAmount;
+            // This is the future casting amount, not the source quantity
+            // returned to the crucible (different for lava -> obsidian).
+            contentAmount = outputAmount;
             this.temperature = temperature;
             this.coolingStartTemperature = temperature;
             markDirty();

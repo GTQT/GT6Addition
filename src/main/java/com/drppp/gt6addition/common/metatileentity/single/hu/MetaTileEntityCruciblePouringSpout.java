@@ -15,6 +15,7 @@ import gregtech.api.unification.material.Material;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
+import net.minecraft.block.BlockLiquid;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
@@ -36,7 +37,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Locale;
 
 /** GT6 MultiTileEntityFaucet's dedicated Crucible Pouring Spout. */
 public class MetaTileEntityCruciblePouringSpout extends MetaTileEntity implements ICrucibleMold {
@@ -121,9 +121,10 @@ public class MetaTileEntityCruciblePouringSpout extends MetaTileEntity implement
 
     @Override public long fillMold(Material material, long amount, long temperature, @Nullable EnumFacing side, boolean simulate) {
         if (side != getFrontFacing() || material == null || amount <= 0L ||
-                (!acidProof && material.getName().toLowerCase(Locale.ROOT).contains("acid"))) return 0L;
+                (!acidProof && GT6MaterialHazardData.isAcidMaterial(material))) return 0L;
         if (temperature > maxTemperature) {
-            if (!simulate) getWorld().setBlockState(getPos(), Blocks.FLOWING_LAVA.getDefaultState(), 3);
+            if (!simulate) getWorld().setBlockState(getPos(),
+                    Blocks.FLOWING_LAVA.getDefaultState().withProperty(BlockLiquid.LEVEL, 1), 3);
         }
         BlockPos cursor = getPos().down();
         while (cursor.getY() > 0) {

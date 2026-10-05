@@ -1,25 +1,35 @@
 package com.drppp.gt6addition.common.recipes;
 
 import com.drppp.gt6addition.Tags;
+import com.drppp.gt6addition.GT6AdditionMain;
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
 import com.drppp.gt6addition.common.item.GT6AdditionItems;
 import com.drppp.gt6addition.common.material.GT6AdditionOrePrefixes;
 import com.drppp.gt6addition.common.material.GT6MachineMaterials;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
+import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
+import gregtech.api.recipes.ingredients.GTRecipeInput;
+import gregtech.api.recipes.ingredients.GTRecipeItemInput;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.unification.ore.OrePrefix;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.FurnaceRecipes;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class GT6AdditionMachineRecipes {
 
@@ -68,6 +78,120 @@ public final class GT6AdditionMachineRecipes {
         registerItemMachines();
         registerMuSeries();
         registerScrapMaceratorRecipes();
+        registerTreeCokeOvenRecipes();
+    }
+
+    /**
+     * GTCEu's default Coke Oven recipe accepts every item in the logWood ore dictionary.
+     * Split that recipe so only this mod's GT6 tree logs get the doubled GT6 yield.
+     */
+    private static void registerTreeCokeOvenRecipes() {
+        Recipe standardWoodRecipe = findStandardWoodCokeOvenRecipe();
+        if (standardWoodRecipe == null) {
+            GT6AdditionMain.LOGGER.warn("Could not find the standard logWood Coke Oven recipe; GT6 tree yields were not changed.");
+            return;
+        }
+        if (!RecipeMaps.COKE_OVEN_RECIPES.removeRecipe(standardWoodRecipe)) {
+            GT6AdditionMain.LOGGER.warn("Could not replace the standard logWood Coke Oven recipe; GT6 tree yields were not changed.");
+            return;
+        }
+
+        List<ItemStack> otherLogs = getOtherLogWoodStacks();
+        if (!otherLogs.isEmpty()) {
+            GTRecipeInput otherLogInput = new GTRecipeItemInput(otherLogs.toArray(new ItemStack[0]));
+            RecipeMaps.COKE_OVEN_RECIPES.recipeBuilder()
+                    .inputs(otherLogInput)
+                    .outputs(copyItemOutputs(standardWoodRecipe, 1))
+                    .fluidOutputs(copyFluidOutputs(standardWoodRecipe, 1))
+                    .duration(standardWoodRecipe.getDuration())
+                    .EUt(standardWoodRecipe.getEUt())
+                    .buildAndRegister();
+        }
+
+        for (Item logItem : GT6AdditionItems.TREE_LOGS) {
+            RecipeMaps.COKE_OVEN_RECIPES.recipeBuilder()
+                    .inputs(new ItemStack(logItem))
+                    .outputs(copyItemOutputs(standardWoodRecipe, 2))
+                    .fluidOutputs(copyFluidOutputs(standardWoodRecipe, 2))
+                    .duration(standardWoodRecipe.getDuration())
+                    .EUt(standardWoodRecipe.getEUt())
+                    .buildAndRegister();
+        }
+    }
+
+    private static Recipe findStandardWoodCokeOvenRecipe() {
+        ItemStack charcoal = OreDictUnifier.get(OrePrefix.gem, Materials.Charcoal, 1);
+        FluidStack creosote = Materials.Creosote.getFluid(250);
+        if (charcoal.isEmpty() || creosote == null) {
+            return null;
+        }
+
+        for (Recipe recipe : RecipeMaps.COKE_OVEN_RECIPES.getRecipeList()) {
+            if (recipe.getInputs().size() != 1 || recipe.getOutputs().size() != 1 ||
+                    recipe.getFluidOutputs().size() != 1) {
+                continue;
+            }
+            GTRecipeInput input = recipe.getInputs().get(0);
+            ItemStack itemOutput = recipe.getOutputs().get(0);
+            FluidStack fluidOutput = recipe.getFluidOutputs().get(0);
+            if (input.isOreDict() && "logWood".equals(OreDictionary.getOreName(input.getOreDict())) &&
+                    itemOutput.getCount() == 1 && itemOutput.isItemEqual(charcoal) &&
+                    fluidOutput.amount == creosote.amount && fluidOutput.isFluidEqual(creosote)) {
+                return recipe;
+            }
+        }
+        return null;
+    }
+
+    private static List<ItemStack> getOtherLogWoodStacks() {
+        List<ItemStack> stacks = new ArrayList<>();
+        for (ItemStack oreStack : OreDictionary.getOres("logWood")) {
+            if (oreStack.isEmpty() || isGT6TreeLog(oreStack.getItem())) {
+                continue;
+            }
+            ItemStack stack = oreStack.copy();
+            stack.setCount(1);
+            boolean duplicate = false;
+            for (ItemStack existing : stacks) {
+                if (ItemStack.areItemStacksEqual(existing, stack)) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (!duplicate) {
+                stacks.add(stack);
+            }
+        }
+        return stacks;
+    }
+
+    private static boolean isGT6TreeLog(Item item) {
+        for (Item treeLog : GT6AdditionItems.TREE_LOGS) {
+            if (treeLog == item) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<ItemStack> copyItemOutputs(Recipe recipe, int multiplier) {
+        List<ItemStack> outputs = new ArrayList<>();
+        for (ItemStack output : recipe.getOutputs()) {
+            ItemStack copy = output.copy();
+            copy.setCount(copy.getCount() * multiplier);
+            outputs.add(copy);
+        }
+        return outputs;
+    }
+
+    private static List<FluidStack> copyFluidOutputs(Recipe recipe, int multiplier) {
+        List<FluidStack> outputs = new ArrayList<>();
+        for (FluidStack output : recipe.getFluidOutputs()) {
+            FluidStack copy = output.copy();
+            copy.amount *= multiplier;
+            outputs.add(copy);
+        }
+        return outputs;
     }
 
     private static void registerScrapMaceratorRecipes() {

@@ -6,9 +6,15 @@
   "minVersion": "0.8.3",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "gregtech.ElectricContainerInfoProviderMixin",
     "gregtech.MetaItemLighterBehaviourMixin",
-    "gregtech.GTFlintAndSteelToolBehaviorMixin"
+    "gregtech.GTFlintAndSteelToolBehaviorMixin",
+    "gregtech.HeatNetTransferBudgetMixin",
+    "gregtech.CrucibleToolRecipeMixin",
+    "gregtech.CrucibleToolMachineRecipeMixin",
+    "gregtech.CrucibleElectricCraftingMixin",
+    "gregtech.CrucibleElectricHeadReplacementMixin",
+    "gregtech.CrucibleElectricToolBreakMixin",
+    "gregtech.CrucibleElectricCraftingBreakMixin"
   ],
   "server": [],
   "client":["gregtech.AnthraciteOreByProductMixin"]

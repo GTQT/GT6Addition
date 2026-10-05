@@ -6,6 +6,7 @@ import com.drppp.gt6addition.client.Gt6AdditionTextures;
 import com.drppp.gt6addition.common.material.GT6AdditionOrePrefixes;
 import com.drppp.gt6addition.common.cover.GT6AdditionCovers;
 import com.drppp.gt6addition.common.item.GT6AdditionItems;
+import com.drppp.gt6addition.common.item.GT6CastingIngotItem;
 import com.drppp.gt6addition.common.block.GT6AdditionBlocks;
 import com.drppp.gt6addition.common.material.GT6MachineMaterials;
 import com.drppp.gt6addition.common.fluid.GT6PotionFluids;
@@ -40,6 +41,7 @@ public class CommonProxy {
     public static void registerOrePrefixes(PostMaterialEvent event) {
         // GTCEu posts this after creating material registries and before MetaItems.init().
         GT6AdditionOrePrefixes.register();
+        GT6CastingIngotItem.registerFluorite();
         com.drppp.gt6addition.common.recipes.AnthraciteProcessing.register();
     }
 

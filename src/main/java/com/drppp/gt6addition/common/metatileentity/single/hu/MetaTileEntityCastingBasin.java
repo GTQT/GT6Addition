@@ -18,7 +18,6 @@ import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
-import gregtech.api.unification.material.properties.PropertyKey;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
@@ -62,6 +61,8 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
 
     private static final String NBT_MATERIAL = "Material";
     private static final String NBT_AMOUNT = "Amount";
+    private static final String NBT_FLUID_REMAINDER = "FluidRemainder";
+    private static final String NBT_FLUID_QUANTITY_VERSION = "FluidQuantityVersion";
     private static final String NBT_TEMPERATURE = "Temperature";
     private static final int DATA_DISPLAY_STATE = 201;
     private static final long CAPACITY = 9L * GTValues.M;
@@ -85,6 +86,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
 
     private Material material;
     private long materialAmount;
+    private int fluidRemainder;
     private long temperature = ENVIRONMENT_TEMPERATURE;
     private int displayHeight;
     private int lastDisplayHeight = -1;
@@ -120,7 +122,9 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     public void update() {
         super.update();
         if (!getWorld().isRemote && getOffsetTimer() % 20 == 0) {
+            long previousTemperature = temperature;
             coolDown();
+            if (temperature != previousTemperature) markDirty();
             refreshDisplayState();
         }
     }
@@ -145,7 +149,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
             }
             return true;
         }
-        if (materialAmount <= 0 || material == null) {
+        if (!hasContents()) {
             player.sendStatusMessage(new TextComponentTranslation("gt6addition.machine.casting_basin.status.empty"), true);
             return true;
         }
@@ -160,7 +164,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
         }
         ItemHandlerHelper.giveItemToPlayer(player, result.output);
         materialAmount -= Math.min(materialAmount, result.materialAmount);
-        if (materialAmount <= 0) {
+        if (materialAmount <= 0 && fluidRemainder <= 0) {
             material = null;
             temperature = ENVIRONMENT_TEMPERATURE;
         }
@@ -170,7 +174,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     }
 
     private void coolDown() {
-        if (materialAmount <= 0) {
+        if (!hasContents()) {
             temperature = ENVIRONMENT_TEMPERATURE;
             return;
         }
@@ -182,7 +186,15 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     }
 
     private boolean isMolten() {
-        return material != null && materialAmount > 0 && temperature >= getMeltingTemperature(material);
+        return hasContents() && temperature >= getMeltingTemperature(material);
+    }
+
+    private boolean hasContents() {
+        return material != null && (materialAmount > 0 || fluidRemainder > 0);
+    }
+
+    private long occupiedAmount() {
+        return CrucibleTransferLogic.saturatingMaterialSum(materialAmount, fluidRemainder > 0 ? 1 : 0);
     }
 
     @Override
@@ -200,14 +212,16 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
         if (material != null && requestedMaterial != null && material != requestedMaterial) {
             return 0L;
         }
-        return Math.max(0L, CAPACITY - materialAmount);
+        return Math.max(0L, CAPACITY - occupiedAmount());
     }
 
     @Override
     public long fillMold(Material incomingMaterial, long incomingAmount, long incomingTemperature,
                          @Nullable EnumFacing side, boolean simulate) {
         if (incomingMaterial == null || incomingMaterial == Materials.NULL || incomingAmount <= 0L ||
-                !isMoldInputSide(side) || !hasSolidOutput(incomingMaterial)) {
+                (!acidProof && GT6MaterialHazardData.isAcidMaterial(incomingMaterial)) ||
+                !isMoldInputSide(side) || !hasSolidOutput(incomingMaterial) ||
+                incomingTemperature < getMeltingTemperature(incomingMaterial)) {
             return 0L;
         }
         if (incomingTemperature > maxTemperature) {
@@ -219,18 +233,20 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
         if (material != null && material != incomingMaterial) {
             return 0L;
         }
-        long acceptedAmount = Math.min(incomingAmount, Math.max(0L, CAPACITY - materialAmount));
+        long acceptedAmount = Math.min(incomingAmount, Math.max(0L, CAPACITY - occupiedAmount()));
         if (acceptedAmount <= 0L) {
             return 0L;
         }
         if (!simulate) {
-            if (material == null || materialAmount <= 0L) {
+            if (!hasContents()) {
                 material = incomingMaterial;
                 temperature = incomingTemperature;
                 materialAmount = acceptedAmount;
+                fluidRemainder = 0;
             } else {
                 long totalAmount = materialAmount + acceptedAmount;
-                temperature = (temperature * materialAmount + incomingTemperature * acceptedAmount) / totalAmount;
+                temperature = CrucibleTransferLogic.mixTemperature(temperature, occupiedAmount(),
+                        incomingTemperature, acceptedAmount);
                 materialAmount = totalAmount;
             }
             markDirty();
@@ -241,18 +257,27 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
 
     @Nullable
     private CastResult createCastResult() {
-        if (material == null || materialAmount <= 0) {
+        if (!hasContents()) {
             return null;
+        }
+        Material solid = MetaTileEntityCrucible.getSolidifyingTarget(material);
+        if (solid == null || solid == Materials.NULL) return null;
+        if (solid == Materials.Obsidian) {
+            long unitAmount = material == Materials.Lava ?
+                    CrucibleFluidUnits.materialAmount(1000, GTValues.L) : GTValues.M;
+            int count = (int) Math.min(64L, materialAmount / unitAmount);
+            return count <= 0 ? null : new CastResult(new ItemStack(Blocks.OBSIDIAN, count),
+                    count * unitAmount);
         }
         OrePrefix[] prefixes = {OrePrefix.block, OrePrefix.ingot, OrePrefix.dust, OrePrefix.nugget,
                 OrePrefix.dustSmall, OrePrefix.dustTiny};
         for (OrePrefix prefix : prefixes) {
-            long unitAmount = prefix.getMaterialAmount(material);
+            long unitAmount = prefix.getMaterialAmount(solid);
             if (unitAmount <= 0L || materialAmount < unitAmount) {
                 continue;
             }
             int count = (int) Math.min(64L, materialAmount / unitAmount);
-            ItemStack output = OreDictUnifier.get(prefix, material, count);
+            ItemStack output = OreDictUnifier.get(prefix, solid, count);
             if (!output.isEmpty()) {
                 return new CastResult(output, unitAmount * count);
             }
@@ -261,9 +286,11 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     }
 
     private boolean hasSolidOutput(Material material) {
+        material = MetaTileEntityCrucible.getSolidifyingTarget(material);
         if (material == null || material == Materials.NULL) {
             return false;
         }
+        if (material == Materials.Obsidian) return true;
         OrePrefix[] prefixes = {OrePrefix.block, OrePrefix.ingot, OrePrefix.dust, OrePrefix.nugget,
                 OrePrefix.dustSmall, OrePrefix.dustTiny};
         for (OrePrefix prefix : prefixes) {
@@ -277,6 +304,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     private void meltDown() {
         material = null;
         materialAmount = 0L;
+        fluidRemainder = 0;
         temperature = ENVIRONMENT_TEMPERATURE;
         markDirty();
         refreshDisplayState();
@@ -303,13 +331,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     }
 
     private int getMeltingTemperature(Material material) {
-        if (material.hasFluid()) {
-            return material.getFluid().getTemperature();
-        }
-        if (material.hasProperty(PropertyKey.INGOT)) {
-            return material.getBlastTemperature() > 0 ? material.getBlastTemperature() : 1811;
-        }
-        return 1811;
+        return CrucibleMaterialPhaseData.meltingPoint(material);
     }
 
     private static long getDefaultMaxTemperature(int tier) {
@@ -317,15 +339,15 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     }
 
     private int toFluidAmount(long amount) {
-        return (int) Math.min(Integer.MAX_VALUE, amount * GTValues.L / GTValues.M);
+        return CrucibleFluidUnits.fluidAmount(amount, 0, currentFluidUnit());
     }
 
-    private long toMaterialAmount(int amount) {
-        return Math.max(1L, (amount * GTValues.M + GTValues.L - 1L) / GTValues.L);
+    private int currentFluidUnit() {
+        return CrucibleFluidUnits.defaultFluidUnit(material);
     }
 
     public int getStoredFluidAmount() {
-        return toFluidAmount(materialAmount);
+        return CrucibleFluidUnits.storedFluidVolume(materialAmount, fluidRemainder, currentFluidUnit());
     }
 
     public int getCapacityFluidAmount() {
@@ -347,7 +369,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     }
 
     public String getContentsDisplayName() {
-        return material == null || materialAmount <= 0 ? "" : material.getLocalizedName();
+        return !hasContents() ? "" : material.getLocalizedName();
     }
 
     public boolean isContentsMolten() {
@@ -387,14 +409,14 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     }
 
     private void calculateDisplayState() {
-        if (material == null || materialAmount <= 0) {
+        if (!hasContents()) {
             displayHeight = 0;
             displayMaterialName = "";
             displayMolten = false;
             return;
         }
-        displayHeight = (int) Math.min(255L, materialAmount * 255L / CAPACITY);
-        displayMaterialName = material.getName();
+        displayHeight = Math.min(255, CrucibleTransferLogic.materialFluidAmount(occupiedAmount(), CAPACITY, 255));
+        displayMaterialName = material.getRegistryName();
         displayMolten = isMolten();
     }
 
@@ -542,10 +564,17 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound data) {
         super.writeToNBT(data);
-        if (material != null && material != Materials.NULL && materialAmount > 0) {
-            data.setString(NBT_MATERIAL, material.getName());
+        data.setInteger(NBT_FLUID_QUANTITY_VERSION, 1);
+        if (hasContents() && material != Materials.NULL) {
+            data.setString(NBT_MATERIAL, material.getRegistryName());
             data.setLong(NBT_AMOUNT, materialAmount);
+            data.setInteger(NBT_FLUID_REMAINDER, fluidRemainder);
             data.setLong(NBT_TEMPERATURE, temperature);
+        } else {
+            data.removeTag(NBT_MATERIAL);
+            data.removeTag(NBT_AMOUNT);
+            data.removeTag(NBT_FLUID_REMAINDER);
+            data.removeTag(NBT_TEMPERATURE);
         }
         return data;
     }
@@ -558,10 +587,23 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
             material = null;
         }
         materialAmount = data.getLong(NBT_AMOUNT);
+        fluidRemainder = data.getInteger(NBT_FLUID_REMAINDER);
+        int savedUnit = data.getInteger(NBT_FLUID_QUANTITY_VERSION) >= 1 ? CrucibleFluidUnits.STORAGE_UNIT :
+                material == null ? GTValues.L : CrucibleFluidUnits.legacyFluidUnit(material.getName());
+        if (fluidRemainder < 0 || fluidRemainder >= savedUnit) fluidRemainder = 0;
+        if (savedUnit != CrucibleFluidUnits.STORAGE_UNIT && materialAmount >= 0) {
+            CrucibleFluidUnits.Quantity migrated = CrucibleFluidUnits.migrateStoredQuantity(
+                    materialAmount, fluidRemainder, savedUnit);
+            if (migrated != null) {
+                materialAmount = migrated.amount;
+                fluidRemainder = migrated.remainder;
+            }
+        }
         temperature = data.hasKey(NBT_TEMPERATURE) ? data.getLong(NBT_TEMPERATURE) : ENVIRONMENT_TEMPERATURE;
-        if (material == null || materialAmount <= 0) {
+        if (materialAmount < 0 || !hasContents()) {
             material = null;
             materialAmount = 0;
+            fluidRemainder = 0;
         }
         calculateDisplayState();
         rememberDisplayState();
@@ -618,9 +660,20 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
 
         @Override
         public IFluidTankProperties[] getTankProperties() {
-            FluidStack content = material == null || materialAmount <= 0 || !material.hasFluid() ?
-                    null : material.getFluid(toFluidAmount(materialAmount));
-            return new IFluidTankProperties[]{new FluidTankProperties(content, toFluidAmount(CAPACITY), true, true)};
+            FluidStack content = !hasContents() || !material.hasFluid() || !isMolten() || getStoredFluidAmount() <= 0 ?
+                    null : material.getFluid(getStoredFluidAmount());
+            return new IFluidTankProperties[]{new FluidTankProperties(content, toFluidAmount(CAPACITY),
+                    occupiedAmount() < CAPACITY, content != null) {
+                @Override
+                public boolean canFillFluidType(FluidStack candidate) {
+                    return candidate != null && fill(candidate, false) > 0;
+                }
+
+                @Override
+                public boolean canDrainFluidType(FluidStack candidate) {
+                    return candidate != null && drain(candidate, false) != null;
+                }
+            }};
         }
 
         @Override
@@ -629,6 +682,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
             if (filledMaterial == null || resource == null || resource.amount <= 0) {
                 return 0;
             }
+            if (!acidProof && GT6MaterialHazardData.isAcidMaterial(filledMaterial)) return 0;
             long incomingTemperature = resource.getFluid().getTemperature(resource);
             if (!hasSolidOutput(filledMaterial)) {
                 return 0;
@@ -642,24 +696,27 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
             if (material != null && material != filledMaterial) {
                 return 0;
             }
-            long space = CAPACITY - materialAmount;
+            long space = CAPACITY - occupiedAmount();
             if (space <= 0) {
                 return 0;
             }
-            int acceptedFluid = Math.min(resource.amount, toFluidAmount(space));
+            int unit = CrucibleFluidUnits.defaultFluidUnit(filledMaterial);
+            int acceptedFluid = Math.min(resource.amount, CrucibleFluidUnits.fluidAmount(space, 0, unit));
             if (acceptedFluid <= 0) {
                 return 0;
             }
-            long acceptedMaterialAmount = Math.min(space, toMaterialAmount(acceptedFluid));
-            if (acceptedMaterialAmount <= 0) {
-                return 0;
-            }
+            CrucibleFluidUnits.Quantity added = CrucibleFluidUnits.storedFluidAmount(acceptedFluid, unit);
+            if (added == null) return 0;
+            CrucibleFluidUnits.Quantity merged = CrucibleFluidUnits.merge(materialAmount, fluidRemainder,
+                    added.amount, added.remainder, CrucibleFluidUnits.STORAGE_UNIT);
+            if (merged == null) return 0;
             if (doFill) {
-                long oldAmount = materialAmount;
+                long oldAmount = occupiedAmount();
                 material = filledMaterial;
-                materialAmount += acceptedMaterialAmount;
-                temperature = (temperature * Math.max(1L, oldAmount) + incomingTemperature * acceptedMaterialAmount) /
-                        Math.max(1L, oldAmount + acceptedMaterialAmount);
+                materialAmount = merged.amount;
+                fluidRemainder = merged.remainder;
+                temperature = CrucibleTransferLogic.mixTemperature(temperature, oldAmount, incomingTemperature,
+                        added.amount + (added.remainder > 0 ? 1 : 0));
                 markDirty();
                 refreshDisplayState();
             }
@@ -682,17 +739,21 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
         @Nullable
         @Override
         public FluidStack drain(int maxDrain, boolean doDrain) {
-            if (maxDrain <= 0 || material == null || materialAmount <= 0 || !material.hasFluid() || !isMolten()) {
+            if (maxDrain <= 0 || !hasContents() || !material.hasFluid() || !isMolten()) {
                 return null;
             }
-            int drainedFluid = Math.min(maxDrain, toFluidAmount(materialAmount));
+            int drainedFluid = Math.min(maxDrain, getStoredFluidAmount());
             if (drainedFluid <= 0) {
                 return null;
             }
             FluidStack result = material.getFluid(drainedFluid);
             if (doDrain) {
-                materialAmount -= Math.min(materialAmount, toMaterialAmount(drainedFluid));
-                if (materialAmount <= 0) {
+                CrucibleFluidUnits.Quantity remaining = CrucibleFluidUnits.drainStored(materialAmount, fluidRemainder,
+                        drainedFluid, currentFluidUnit());
+                if (remaining == null) return null;
+                materialAmount = remaining.amount;
+                fluidRemainder = remaining.remainder;
+                if (!hasContents()) {
                     material = null;
                     temperature = ENVIRONMENT_TEMPERATURE;
                 }

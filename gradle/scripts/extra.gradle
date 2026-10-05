@@ -1,5 +1,202 @@
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.AnnotationVisitor
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Type
+
+// Build-tool-only bytecode inspection, never shipped as a game dependency.
+buildscript {
+    repositories { mavenCentral() }
+    dependencies { classpath 'org.ow2.asm:asm:9.1' }
+}
+
 // You may write any gradle buildscript component in this file
 // This file is automatically applied after build.gradle + dependencies.gradle is ran
 
 // If you wish to use the default helper methods, uncomment the line below
 // apply from: 'gradle/scripts/helpers.gradle'
+
+// Check the artifact, not just source JSON: early loading and SRG mappings must
+// survive resource processing and packaging in a production environment.
+tasks.register('verifyMixinPackaging') {
+    group = 'verification'
+    dependsOn tasks.named('jar'), tasks.named('reobfJar')
+    inputs.file(tasks.named('jar').flatMap { it.archiveFile })
+    inputs.files(tasks.named('reobfJar').map { it.outputs.files })
+    doLast {
+        def productionArchives = tasks.named('reobfJar').get().outputs.files.files.findAll {
+            it.name.endsWith('.jar')
+        }
+        if (productionArchives.isEmpty()) throw new GradleException('Reobfuscated mod artifact is missing')
+        def archives = [tasks.named('jar').get().archiveFile.get().asFile] + productionArchives
+        for (archive in archives) {
+          new java.util.zip.ZipFile(archive).withCloseable { zip ->
+            if (zip.entries().find { it.name.startsWith('com/drppp/gt6addition/smoketest/') }) {
+                throw new GradleException('Test-only world smoke mod must not be shipped in the mod artifact')
+            }
+            def manifestEntry = zip.getEntry('META-INF/MANIFEST.MF')
+            if (manifestEntry == null) throw new GradleException('Missing mod manifest')
+            def manifest = zip.getInputStream(manifestEntry).withCloseable {
+                new java.util.jar.Manifest(it)
+            }
+            if (manifest.mainAttributes.getValue('FMLCorePlugin') != propertyString('coremod_plugin_class_name')) {
+                throw new GradleException('Early Mixin loader is not registered in the manifest')
+            }
+            if (manifest.mainAttributes.getValue('FMLCorePluginContainsFMLMod') != 'true') {
+                throw new GradleException('Coremod artifact must also be discovered as an FML mod')
+            }
+            def refmapName = propertyString('mixin_refmap')
+            def refmapEntry = zip.getEntry(refmapName)
+            if (refmapEntry == null) throw new GradleException('Generated Mixin refmap is missing')
+            def refmap = zip.getInputStream(refmapEntry).withCloseable {
+                new groovy.json.JsonSlurper().parse(it, 'UTF-8')
+            }
+            def comparator = refmap.data?.searge?.get(
+                    'com/drppp/gt6addition/mixin/gregtech/BlockMachineComparatorMixin')
+            if (!comparator?.get('hasComparatorInputOverride')?.contains('func_149740_M') ||
+                    !comparator?.get('getComparatorInputOverride')?.contains('func_180641_l')) {
+                throw new GradleException('Vanilla comparator SRG mappings are missing')
+            }
+            for (configName in propertyStringList('mixin_configs')) {
+                def entry = zip.getEntry("mixins.${configName}.json")
+                if (entry == null) throw new GradleException("Missing Mixin configuration: ${configName}")
+                def config = zip.getInputStream(entry).withCloseable {
+                    new groovy.json.JsonSlurper().parse(it, 'UTF-8')
+                }
+                if (config.refmap != refmapName) {
+                    throw new GradleException("Unexpanded or incorrect refmap in ${configName}")
+                }
+                for (mixin in (config.mixins ?: []) + (config.server ?: []) + (config.client ?: [])) {
+                    def classPath = (config.package + '.' + mixin).replace('.', '/') + '.class'
+                    if (zip.getEntry(classPath) == null) {
+                        throw new GradleException("Configured Mixin class is not packaged: ${mixin}")
+                    }
+                }
+            }
+          }
+        }
+    }
+}
+
+tasks.named('check') { dependsOn tasks.named('verifyMixinPackaging') }
+
+// Opt-in real Forge startup, isolated from the developer's run directory.
+// Reuse an existing EULA decision; this task must never accept it for the user.
+if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
+    def worldChecks = providers.gradleProperty('gt6ParityWorld').isPresent()
+    if (worldChecks) {
+        sourceSets.create('crucibleSmoke') {
+            java.srcDir 'src/smokeTest/java'
+            compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+            runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+        }
+    }
+    tasks.named('runServer') {
+        if (worldChecks) {
+            dependsOn tasks.named('crucibleSmokeClasses')
+            classpath += sourceSets.crucibleSmoke.output
+            extraArgs.addAll(['nogui', '--world', 'parity-smoke-world-' + UUID.randomUUID().toString()])
+        }
+        workingDir layout.buildDirectory.dir('crucible-parity-smoke').get().asFile
+        standardInput = new ByteArrayInputStream('stop\n'.getBytes('UTF-8'))
+        maxHeapSize = '3G'
+        doFirst {
+            def acceptedEula = file('run/eula.txt')
+            def decision = new Properties()
+            if (acceptedEula.isFile()) acceptedEula.withInputStream { decision.load(it) }
+            if (decision.getProperty('eula') != 'true') {
+                throw new GradleException('The isolated smoke run requires an already accepted run/eula.txt')
+            }
+            copy {
+                from acceptedEula
+                from file('src/test/resources/crucible-parity-smoke/server.properties')
+                into workingDir
+            }
+        }
+    }
+
+    tasks.register('verifyCrucibleForgeStartup') {
+        group = 'verification'
+        dependsOn tasks.named('runServer')
+        doLast {
+            def smokeDir = layout.buildDirectory.dir('crucible-parity-smoke').get().asFile
+            def latest = new File(smokeDir, 'logs/latest.log').getText('UTF-8')
+            def debug = new File(smokeDir, 'logs/debug.log').getText('UTF-8')
+            if (!latest.contains('Done (') || !latest.contains('Stopping server') ||
+                    !latest.contains('Forge Mod Loader has successfully loaded')) {
+                throw new GradleException('Forge did not complete startup and normal shutdown')
+            }
+            if (worldChecks && (!latest.contains('CRUCIBLE_WORLD_PASS 43') || latest.contains('CRUCIBLE_WORLD_FAIL'))) {
+                throw new GradleException('Actual Forge world crucible checks did not all pass')
+            }
+            if (latest.contains('Invalid Recipe Found: Recipe output cannot be an empty ItemStack. Recipe: wheat_to_dust')) {
+                throw new GradleException('Wheat OreDict registration still produces an empty host recipe')
+            }
+            // Read actual annotations and transformed classes without loading
+            // Minecraft/CEu into the Gradle daemon. Every hook must have a caller.
+            def readMethods = { byte[] bytes ->
+                def methods = []
+                def calls = []
+                new ClassReader(bytes).accept(new ClassVisitor(Opcodes.ASM9) {
+                    @Override
+                    MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+                        methods.add(name)
+                        return new MethodVisitor(Opcodes.ASM9) {
+                            @Override
+                            void visitMethodInsn(int opcode, String owner, String method, String descriptor, boolean isInterface) {
+                                calls.add([owner, method])
+                            }
+                        }
+                    }
+                }, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+                [methods, calls]
+            }
+            int targetsVerified = 0
+            for (configName in propertyStringList('mixin_configs')) {
+                def config = new groovy.json.JsonSlurper().parse(file("src/main/resources/mixins.${configName}.json"), 'UTF-8')
+                for (name in (config.mixins ?: []) + (config.server ?: [])) {
+                    def path = (config.package + '.' + name).replace('.', '/')
+                    def bytes = new File(layout.buildDirectory.dir('classes/java/main').get().asFile, path + '.class').bytes
+                    def targets = []
+                    new ClassReader(bytes).accept(new ClassVisitor(Opcodes.ASM9) {
+                        @Override
+                        AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+                            if (descriptor != 'Lorg/spongepowered/asm/mixin/Mixin;') return null
+                            return new AnnotationVisitor(Opcodes.ASM9) {
+                                @Override
+                                AnnotationVisitor visitArray(String field) {
+                                    if (field != 'value' && field != 'targets') return null
+                                    return new AnnotationVisitor(Opcodes.ASM9) {
+                                        @Override
+                                        void visit(String ignored, Object value) {
+                                            targets.add(value instanceof Type ? value.internalName : value.replace('.', '/'))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }, ClassReader.SKIP_CODE)
+                    def hooks = readMethods(bytes)[0].findAll { it.startsWith('gt6addition$') && !it.contains('lambda$') }
+                    if (targets.isEmpty() || hooks.isEmpty()) throw new GradleException("No audited target/hooks: ${name}")
+                    for (target in targets) {
+                        if (!debug.contains("Mixing ${name} from mixins.${configName}.json into ${target.replace('/', '.')}")) {
+                            throw new GradleException("Mixin was not applied in Forge: ${name} -> ${target}")
+                        }
+                        def exported = new File(smokeDir, '.mixin.out/class/' + target + '.class')
+                        if (!exported.isFile()) throw new GradleException("Transformed class was not exported: ${target}")
+                        def transformed = readMethods(exported.bytes)
+                        for (hook in hooks) {
+                            def merged = transformed[0].findAll { it.endsWith('$' + hook) || it == hook }
+                            if (!merged.any { method -> transformed[1].any { call -> call[0] == target && call[1] == method } }) {
+                                throw new GradleException("No actual transformed call to ${hook} in ${target}")
+                            }
+                        }
+                        targetsVerified++
+                    }
+                }
+            }
+            logger.lifecycle("Forge startup/shutdown and ${targetsVerified} transformed Mixin targets verified (server side only)")
+        }
+    }
+}

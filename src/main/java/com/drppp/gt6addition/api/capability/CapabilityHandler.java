@@ -12,6 +12,8 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = Tags.MOD_ID)
 public class CapabilityHandler {
+    @CapabilityInject(ICrucibleEnergyReceiver.class)
+    public static Capability<ICrucibleEnergyReceiver> CAPABILITY_CRUCIBLE_ENERGY = null;
     @CapabilityInject(IHeatEnergy.class)
     public static Capability<IHeatEnergy> CAPABILITY_HEAT_ENERGY= null;
     @CapabilityInject(IRotationEnergy.class)
@@ -41,6 +43,7 @@ public class CapabilityHandler {
     }
     public static void init()
     {
+        registerCapabilityWithNoDefault(ICrucibleEnergyReceiver.class);
         CapabilityManager.INSTANCE.register(IHeatEnergy.class,new HeatEnergyStore(),  HeatEnergyHandler::new);
         CapabilityManager.INSTANCE.register(IRotationEnergy.class,new RotationEnergyStore(),  RotationEnergyHandler::new);
         CapabilityManager.INSTANCE.register(IKineticEnergy.class,new KineticEnergyStore(),  KineticEnergyHandler::new);

@@ -2,6 +2,7 @@ package com.drppp.gt6addition.intergations.top.provider;
 
 import com.drppp.gt6addition.Tags;
 import com.drppp.gt6addition.api.top.IEnergyOutShow;
+import com.drppp.gt6addition.api.baseMTile.MetaTileEntityMutiEnergyMachine;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCastingBasin;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamber;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamberLiquid;
@@ -12,6 +13,7 @@ import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityGt6
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticGearbox;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticSteamEngine;
 import gregtech.api.util.GTUtility;
+import gregtech.api.util.TextFormattingUtil;
 import mcjty.theoneprobe.api.IProbeHitData;
 import mcjty.theoneprobe.api.IProbeInfo;
 import mcjty.theoneprobe.api.IProbeInfoProvider;
@@ -25,6 +27,8 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
 
+import java.util.List;
+
 public class TopCommonProvider implements IProbeInfoProvider {
 
     @Override
@@ -36,28 +40,40 @@ public class TopCommonProvider implements IProbeInfoProvider {
     public void addProbeInfo(ProbeMode probeMode, IProbeInfo iProbeInfo, EntityPlayer entityPlayer,
                              World world, IBlockState iBlockState, IProbeHitData iProbeHitData) {
         Object metaTileEntity = GTUtility.getMetaTileEntity(world, iProbeHitData.getPos());
+        if (metaTileEntity instanceof MetaTileEntityMutiEnergyMachine) {
+            MetaTileEntityMutiEnergyMachine machine = (MetaTileEntityMutiEnergyMachine) metaTileEntity;
+            iProbeInfo.text(I18n.format("gt6addition.top.multi_energy.available",
+                    TextFormattingUtil.formatNumbers(Math.max(0, machine.mutiEnergyProxy.getEnergy())),
+                    machine.EnergyType));
+        }
         if (metaTileEntity instanceof MetaTileEntityCrucible) {
             MetaTileEntityCrucible s = (MetaTileEntityCrucible) metaTileEntity;
             ItemStack input = s.getImportItems().getStackInSlot(0).copy();
             long heat = Math.max(0L, s.getCurrentTemperature());
             long heatMax = Math.max(1L, s.getMaxTemperature());
             iProbeInfo.progress(Math.min(heat, heatMax), heatMax, iProbeInfo.defaultProgressStyle()
-                    .prefix("\u70ed\u91cf: ")
+                    .prefix(I18n.format("gt6addition.top.crucible.temperature"))
                     .suffix(" / " + heatMax + " K")
                     .filledColor(0xFFFF6600)
                     .alternateFilledColor(0xFFFFC040)
                     .borderColor(0xFF555555)
                     .backgroundColor(0xFF111111)
                     .numberFormat(NumberFormat.FULL));
-            iProbeInfo.text(TextFormatting.BOLD + "\u5bb9\u91cf:" + TextFormatting.GREEN +
+            iProbeInfo.text(TextFormatting.BOLD + I18n.format("gt6addition.top.crucible.capacity_equivalent") + TextFormatting.GREEN +
                     s.getStoredFluidAmount() + "/" + s.getCapacityFluidAmount() + " L");
-            iProbeInfo.text(TextFormatting.BOLD + "\u8f93\u5165\u69fd:" + TextFormatting.GREEN +
-                    (input.isEmpty() ? "\u7a7a" : input.getDisplayName() + "*" + input.getCount()));
-            if (s.getTopContents().isEmpty()) {
-                iProbeInfo.text(TextFormatting.BOLD + "\u5185\u5bb9\u7269:" + TextFormatting.GREEN + "\u7a7a");
+            iProbeInfo.text(TextFormatting.BOLD + I18n.format("gt6addition.top.crucible.input_slot") + TextFormatting.GREEN +
+                    (input.isEmpty() ? I18n.format("gt6addition.top.crucible.empty") :
+                            input.getDisplayName() + " ×" + input.getCount()));
+            iProbeInfo.text(TextFormatting.BOLD + I18n.format("gt6addition.top.crucible.pending_items") +
+                    TextFormatting.GREEN + I18n.format("gt6addition.top.crucible.pending_count",
+                    s.getPendingItemCount(), s.getPendingItemCapacity()));
+            List<MetaTileEntityCrucible.CrucibleContentInfo> contents = s.getTopContents();
+            if (contents.isEmpty()) {
+                iProbeInfo.text(TextFormatting.BOLD + I18n.format("gt6addition.top.crucible.contents") +
+                        TextFormatting.GREEN + I18n.format("gt6addition.top.crucible.empty"));
             } else {
-                iProbeInfo.text(TextFormatting.BOLD + "\u5185\u5bb9\u7269:");
-                for (MetaTileEntityCrucible.CrucibleContentInfo content : s.getTopContents()) {
+                iProbeInfo.text(TextFormatting.BOLD + I18n.format("gt6addition.top.crucible.contents"));
+                for (MetaTileEntityCrucible.CrucibleContentInfo content : contents) {
                     ItemStack displayStack = content.getDisplayStack();
                     IProbeInfo line = iProbeInfo.horizontal();
                     if (!displayStack.isEmpty()) {
@@ -65,7 +81,8 @@ public class TopCommonProvider implements IProbeInfoProvider {
                     }
                     line.text(TextFormatting.GREEN + content.getMaterialName() + TextFormatting.GRAY + " " +
                             content.getFluidAmount() + "L " +
-                            (content.isMolten() ? "\u7194\u878d" : "\u56fa\u6001"));
+                            I18n.format(content.isMolten() ? "gt6addition.top.crucible.molten" :
+                                    "gt6addition.top.crucible.solid"));
                 }
             }
         } else if (metaTileEntity instanceof MetaTileEntityCastingBasin) {

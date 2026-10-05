@@ -62,21 +62,51 @@ public class CrucibleJeiCategory implements IRecipeCategory<CrucibleJeiRecipe> {
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, CrucibleJeiRecipe recipeWrapper, IIngredients ingredients) {
         IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
+        IGuiFluidStackGroup fluidStacks = recipeLayout.getFluidStacks();
         for (int i = 0; i < recipeWrapper.getInputCount(); i++) {
-            itemStacks.init(i, true, 4 + (i % 3) * 22, 20 + (i / 3) * 20);
-            itemStacks.setBackground(i, slot);
+            int x = 4 + (i % 3) * 22;
+            int y = 20 + (i / 3) * 20;
+            if (!recipeWrapper.getItemInputs(i).isEmpty()) {
+                itemStacks.init(i, true, x, y);
+                itemStacks.setBackground(i, slot);
+                itemStacks.set(i, recipeWrapper.getItemInputs(i));
+            }
+            if (!recipeWrapper.getFluidInputs(i).isEmpty()) {
+                int capacity = recipeWrapper.getFluidInputs(i).get(0).amount;
+                // Fluid index 0 is reserved for the output. Rows retain their
+                // component index even when preceding rows are item inputs.
+                fluidStacks.init(i + 1, true, x + 1, y + 1, 16, 16, capacity, true, null);
+                fluidStacks.setBackground(i + 1, slot);
+                fluidStacks.set(i + 1, recipeWrapper.getFluidInputs(i));
+            }
         }
-        itemStacks.set(ingredients);
         itemStacks.addTooltipCallback((index, input, stack, tooltip) -> {
             if (input && index < recipeWrapper.getComponentInfo().size()) {
                 tooltip.add(I18n.format("gt6addition.jei.crucible.ratio_component",
                         recipeWrapper.getComponentInfo().get(index)));
             }
             if (input) tooltip.add(I18n.format("gt6addition.jei.crucible.alternatives"));
+            else if (recipeWrapper.hasInternalOutput())
+                tooltip.add(I18n.format("gt6addition.jei.crucible.internal_note"));
         });
 
-        IGuiFluidStackGroup fluidStacks = recipeLayout.getFluidStacks();
-        fluidStacks.init(0, false, 132, 23, 16, 52, recipeWrapper.getOutputFluid().amount, false, null);
-        fluidStacks.set(ingredients);
+        if (recipeWrapper.hasInternalOutput()) {
+            if (!recipeWrapper.getOutputPreview().isEmpty()) {
+                itemStacks.init(100, false, 131, 40);
+                itemStacks.setBackground(100, slot);
+                itemStacks.set(100, recipeWrapper.getOutputPreview());
+            }
+        } else {
+            fluidStacks.init(0, false, 132, 23, 16, 52, recipeWrapper.getOutputFluid().amount, false, null);
+            fluidStacks.set(0, recipeWrapper.getOutputFluid());
+        }
+        fluidStacks.addTooltipCallback((index, input, stack, tooltip) -> {
+            int row = index - 1;
+            if (input && row >= 0 && row < recipeWrapper.getComponentInfo().size()) {
+                tooltip.add(I18n.format("gt6addition.jei.crucible.ratio_component",
+                        recipeWrapper.getComponentInfo().get(row)));
+            }
+            if (input) tooltip.add(I18n.format("gt6addition.jei.crucible.fluid_input"));
+        });
     }
 }
