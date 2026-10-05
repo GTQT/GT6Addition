@@ -10,7 +10,7 @@ import com.drppp.gt6addition.common.item.GT6CastingIngotItem;
 import com.drppp.gt6addition.common.block.GT6AdditionBlocks;
 import com.drppp.gt6addition.common.material.GT6MachineMaterials;
 import com.drppp.gt6addition.common.fluid.GT6PotionFluids;
-import com.drppp.gt6addition.common.world.AnthraciteWorldGenerator;
+import com.drppp.gt6addition.common.world.AnthraciteVeins;
 import com.drppp.gt6addition.common.world.GT6TreeWorldGenerator;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.ore.OrePrefix;
@@ -60,11 +60,12 @@ public class CommonProxy {
                         OreDictUnifier.getPrefix(fuel) == OrePrefix.gem ? GT6MachineMaterials.ANTHRACITE_BURN_TIME : 0;
             }
         });
-        GameRegistry.registerWorldGenerator(new AnthraciteWorldGenerator(), 0);
         GameRegistry.registerWorldGenerator(new GT6TreeWorldGenerator(), 1);
     }
 
     public void init(FMLInitializationEvent event) {
+        // GT initializes its worldgen registry during its own init, which runs before this one.
+        AnthraciteVeins.register();
         TopInit.init();
         registerTreeOreDictionaryEntries();
     }
