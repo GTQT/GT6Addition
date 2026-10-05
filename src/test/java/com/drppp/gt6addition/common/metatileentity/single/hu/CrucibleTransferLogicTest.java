@@ -21,6 +21,20 @@ class CrucibleTransferLogicTest {
     }
 
     @Test
+    void gt6DisplayScaleKeepsTinyContentsVisibleAndSaturatesBeforeMultiplication() {
+        long capacity = 16L * GTValues.M;
+        assertEquals(0, CrucibleTransferLogic.displayHeight(0, capacity));
+        assertEquals(0, CrucibleTransferLogic.displayHeight(-1, capacity));
+        assertEquals(1, CrucibleTransferLogic.displayHeight(1, capacity));
+        assertEquals(128, CrucibleTransferLogic.displayHeight(capacity / 2, capacity));
+        assertEquals(254, CrucibleTransferLogic.displayHeight(capacity - 1, capacity));
+        assertEquals(255, CrucibleTransferLogic.displayHeight(capacity, capacity));
+        assertEquals(255, CrucibleTransferLogic.displayHeight(Long.MAX_VALUE, capacity));
+        assertEquals(254, CrucibleTransferLogic.displayHeight(Long.MAX_VALUE - 1, Long.MAX_VALUE));
+        assertEquals(0, CrucibleTransferLogic.displayHeight(1, 0));
+    }
+
+    @Test
     void thaumicAndHexoriumFamiliesKeepDefaultTargetsInsteadOfMemberTargets() {
         String[] originals = {"Any Thaumic Crystal", "AnyThaumicCrystal", "Hexorium"};
         String[] materialNames = {"any_thaumic_crystal", "any_thaumic_crystal", "any_hexorium"};
@@ -1004,6 +1018,94 @@ class CrucibleTransferLogicTest {
     }
 
     @Test
+    void generatedGt6LiquidsAndLiteralAliasesUseBucketUnitsNotMetalUnits() {
+        for (String name : new String[]{"Bromine", "Semiheavy Water", "Heavy Water", "Tritiated Water",
+                "Sea Water", "WaterDirty", "Hydrogen Peroxide", "Nitric Acid", "Glycerol", "Glyceryl",
+                "Sulfuric Acid", "Disulfuric Acid", "Hexafluorosilicic Acid", "Titanium Tetrachloride",
+                "Saltwater", "Salted Water", "Chloroauric Acid", "Chloroplatinic Acid", "Stannic Chloride",
+                "Black Vitriol", "Blue Vitriol", "Green Vitriol", "Red Vitriol", "Pink Vitriol",
+                "Cyan Vitriol", "White Vitriol", "Gray Vitriol", "Martian Vitriol", "Vitriol Of Clay",
+                "Aqua Regia", "Creosote", "Ectoplasm", "SulphuricAcid", "Brine", "RomanVitriol",
+                "CyprusVitriol", "SolutionBlueVitriol", "SolutionNickelSulfate", "SolutionNickelSulphate",
+                "Creosote Oil", "glyceryl_trinitrate"}) {
+            assertEquals(1000, CrucibleFluidUnits.fluidUnit(name), name);
+            assertEquals(GTValues.L, CrucibleFluidUnits.legacyFluidUnit(name), name);
+            CrucibleFluidUnits.Quantity bucket = CrucibleFluidUnits.storedFluidAmount(1000,
+                    CrucibleFluidUnits.fluidUnit(name));
+            assertNotNull(bucket);
+            assertEquals(GTValues.M, bucket.amount, name);
+            assertEquals(0, bucket.remainder, name);
+        }
+    }
+
+    @Test
+    void newLiquidUnitsDoNotReclassifyMercuryMetalsOrTheProjectLavaRule() {
+        for (String name : new String[]{"mercury", "iron", "tin", "lava", "unknown_liquid"}) {
+            assertEquals(GTValues.L, CrucibleFluidUnits.fluidUnit(name), name);
+        }
+        assertEquals(504, CrucibleFluidUnits.fluidUnit("alumina"));
+        assertEquals(1296, CrucibleFluidUnits.fluidUnit("blaze"));
+        assertEquals(160000, CrucibleFluidUnits.gasUnit("water"));
+        assertEquals(20736, CrucibleFluidUnits.plasmaUnit("iron"));
+    }
+
+    @Test
+    void generatedLiquidFractionsCanMergeAndDrainWithoutLosingMillibuckets() {
+        int unit = CrucibleFluidUnits.fluidUnit("sulfuric_acid");
+        CrucibleFluidUnits.Quantity half = CrucibleFluidUnits.storedFluidAmount(500, unit);
+        CrucibleFluidUnits.Quantity small = CrucibleFluidUnits.storedFluidAmount(1, unit);
+        CrucibleFluidUnits.Quantity merged = CrucibleFluidUnits.merge(half.amount, half.remainder,
+                small.amount, small.remainder, CrucibleFluidUnits.STORAGE_UNIT);
+        assertNotNull(merged);
+        assertEquals(501, CrucibleFluidUnits.storedFluidVolume(merged.amount, merged.remainder, unit));
+        CrucibleFluidUnits.Quantity remaining = CrucibleFluidUnits.drainStored(merged.amount,
+                merged.remainder, 500, unit);
+        assertNotNull(remaining);
+        assertEquals(small.amount, remaining.amount);
+        assertEquals(small.remainder, remaining.remainder);
+        remaining = CrucibleFluidUnits.drainStored(remaining.amount, remaining.remainder, 1, unit);
+        assertNotNull(remaining);
+        assertEquals(0, remaining.amount);
+        assertEquals(0, remaining.remainder);
+    }
+
+    @Test
+    void preExpansionLiquidRemaindersKeepTheirOldDenominatorAndMaterialAmount() {
+        for (String name : new String[]{"sulfuric_acid", "creosote", "glyceryl_trinitrate"}) {
+            // Artificial nonzero remainder tests migration even when the
+            // host's M happens to divide evenly by the old metal denominator.
+            CrucibleFluidUnits.Quantity migrated = CrucibleFluidUnits.migrateStoredQuantity(
+                    GTValues.M, 1, CrucibleFluidUnits.legacyFluidUnit(name));
+            assertNotNull(migrated);
+            assertEquals(GTValues.M, migrated.amount);
+            assertEquals(CrucibleFluidUnits.STORAGE_UNIT / GTValues.L, migrated.remainder);
+            assertEquals(1000, CrucibleFluidUnits.storedFluidVolume(migrated.amount, migrated.remainder,
+                    CrucibleFluidUnits.fluidUnit(name)));
+        }
+    }
+
+    @Test
+    void verifiedNitroglycerinAliasSharesGt6HeatDensityHazardsAndDefaultTargets() {
+        String name = "glyceryl_trinitrate";
+        assertEquals("gregtech:glyceryl_trinitrate",
+                GT6MaterialIdentity.hostRecyclingName(GT6MaterialIdentity.name(9821)));
+        assertEquals("thirdparty:glyceryl", GT6MaterialIdentity.hostRecyclingName("thirdparty:glyceryl"));
+        assertEquals(287, CrucibleMaterialPhaseData.knownMeltingPoint(name));
+        assertEquals(323, CrucibleMaterialPhaseData.boilingPoint(name));
+        assertEquals(1500D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter(name), 0.00001D);
+        assertTrue(GT6MaterialHazardData.isExplosive(name));
+        assertFalse(GT6MaterialHazardData.shouldBurn(name, 313, false));
+        assertTrue(GT6MaterialHazardData.shouldBurn(name, 314, false));
+        assertFalse(GT6DeclaredPhaseData.hasBurningExemption(name));
+        assertTrue(CrucibleSmeltingRule.hasDefaultSelfTarget(name));
+        assertTrue(CrucibleSolidifyingRule.hasAuthoritativeSelfTarget(name));
+        assertTrue(GT6AlloyRecipes.hasCompleteRecipeSet(name));
+        assertEquals("glycerol", GT6MaterialIdentity.canonicalCompoundName("glycerol"));
+        assertEquals(291, CrucibleMaterialPhaseData.knownMeltingPoint("glycerol"));
+        assertFalse(GT6MaterialHazardData.isExplosive("glycerol"));
+    }
+
+    @Test
     void explicitGt6LiquidAndGasUnitsDoNotUseMetalDefaults() {
         assertEquals(1296, CrucibleFluidUnits.fluidUnit("blaze"));
         for (String name : new String[]{"fish_oil", "whale_oil", "seed_oil", "hemp_oil", "lin_oil",
@@ -1321,7 +1423,7 @@ class CrucibleTransferLogicTest {
                     CrucibleMaterialPhaseData.boilingPoint(names[i]));
             assertTrue(CrucibleSmeltingRule.hasMeltingFlag(names[i]));
         }
-        assertEquals(3800, CrucibleMaterialPhaseData.knownMeltingPoint("diamond"));
+        assertEquals(4200, CrucibleMaterialPhaseData.knownMeltingPoint("diamond"));
         assertEquals(4300L, CrucibleMaterialPhaseData.boilingPoint("diamond"));
         // These are cooling targets of the copied material, not an instruction
         // to restore a strengthened gem after its conversion into carbon/beryllium.
@@ -2669,6 +2771,152 @@ class CrucibleTransferLogicTest {
     }
 
     @Test
+    void diamondDeclarationsOverrideCarbonHeatForEveryVerifiedVariant() {
+        for (String name : new String[]{"diamond", "diamond_blue", "diamond_green", "diamond_purple",
+                "diamond_red", "diamond_yellow", "diamond_pink", "diamond_industrial", "Blue Diamond",
+                "Green Diamond", "Purple Diamond", "Red Diamond", "Yellow Diamond", "Pink Diamond",
+                "mana_diamond", "elven_dragonstone", "gravitite", "diamantine"}) {
+            assertEquals(4200, CrucibleMaterialPhaseData.knownMeltingPoint(name), name);
+            assertEquals(4300L, CrucibleMaterialPhaseData.boilingPoint(name), name);
+            CrucibleSmeltingRule rule = CrucibleSmeltingRule.find(name);
+            assertNotNull(rule, name);
+            assertEquals("carbon", rule.target, name);
+            assertEquals(2 * GTValues.M, rule.convert(GTValues.M), name);
+        }
+        assertEquals(3800, CrucibleMaterialPhaseData.knownMeltingPoint("carbon"));
+        assertEquals(4300L, CrucibleMaterialPhaseData.boilingPoint("carbon"));
+    }
+
+    @Test
+    void enderAmethystUsesActualGt6NameAndOwnHeatWithoutEnablingSmelting() {
+        assertEquals("AmethystEnder", GT6MaterialIdentity.name(8329));
+        assertTrue(CrucibleSolidifyingRule.isSnapshotMaterial("AmethystEnder"));
+        assertTrue(CrucibleSolidifyingRule.hasAuthoritativeSelfTarget("AmethystEnder"));
+        for (String name : new String[]{"AmethystEnder", "amethyst_ender", "Amethyst Ender",
+                "EnderAmethyst", "ender_amethyst"}) {
+            CrucibleSmeltingRule rule = CrucibleSmeltingRule.find(name);
+            assertNotNull(rule, name);
+            assertEquals("", rule.target, name);
+            assertEquals(0, rule.convert(GTValues.M), name);
+            assertFalse(CrucibleSmeltingRule.hasDefaultSelfTarget(name), name);
+            assertFalse(CrucibleSmeltingRule.hasMeltingFlag(name), name);
+            assertFalse(GT6DeclaredPhaseData.hasBurningExemption(name), name);
+            assertEquals(1625, CrucibleMaterialPhaseData.knownMeltingPoint(name), name);
+            assertEquals(2669L, CrucibleMaterialPhaseData.boilingPoint(name), name);
+        }
+        // setGenerifying does not replace the ender variant's six-part heat
+        // average with ordinary amethyst's five-part average.
+        assertEquals(1951, CrucibleMaterialPhaseData.knownMeltingPoint("amethyst"));
+        assertEquals(3202L, CrucibleMaterialPhaseData.boilingPoint("amethyst"));
+    }
+
+    @Test
+    void amethystDensitiesUseFivePartDividerAndZeroDensityMagic() {
+        double silica = (2329.6 + 2 * 1.429) / 3;
+        double density = (4 * silica + 7874) / 5;
+        for (String name : new String[]{"amethyst", "AmethystEnder", "ender_amethyst"}) {
+            assertTrue(CrucibleTransferLogic.hasKnownGt6MaterialDensity(name), name);
+            assertEquals(density, CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter(
+                    name, 999999), 1.0e-9, name);
+            assertEquals(density / 9, CrucibleTransferLogic.materialWeightKg(
+                    GTValues.M, density, GTValues.M), 1.0e-9, name);
+        }
+        assertTrue(CrucibleTransferLogic.hasKnownGt6MaterialDensity("Magic"));
+        assertEquals(0D, CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter("Magic", 999999));
+        assertTrue(CrucibleTransferLogic.isAirDensity(
+                CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter("Magic")));
+        assertEquals(1200D, CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter(
+                "parity_unknown_gem", 0));
+    }
+
+    @Test
+    void verifiedDisabledSmeltingGemsDoNotInheritHostCombustionFlags() {
+        for (String name : new String[]{"spinel", "balas_ruby", "fools_ruby", "almandine", "grossular",
+                "pyrope", "spessartine", "andradite", "uvarovite", "garnet_red", "garnet_orange",
+                "garnet_purple", "garnet", "garnet_yellow", "garnet_green", "red_jasper", "jasper",
+                "ocean_jasper", "rainforest_jasper", "blue_jasper", "green_jasper", "yellow_jasper",
+                "tiger_eye", "yellow_tiger_eye", "cats_eye", "green_tiger_eye", "dragon_eye",
+                "red_tiger_eye", "hawks_eye", "blue_tiger_eye", "black_eye", "black_tiger_eye",
+                "tiger_iron", "green_aventurine", "aventurine", "brown_aventurine", "yellow_aventurine",
+                "black_aventurine", "blue_aventurine", "red_aventurine", "topaz", "blue_topaz",
+                "tanzanite", "zanite", "amazonite", "alexandrite", "opal", "onyx_red", "onyx_black",
+                "onyx", "sugilite", "peridot", "olivine", "amethyst", "dioptase", "amethyst_ender",
+                "ender_amethyst", "dilithium", "hexorium_black", "hexorium_red", "hexorium_green",
+                "hexorium_blue", "hexorium_white"}) {
+            assertFalse(GT6MaterialHazardData.shouldBurn(name, 314, true), name);
+            assertFalse(GT6MaterialHazardData.shouldBurn(name, 5000, true), name);
+            assertFalse(GT6MaterialHazardData.isExplosive(name), name);
+        }
+        // A disabled smelting target is not itself proof of noncombustibility.
+        assertEquals(0, CrucibleSmeltingRule.find("silverwood").convert(GTValues.M));
+        assertTrue(GT6MaterialHazardData.shouldBurn("silverwood", 314, false));
+        assertFalse(GT6MaterialHazardData.shouldBurn("parity_unknown_gem", 314, false));
+        assertTrue(GT6MaterialHazardData.shouldBurn("parity_unknown_gem", 314, true));
+    }
+
+    @Test
+    void refinedMaterialOutputCopiesDoNotReplaceTheirOwnThermalProperties() {
+        String[] names = {"refined_glowstone", "GlowstoneRefined", "refined_obsidian", "ObsidianRefined"};
+        int[] melting = {855, 855, 2750, 2750};
+        long[] boiling = {1853, 1853, 4150, 4150};
+        String[] hotTargets = {"glowstone", "glowstone", "lava", "lava"};
+        String[] coldTargets = {"glowstone", "glowstone", "obsidian", "obsidian"};
+        for (int i = 0; i < names.length; i++) {
+            assertEquals(melting[i], CrucibleMaterialPhaseData.knownMeltingPoint(names[i]), names[i]);
+            assertEquals(boiling[i], CrucibleMaterialPhaseData.boilingPoint(names[i]), names[i]);
+            assertEquals(hotTargets[i], CrucibleSmeltingRule.find(names[i]).target);
+            assertEquals(coldTargets[i], CrucibleSolidifyingRule.target(names[i]));
+            // The 2-component configuration is not a 2U smelting yield.
+            assertEquals(GTValues.M, CrucibleSmeltingRule.find(names[i]).convert(GTValues.M));
+            assertTrue(CrucibleSmeltingRule.hasMeltingFlag(names[i]));
+            assertFalse(GT6MaterialHazardData.shouldBurn(names[i], 5000, true));
+        }
+        assertEquals(500, CrucibleMaterialPhaseData.knownMeltingPoint("glowstone"));
+        assertEquals(1300, CrucibleMaterialPhaseData.knownMeltingPoint("obsidian"));
+    }
+
+    @Test
+    void refinedMaterialBoundariesUseSourceHeatRatherThanOutputHeat() {
+        int glowstone = CrucibleMaterialPhaseData.knownMeltingPoint("refined_glowstone");
+        int obsidian = CrucibleMaterialPhaseData.knownMeltingPoint("refined_obsidian");
+        assertEquals(CrucibleTransferLogic.IntakePhase.NONE,
+                CrucibleTransferLogic.intakePhase(286, 854, glowstone));
+        assertEquals(CrucibleTransferLogic.IntakePhase.MELT,
+                CrucibleTransferLogic.intakePhase(286, 855, glowstone));
+        assertEquals(CrucibleTransferLogic.IntakePhase.NONE,
+                CrucibleTransferLogic.intakePhase(286, 1300, obsidian));
+        assertEquals(CrucibleTransferLogic.IntakePhase.MELT,
+                CrucibleTransferLogic.intakePhase(286, 2750, obsidian));
+        assertEquals(CrucibleTransferLogic.IntakePhase.SOLIDIFY,
+                CrucibleTransferLogic.intakePhase(2750, 2749, obsidian));
+        assertEquals(2775, CrucibleTransferLogic.fluidInputTemperature(1600, obsidian, 4150));
+    }
+
+    @Test
+    void refinedMaterialDensitiesKeepGt6NestedConfigurationsAndExplicitDividers() {
+        double silica = (2329.6 + 2 * 1.429) / 3;
+        double phosphate = (1820 + 4 * 1.429) / 5;
+        double phosphorite = (5 * 1540 + 3 * phosphate + 1.696) / 9;
+        double glowstone = (5 * phosphorite + 3 * 19282 + silica + 0.1785) / 10;
+        double obsidian = (1738 + 7874 + 6 * silica + 4 * 1.429) / 64;
+        String[] names = {"phosphorite", "glowstone", "obsidian", "lava", "refined_glowstone", "GlowstoneRefined",
+                "refined_obsidian", "ObsidianRefined"};
+        double[] densities = {phosphorite, glowstone, obsidian, obsidian, glowstone + 5323, glowstone + 5323,
+                obsidian + 3530, obsidian + 3530};
+        for (int i = 0; i < names.length; i++) {
+            assertTrue(CrucibleTransferLogic.hasKnownGt6MaterialDensity(names[i]), names[i]);
+            assertEquals(densities[i], CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter(
+                    names[i], 999999), 1.0e-9, names[i]);
+            assertEquals(densities[i] / 9, CrucibleTransferLogic.materialWeightKg(
+                    GTValues.M, densities[i], GTValues.M), 1.0e-9, names[i]);
+        }
+        for (String name : new String[]{"Blue Diamond", "Green Diamond", "Purple Diamond",
+                "Red Diamond", "Yellow Diamond", "Pink Diamond"}) {
+            assertEquals(3530, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter(name), 1.0e-9);
+        }
+    }
+
+    @Test
     void copiedOutputRulesUseTheTargetsSmeltingProductAndRatio() {
         assertEquals("ceramic", CrucibleSmeltingRule.find("brick").target);
         assertEquals("tungsten", CrucibleSmeltingRule.find("tungsten_sintered").target);
@@ -2937,6 +3185,30 @@ class CrucibleTransferLogicTest {
     }
 
     @Test
+    void registeredDensityFallbackDoesNotPropagateNonPhysicalValues() {
+        for (double density : new double[]{0.0D, -100.0D, Double.NaN,
+                Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY}) {
+            assertEquals(1200.0D,
+                    CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter("thirdparty:unmapped_material", density));
+        }
+        // Known zero-density data must not be masked by the fallback.
+        assertEquals(0.0D, CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter("fermium", Double.NaN));
+    }
+
+    @Test
+    void extremeThermalMassCannotTurnHeatIntoCoolingByOverflowingTheCost() {
+        for (double mass : new double[]{Double.MAX_VALUE, Double.POSITIVE_INFINITY, Double.NaN}) {
+            assertEquals(Long.MAX_VALUE, CrucibleTransferLogic.requiredEnergyPerKelvin(mass));
+            assertEquals(0, CrucibleTransferLogic.temperatureDeltaForEnergy(128, mass));
+            assertEquals(0, CrucibleTransferLogic.temperatureDeltaForEnergy(-128, mass));
+        }
+        assertEquals(1, CrucibleTransferLogic.requiredEnergyPerKelvin(0));
+        assertEquals(316, CrucibleTransferLogic.requiredEnergyPerKelvin(31_583.333333D));
+        assertEquals(1, CrucibleTransferLogic.temperatureDeltaForEnergy(Long.MAX_VALUE, Double.MAX_VALUE));
+        assertEquals(-1, CrucibleTransferLogic.temperatureDeltaForEnergy(-Long.MAX_VALUE, Double.MAX_VALUE));
+    }
+
+    @Test
     void unknownMaterialUsesSlightlyHeavierDefaultDensityWithoutOverridingRegisteredFluidDensity() {
         assertEquals(1_200.0D, CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter("gtqtcore:unknown", 0.0D));
         assertEquals(1_500.0D, CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter("gtqtcore:unknown", 1_500.0D));
@@ -3037,7 +3309,11 @@ class CrucibleTransferLogicTest {
         assertTrue(CrucibleTransferLogic.isAirDensity(1.2D));
         assertFalse(CrucibleTransferLogic.isAirDensity(1.20001D));
         assertFalse(CrucibleTransferLogic.isAirDensity(200.0D));
-        assertFalse(CrucibleTransferLogic.isAirDensity(0.0D));
+        assertTrue(CrucibleTransferLogic.isAirDensity(0.0D));
+        assertTrue(CrucibleTransferLogic.isAirDensity(Double.MIN_VALUE));
+        assertFalse(CrucibleTransferLogic.isAirDensity(-1.0D));
+        assertFalse(CrucibleTransferLogic.isAirDensity(Double.POSITIVE_INFINITY));
+        assertFalse(CrucibleTransferLogic.isAirDensity(Double.NEGATIVE_INFINITY));
         assertFalse(CrucibleTransferLogic.isAirDensity(Double.NaN));
     }
 

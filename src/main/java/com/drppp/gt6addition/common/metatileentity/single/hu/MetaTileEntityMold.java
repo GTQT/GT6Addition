@@ -14,6 +14,7 @@ import codechicken.lib.vec.uv.UVTranslation;
 import com.drppp.gt6addition.api.crucible.ICrucibleMold;
 import com.drppp.gt6addition.api.temperature.ITemperatureProvider;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
+import com.drppp.gt6addition.client.CrucibleContentRenderer;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -29,7 +30,6 @@ import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -44,8 +44,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.ArrayUtils;
@@ -619,39 +617,11 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
     @SideOnly(Side.CLIENT)
     @Nullable
     private TextureAtlasSprite getContentSprite(Material material) {
-        if (material.hasFluid()) {
-            FluidStack fluidStack = material.getFluid(1);
-            if (fluidStack != null) {
-                Fluid fluid = fluidStack.getFluid();
-                ResourceLocation still = fluid.getStill(fluidStack);
-                if (still != null) {
-                    TextureMap textureMap = Minecraft.getMinecraft().getTextureMapBlocks();
-                    TextureAtlasSprite sprite = textureMap.getAtlasSprite(still.toString());
-                    if (sprite != textureMap.getMissingSprite()) {
-                        return sprite;
-                    }
-                }
-            }
-        }
-        // Match the crucible's material fallback: some registered materials
-        // (for example solidifying compounds without a FluidProperty) are
-        // meltable/castable but have no Forge fluid still texture. Returning
-        // null here hid the liquid during cooling, even though the output item
-        // appeared correctly once solidified.
-        return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("minecraft:blocks/gravel");
+        return CrucibleContentRenderer.sprite(material, true);
     }
 
     private int getContentRenderColor(Material material) {
-        if (material.hasFluid()) {
-            FluidStack fluidStack = material.getFluid(1);
-            if (fluidStack != null) {
-                int fluidColor = fluidStack.getFluid().getColor(fluidStack) & 0xFFFFFF;
-                if (fluidColor != 0xFFFFFF) {
-                    return fluidColor;
-                }
-            }
-        }
-        return material.getMaterialRGB() & 0xFFFFFF;
+        return CrucibleContentVisual.color(material, true);
     }
 
     @SideOnly(Side.CLIENT)

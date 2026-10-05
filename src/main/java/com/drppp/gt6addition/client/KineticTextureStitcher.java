@@ -169,5 +169,6 @@ public final class KineticTextureStitcher {
         for (String texture : DYNAMIC_BLOCK_TEXTURES) {
             event.getMap().registerSprite(new ResourceLocation(texture));
         }
+        CrucibleContentRenderer.registerSprites(event.getMap());
     }
 }

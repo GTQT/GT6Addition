@@ -18,8 +18,9 @@ final class GT6InheritedPhaseData {
         put("voidcrystal", "coal");
         put("emeradic", "emerald");
         put("enori", "iron");
-        // MT.java:208: diamond() steals Carbon heat; target is 2U Carbon.
-        put("diamond", "carbon");
+        // diamond() initially steals Carbon, but MT.java:1358-1368 ends
+        // each declaration with heat(4200, C.mBoilingPoint). The final
+        // values live in GT6DeclaredPhaseData, not a Carbon inheritance.
         put("brick", "ceramic");
         // BalasRuby's steal(Ruby) is followed by uumMcfg at MT.java:1390;
         // the latter recomputes temperature, so it is not a final inheritance.

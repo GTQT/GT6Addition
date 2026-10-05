@@ -70,7 +70,8 @@ public final class CrucibleWorldSmoke {
             int inputCases = CrucibleInputWorldSmoke.run(world, server);
             int moldCases = CrucibleMoldWorldSmoke.run(world, server);
             int storageCases = CrucibleStorageWorldSmoke.run(world, server);
-            LOG.info("CRUCIBLE_WORLD_PASS {}", 10 + inputCases + moldCases + storageCases);
+            int hazardCases = CrucibleHazardWorldSmoke.run(world, server);
+            LOG.info("CRUCIBLE_WORLD_PASS {}", 10 + inputCases + moldCases + storageCases + hazardCases);
         } catch (Throwable failure) {
             // A server can exit zero after a startup event failure. The Gradle
             // verifier requires the success marker and rejects this marker.

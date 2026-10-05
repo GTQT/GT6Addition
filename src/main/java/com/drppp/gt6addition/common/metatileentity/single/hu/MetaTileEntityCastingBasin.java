@@ -10,6 +10,7 @@ import codechicken.lib.vec.Matrix4;
 import com.drppp.gt6addition.api.crucible.ICrucibleMold;
 import com.drppp.gt6addition.api.temperature.ITemperatureProvider;
 import com.drppp.gt6addition.client.Gt6AdditionTextures;
+import com.drppp.gt6addition.client.CrucibleContentRenderer;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.GregtechCapabilities;
@@ -23,7 +24,6 @@ import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import net.minecraft.block.state.BlockFaceShape;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -39,7 +39,6 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
-import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidActionResult;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
@@ -318,16 +317,14 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
         if (stack == null || stack.getFluid() == null) {
             return null;
         }
-        for (Material registeredMaterial : GregTechAPI.materialManager.getRegisteredMaterials()) {
-            if (registeredMaterial == null || !registeredMaterial.hasFluid()) {
-                continue;
-            }
-            FluidStack materialFluid = registeredMaterial.getFluid(1);
-            if (materialFluid != null && materialFluid.isFluidEqual(stack)) {
-                return registeredMaterial;
-            }
-        }
-        return null;
+        CrucibleFluidInput input = CrucibleFluidInput.resolve(stack);
+        if (input == null || input.material == null || !input.material.hasFluid() ||
+                CrucibleFluidUnits.defaultFluidUnit(input.material) <= 0) return null;
+        // The basin still accepts only its material's default output fluid,
+        // but uses the crucible's unambiguous binding instead of the first
+        // registry match. Reject before the over-temperature world effects.
+        FluidStack materialFluid = input.material.getFluid(1);
+        return materialFluid != null && materialFluid.isFluidEqual(stack) ? input.material : null;
     }
 
     private int getMeltingTemperature(Material material) {
@@ -480,30 +477,11 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
 
     @SideOnly(Side.CLIENT)
     private TextureAtlasSprite getContentSprite(Material displayMaterial) {
-        if (displayMolten && displayMaterial.hasFluid()) {
-            FluidStack fluidStack = displayMaterial.getFluid(1);
-            if (fluidStack != null) {
-                Fluid fluid = fluidStack.getFluid();
-                ResourceLocation still = fluid.getStill(fluidStack);
-                if (still != null) {
-                    return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(still.toString());
-                }
-            }
-        }
-        return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("minecraft:blocks/gravel");
+        return CrucibleContentRenderer.sprite(displayMaterial, displayMolten);
     }
 
     private int getContentRenderColor(Material displayMaterial) {
-        if (displayMolten && displayMaterial.hasFluid()) {
-            FluidStack fluidStack = displayMaterial.getFluid(1);
-            if (fluidStack != null) {
-                int fluidColor = fluidStack.getFluid().getColor(fluidStack) & 0xFFFFFF;
-                if (fluidColor != 0xFFFFFF) {
-                    return fluidColor;
-                }
-            }
-        }
-        return displayMaterial.getMaterialRGB() & 0xFFFFFF;
+        return CrucibleContentVisual.color(displayMaterial, displayMolten);
     }
 
     @Override

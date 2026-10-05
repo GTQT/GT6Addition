@@ -255,6 +255,14 @@ final class GT6DeclaredPhaseData {
         put("amber", 473, 946, false); // MT.java:1439
         put("goldenamber", 473, 946, false); // MT.java:1440
         put("dominicanamber", 473, 946, false); // MT.java:1441
+        // MT.java:1358-1368: final heat() overrides both diamond()'s
+        // steal(Carbon) and the subsequent component configuration.
+        for (String name : new String[]{"diamond", "diamondblue", "diamondgreen", "diamondpurple",
+                "diamondred", "diamondyellow", "diamondpink", "diamondindustrial",
+                "bluediamond", "greendiamond", "purplediamond", "reddiamond", "yellowdiamond",
+                "pinkdiamond", "manadiamond", "elvendragonstone", "gravitite"}) {
+            put(name, 4200, 4300, true);
+        }
         put("enderpearl", 2723, 3785, true); // MT.java:1499
         put("endereye", 3447, 4978, true); // MT.java:1500
         put("netherstar", 3896, 5127, true); // MT.java:1501
@@ -414,6 +422,12 @@ final class GT6DeclaredPhaseData {
         putComposition("lumium", 4, new String[]{"tin", "silver", "glowstone"}, new long[]{3, 1, 4});
         putComposition("enderiumbase", 4, new String[]{"tin", "silver", "platinum"}, new long[]{2, 1, 1});
         putComposition("enderium", 1, new String[]{"enderiumbase", "enderpearl"}, new long[]{1, 1});
+        // MT.java:1796-1797. setAllToTheOutputOf copies processing
+        // targets only; the preceding configurations retain their own heat.
+        putComposition("refinedglowstone", 1, new String[]{"glowstone", "germanium"}, new long[]{1, 1});
+        DATA.put("glowstonerefined", DATA.get("refinedglowstone"));
+        putComposition("refinedobsidian", 1, new String[]{"obsidian", "diamond"}, new long[]{1, 1});
+        DATA.put("obsidianrefined", DATA.get("refinedobsidian"));
         putComposition("obsidiansteel", 1, new String[]{"steel", "obsidian"}, new long[]{1, 9});
         DATA.put("darksteel", DATA.get("obsidiansteel")); // Explicit MT.java:1805 alias.
         putComposition("pulsatingiron", 1, new String[]{"wroughtiron", "enderpearl"}, new long[]{1, 1});
@@ -530,6 +544,11 @@ final class GT6DeclaredPhaseData {
         putComposition("sugilite", 0, new String[]{"potassium", "sodium", "pyrolusite", "lithium", "silicondioxide", "oxygen"}, new long[]{1, 2, 2, 3, 36, 2}, false);
         putComposition("peridot", 0, new String[]{"silicondioxide", "iron", "magnesium"}, new long[]{2, 1, 2}, false);
         putComposition("amethyst", 0, new String[]{"silicondioxide", "iron"}, new long[]{4, 1}, false);
+        // MT.java:1498: setGenerifying(Amethyst) changes neither heat nor processing
+        // targets. The zero-temperature Magic component still counts in the mean.
+        putComposition("amethystender", 5, new String[]{"silicondioxide", "iron", "magic"},
+                new long[]{4, 1, 1}, false);
+        DATA.put("enderamethyst", DATA.get("amethystender"));
         putComposition("dioptase", 0, new String[]{"silicondioxide", "copper", "oxygen", "water"}, new long[]{3, 1, 1, 3}, false);
         DATA.put("onyx", DATA.get("onyxblack"));
         DATA.put("olivine", DATA.get("peridot"));
@@ -707,8 +726,9 @@ final class GT6DeclaredPhaseData {
     }
 
     private static int[] find(String name) {
-        return name == null ? null : DATA.get(GT6MaterialIdentity.canonicalOxideName(name.toLowerCase(Locale.ROOT)
-                .replace("_", "").replace("-", "").replace(" ", "")));
+        return name == null ? null : DATA.get(GT6MaterialIdentity.canonicalCompoundName(
+                GT6MaterialIdentity.canonicalOxideName(name.toLowerCase(Locale.ROOT)
+                .replace("_", "").replace("-", "").replace(" ", ""))));
     }
 
     static int meltingPoint(String name) {

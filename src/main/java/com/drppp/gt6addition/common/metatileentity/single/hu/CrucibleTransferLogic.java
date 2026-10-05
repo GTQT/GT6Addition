@@ -101,6 +101,14 @@ public final class CrucibleTransferLogic {
         return amount > Long.MAX_VALUE - total ? Long.MAX_VALUE : total + amount;
     }
 
+    /** Smeltery's UT.Code.scale(total, capacity, 255, false), including tiny contents. */
+    static int displayHeight(long amount, long capacity) {
+        if (amount <= 0 || capacity <= 0) return 0;
+        if (amount >= capacity) return 255;
+        return 1 + java.math.BigInteger.valueOf(amount).multiply(java.math.BigInteger.valueOf(254L))
+                .divide(java.math.BigInteger.valueOf(capacity)).intValue();
+    }
+
     public static boolean canMergeMaterialAmounts(long current, long incoming) {
         return current >= 0 && incoming > 0 && incoming <= Long.MAX_VALUE - current;
     }
@@ -161,7 +169,11 @@ public final class CrucibleTransferLogic {
     }
 
     public static long requiredEnergyPerKelvin(double thermalMassKg) {
-        return 1L + (long) (Math.max(0.0D, thermalMassKg) / 100.0D);
+        double scaledMass = Math.max(0.0D, thermalMassKg) / 100.0D;
+        // Keep GT6's 1 + floor(weight/100) for all representable masses.
+        // Do not wrap the +1 into a negative heat cost for extreme old NBT.
+        if (!Double.isFinite(scaledMass) || scaledMass >= Long.MAX_VALUE) return Long.MAX_VALUE;
+        return 1L + (long) scaledMass;
     }
 
     public static long temperatureGainForHeat(long availableHeat, double thermalMassKg) {
@@ -296,12 +308,15 @@ public final class CrucibleTransferLogic {
         if (hasKnownGt6MaterialDensity(materialName)) {
             return knownGt6MaterialDensityKgPerCubicMeter(materialName);
         }
-        return registeredFluidDensity > 0.0D ? registeredFluidDensity :
+        return registeredFluidDensity > 0.0D && Double.isFinite(registeredFluidDensity) ? registeredFluidDensity :
                 DEFAULT_UNKNOWN_MATERIAL_DENSITY_KG_PER_CUBIC_METER;
     }
 
     public static boolean isAirDensity(double densityKgPerCubicMeter) {
-        return densityKgPerCubicMeter > 0.0D &&
+        // GT6 compares <= WEIGHT_AIR, including explicitly known zero
+        // density elements. Unknown density has already resolved to the
+        // positive project fallback; zero is not an unknown sentinel here.
+        return densityKgPerCubicMeter >= 0.0D &&
                 densityKgPerCubicMeter <= GT6_AIR_DENSITY_LIMIT_KG_PER_CUBIC_METER &&
                 !Double.isNaN(densityKgPerCubicMeter) && !Double.isInfinite(densityKgPerCubicMeter);
     }
@@ -321,7 +336,7 @@ public final class CrucibleTransferLogic {
         if ("lanthanum".equals(normalized)) return "lanthanium";
         if ("phosphorus".equals(normalized)) return "phosphor";
         if ("deuterium".equals(normalized) || "tritium".equals(normalized)) return "hydrogen";
-        return normalized;
+        return GT6MaterialIdentity.canonicalCompoundName(normalized);
     }
 
     private static Double knownMaterialDensity(String normalizedName) {
@@ -443,6 +458,37 @@ public final class CrucibleTransferLogic {
         // not real-world gem densities or the host's flattened atom counts.
         double silicaDensity = (densities.get("silicon") + 2 * densities.get("oxygen")) / 3;
         double aluminaDensity = (2 * densities.get("aluminium") + 3 * densities.get("oxygen")) / 5;
+        // MT.java:539,1436,1498. Magic's declared density is zero; both
+        // amethysts use density divider 5, but the ender variant's heat averages
+        // all six component units. Do not substitute host atom counts or density.
+        densities.put("magic", 0D);
+        double amethystDensity = (4 * silicaDensity + densities.get("iron")) / 5;
+        densities.put("amethyst", amethystDensity);
+        densities.put("amethystender", amethystDensity);
+        densities.put("enderamethyst", amethystDensity);
+        // MT.java:1299,1544,1636,1796-1797. Preserve nested GT6
+        // configurations and their explicit density dividers. In particular
+        // Obsidian uses 64, while both refined materials use 1 (a sum,
+        // not a two-component average). Output copies do not copy density.
+        double phosphoriteDensity = (5 * densities.get("calcium") + 3 * phosphateDensity +
+                densities.get("fluorine")) / 9;
+        double glowstoneDensity = (5 * phosphoriteDensity + 3 * densities.get("gold") +
+                silicaDensity + densities.get("helium")) / 10;
+        double obsidianDensity = (densities.get("magnesium") + densities.get("iron") +
+                6 * silicaDensity + 4 * densities.get("oxygen")) / 64;
+        densities.put("phosphorite", phosphoriteDensity);
+        densities.put("glowstone", glowstoneDensity);
+        densities.put("obsidian", obsidianDensity);
+        densities.put("lava", obsidianDensity); // MT.java:1881, after all declarations.
+        densities.put("refinedglowstone", glowstoneDensity + densities.get("germanium"));
+        densities.put("glowstonerefined", densities.get("refinedglowstone"));
+        densities.put("refinedobsidian", obsidianDensity + densities.get("diamond"));
+        densities.put("obsidianrefined", densities.get("refinedobsidian"));
+        // Literal colour-before-Diamond ore names, MT.java:1359-1365.
+        for (String name : new String[]{"bluediamond", "greendiamond", "purplediamond",
+                "reddiamond", "yellowdiamond", "pinkdiamond"}) {
+            densities.put(name, densities.get("diamond"));
+        }
         // MT.java:1094,794,1675,1842. These are GT6 gameplay densities,
         // including the fictional element, not purported real-world values.
         densities.put("hematite", (2 * densities.get("iron") + 3 * densities.get("oxygen")) / 5);

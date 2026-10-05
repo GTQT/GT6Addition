@@ -200,11 +200,17 @@ final class CrucibleSmeltingRule {
             // Material factory inheritance in MT.java, not guessed gem composition.
             case "diamond":
             case "diamondblue":
+            case "bluediamond":
             case "diamondgreen":
+            case "greendiamond":
             case "diamondpurple":
+            case "purplediamond":
             case "diamondred":
+            case "reddiamond":
             case "diamondyellow":
+            case "yellowdiamond":
             case "diamondpink":
+            case "pinkdiamond":
             case "diamondindustrial":
             case "manadiamond":
             case "elvendragonstone":
@@ -309,6 +315,8 @@ final class CrucibleSmeltingRule {
             case "olivine": // MT.java:1435 explicit ore-name alias.
             case "amethyst":
             case "dioptase":
+            // MT.java:1498: field EnderAmethyst, actual saved name AmethystEnder.
+            case "amethystender":
             case "enderamethyst":
             case "dilithium":
             case "silverwood": return ratio("", 0, 1);

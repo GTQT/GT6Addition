@@ -12,12 +12,14 @@ public final class CrucibleFluidUnits {
     static final int STORAGE_UNIT = 90720000;
     private CrucibleFluidUnits() {}
 
-    /** Unit of the actual default fluid used by output and JEI. */
+    /** Unit of the actual default fluid used by output and JEI; zero means
+     * an unresolved/ambiguous registered binding, not a metal-unit fallback.
+     */
     public static int defaultFluidUnit(Material material) {
         if (material == null) return GTValues.L;
-        CrucibleFluidInput phase = material.hasFluid() ?
-                CrucibleFluidInput.forMaterial(material, material.getFluid()) : null;
-        return phase == null ? fluidUnit(material.getName()) : phase.unit;
+        if (!material.hasFluid()) return fluidUnit(material.getName());
+        CrucibleFluidInput phase = CrucibleFluidInput.forMaterial(material, material.getFluid());
+        return phase == null ? 0 : phase.unit;
     }
 
     static int gasUnit(String name) {
@@ -33,6 +35,9 @@ public final class CrucibleFluidUnits {
 
     /** Denominator used by saves before the explicit-liquid unit expansion. */
     static int legacyFluidUnit(String name) {
+        // These liquids formerly fell through to the metal default. Decode
+        // old fractional amounts with that denominator, never the new one.
+        if (isGt6GeneratedLiquid(normalize(name))) return GTValues.L;
         switch (normalize(name)) {
             case "blaze": case "kerosene": case "fueloil": case "gasoline":
             case "fishoil": case "whaleoil": case "seedoil": case "hempoil":
@@ -132,7 +137,9 @@ public final class CrucibleFluidUnits {
 
     public static int fluidUnit(String name) {
         if (name == null) return GTValues.L;
-        switch (name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "")) {
+        String normalized = normalize(name);
+        if (isGt6GeneratedLiquid(normalized)) return 1000;
+        switch (normalized) {
             case "water":
             case "ice": return 1000; // MT.java:1007; Ice inherits Water's liquid representation.
             case "alumina": return 504; // Loader_Fluids.java:214, FL.createMolten(MT.Al2O3, 504).
@@ -211,6 +218,56 @@ public final class CrucibleFluidUnits {
             case "aerotheum": return 250;
             case "steam": return 160000; // Loader_Fluids.java:52-55, MT.Steam.gas(...160000).
             default: return GTValues.L;
+        }
+    }
+
+    /** Explicit LIQUID tags in MT.java, consumed by Loader_Fluids:658 and
+     * FL.createLiquid:1072 (1000 mB/U). lqud* factories alone do not imply
+     * this tag: Mercury, for example, is explicitly registered with 144.
+     */
+    private static boolean isGt6GeneratedLiquid(String normalized) {
+        switch (GT6MaterialIdentity.canonicalCompoundName(normalized)) {
+            case "bromine": // MT.java:424.
+            case "semiheavywater": // :1008-1019.
+            case "heavywater":
+            case "tritiatedwater":
+            case "seawater":
+            case "waterdirty":
+            case "hydrogenperoxide":
+            case "nitricacid": // :1031-1054.
+            case "glycerol":
+            case "glyceryl":
+            case "sulfuricacid":
+            case "sulphuricacid": // Literal ore-name alias, :1047.
+            case "disulfuricacid":
+            case "hexafluorosilicicacid":
+            case "titaniumtetrachloride": // :1087.
+            case "saltwater": // :1143,1160.
+            case "brine":
+            case "saltedwater":
+            case "chloroauricacid": // :1163-1177,1188; literal aliases included.
+            case "chloroplatinicacid":
+            case "stannicchloride":
+            case "blackvitriol":
+            case "bluevitriol":
+            case "romanvitriol":
+            case "cyprusvitriol":
+            case "solutionbluevitriol":
+            case "greenvitriol":
+            case "redvitriol":
+            case "pinkvitriol":
+            case "cyanvitriol":
+            case "solutionnickelsulfate":
+            case "solutionnickelsulphate":
+            case "whitevitriol":
+            case "grayvitriol":
+            case "martianvitriol":
+            case "vitriolofclay":
+            case "aquaregia":
+            case "creosote": // :1210.
+            case "creosoteoil":
+            case "ectoplasm": return true; // :1536.
+            default: return false;
         }
     }
 

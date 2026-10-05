@@ -1,9 +1,14 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
+import gregtech.api.fluids.FluidState;
 import gregtech.api.fluids.attribute.AttributedFluid;
 import gregtech.api.fluids.attribute.FluidAttributes;
+import gregtech.api.fluids.store.FluidStorageKey;
+import gregtech.api.fluids.store.FluidStorageKeys;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.info.MaterialFlags;
+import gregtech.api.unification.material.properties.FluidProperty;
+import gregtech.api.unification.material.properties.PropertyKey;
 import net.minecraftforge.fluids.Fluid;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +41,23 @@ final class GT6MaterialHazardData {
         putCombustion(0, "fishraw", "fishcooked", "fishrotten", "tofu", "bone");
         putCombustion(0, "potato"); // setBurning(Ash, U9) does not grant FLAMMABLE.
         putCombustion(0, "anythaumiccrystal", "anyhexorium");
+        // MT.java:180,198-214,1389-1437,1498,1508,1596-1611. These
+        // disabled-smelting gems have neither FLAMMABLE nor EXPLOSIVE. Component
+        // configuration/generification does not copy those tags. Keep explicit
+        // zero records rather than allowing unrelated host flags to burn/explode
+        // them; a zero smelting target alone is not proof (e.g. Silverwood).
+        putCombustion(0, "spinel", "balasruby", "foolsruby",
+                "almandine", "grossular", "pyrope", "spessartine", "andradite", "uvarovite",
+                "garnetred", "garnetorange", "garnetpurple", "garnet", "garnetyellow", "garnetgreen",
+                "redjasper", "jasper", "oceanjasper", "rainforestjasper", "bluejasper", "greenjasper", "yellowjasper",
+                "tigereye", "yellowtigereye", "catseye", "greentigereye", "dragoneye", "redtigereye",
+                "hawkseye", "bluetigereye", "blackeye", "blacktigereye", "tigeriron",
+                "greenaventurine", "aventurine", "brownaventurine", "yellowaventurine",
+                "blackaventurine", "blueaventurine", "redaventurine",
+                "topaz", "bluetopaz", "tanzanite", "zanite", "amazonite", "alexandrite",
+                "opal", "onyxred", "onyxblack", "onyx", "sugilite", "peridot", "olivine",
+                "amethyst", "dioptase", "amethystender", "enderamethyst", "dilithium",
+                "hexoriumblack", "hexoriumred", "hexoriumgreen", "hexoriumblue", "hexoriumwhite");
         putCombustion(FLAMMABLE, "anygrains");
         // MT.java:1037-1198 explicit tags and lqudflam; :1210-1220 oil factories.
         putCombustion(FLAMMABLE, "methane", "sugar", "glycerol", "hydrosulfuricacid", "hydrogensulfide",
@@ -64,8 +86,8 @@ final class GT6MaterialHazardData {
     }
 
     private static Integer combustionFlags(String name) {
-        return name == null ? null : COMBUSTION.get(name.toLowerCase(Locale.ROOT)
-                .replace("_", "").replace("-", "").replace(" ", ""));
+        return name == null ? null : COMBUSTION.get(GT6MaterialIdentity.canonicalCompoundName(
+                name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "")));
     }
 
     static boolean isExplosive(String name) {
@@ -98,10 +120,54 @@ final class GT6MaterialHazardData {
     static boolean isAcidMaterial(Material material) {
         if (material == null) return false;
         if (isAcid(material.getName())) return true;
-        if (!material.hasFluid()) return false;
-        Fluid fluid = material.getFluid();
+        if (!material.hasProperty(PropertyKey.FLUID)) return false;
+        FluidProperty property = material.getProperty(PropertyKey.FLUID);
+        // Contents store material identity, not their historical input phase.
+        // A primary-key change must not hide a registered acid attribute.
+        return hasAcidAttribute(property.get(FluidStorageKeys.MOLTEN)) ||
+                hasAcidAttribute(property.get(FluidStorageKeys.LIQUID)) ||
+                hasAcidAttribute(property.get(FluidStorageKeys.GAS)) ||
+                hasAcidAttribute(property.get(FluidStorageKeys.PLASMA)) ||
+                hasAcidAttribute(primaryFluid(property));
+    }
+
+    private static boolean hasAcidAttribute(Fluid fluid) {
         return fluid instanceof AttributedFluid &&
                 ((AttributedFluid) fluid).getAttributes().contains(FluidAttributes.ACID);
+    }
+
+    /** CEu fallback only when no authoritative boiling point is known.
+     * A registered gas/plasma variant does not make a condensed material a gas.
+     * Do not fabricate a boiling temperature from any of these fluid bindings.
+     */
+    static boolean isGasOnlyMaterial(Material material) {
+        if (material == null || !material.hasProperty(PropertyKey.FLUID)) return false;
+        FluidProperty property = material.getProperty(PropertyKey.FLUID);
+        if (isLiquid(property.get(FluidStorageKeys.MOLTEN)) ||
+                isLiquid(property.get(FluidStorageKeys.LIQUID))) return false;
+        FluidStorageKey primary = property.getPrimaryKey();
+        Fluid primaryFluid = primaryFluid(property);
+        if (primary != FluidStorageKeys.GAS && primary != FluidStorageKeys.PLASMA &&
+                primaryFluid != property.get(FluidStorageKeys.GAS) &&
+                primaryFluid != property.get(FluidStorageKeys.PLASMA) &&
+                isLiquid(primaryFluid)) return false;
+        // Standard storage keys also identify plain Forge fluids which do
+        // not implement CEu's AttributedFluid interface.
+        return property.get(FluidStorageKeys.GAS) != null ||
+                property.get(FluidStorageKeys.PLASMA) != null ||
+                (primaryFluid != null && (primaryFluid.isGaseous() ||
+                        (primaryFluid instanceof AttributedFluid &&
+                                ((AttributedFluid) primaryFluid).getState() != FluidState.LIQUID)));
+    }
+
+    private static Fluid primaryFluid(FluidProperty property) {
+        FluidStorageKey primary = property.getPrimaryKey();
+        return primary == null ? null : property.get(primary);
+    }
+
+    private static boolean isLiquid(Fluid fluid) {
+        return fluid != null && !fluid.isGaseous() &&
+                (!(fluid instanceof AttributedFluid) || ((AttributedFluid) fluid).getState() == FluidState.LIQUID);
     }
 
     /** MT.java gasacid/lqudacid factories, fluorite(), and explicit ACID declarations.

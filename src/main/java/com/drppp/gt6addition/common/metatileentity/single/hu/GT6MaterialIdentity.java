@@ -14,6 +14,13 @@ final class GT6MaterialIdentity {
         return normalizedName;
     }
 
+    /** MT.java:1041 and CEu OrganicChemistryMaterials:89 both define C3H5N3O9.
+     * Glycerol (C3H8O3) is a different compound and must remain separate.
+     */
+    static String canonicalCompoundName(String normalizedName) {
+        return "glyceryltrinitrate".equals(normalizedName) ? "glyceryl" : normalizedName;
+    }
+
     /** One known retired addon identity; do not strip arbitrary namespaces. */
     static String migrateOwnRegistryName(String name) {
         return "gt6addition:wheat".equals(name) ? "gregtech:wheat" : name;
@@ -37,6 +44,7 @@ final class GT6MaterialIdentity {
         if (gt6Name == null) return null;
         String normalized = gt6Name.toLowerCase(java.util.Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "");
         switch (normalized) {
+            case "glyceryl": return "gregtech:glyceryl_trinitrate";
             // ANY.java:94-108,117-133: negative-ID technical families
             // save their sanitized name, not an index in MT's numeric array.
             // These families steal the same material's heat/density and

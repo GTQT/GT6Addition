@@ -225,6 +225,10 @@ public final class GT6AlloyRecipes {
         String normalized = name.substring(separator + 1).toLowerCase(Locale.ROOT)
                 .replaceAll("[^a-z0-9]", "");
         switch (GT6MaterialIdentity.canonicalAlloyName(normalized)) {
+            // MT.java:1041 defines composition, not a crucible alloy recipe.
+            // Keep the verified CEu C3H5N3O9 identity out of host fallback recipes.
+            case "glyceryl":
+            case "glyceryltrinitrate":
             // MT.java:1294 only uumMcfg, no alloySimple/added recipe.
             case "tricalciumphosphate":
             case "bluephosphorus":

@@ -4,6 +4,8 @@
 
 ## 本轮迁回本模组的实现
 
+最新约束（2026-10-05）：用户要求暂时不编译、只做静态检查并继续坩埚开发，CEu不更新。新增手工/铲子回收、显示尺度和高温拆除音效直接修改本模组源码；未新增Mixin，历史构建/世界通过记录不代表本轮改动已验收。
+
 | 原Mixin | 原注入目标 | 直接实现与移除结果 |
 | --- | --- | --- |
 | CrucibleEntityCollisionMixin | `net.minecraft.block.Block` | 在`MetaTileEntityCrucible.update`每服务端tick检查块内生物并执行温度接触/致死回收；检查范围缩进0.001，包含空心内部，不扩大到相邻块。移除Mixin源码及early配置项。 |
@@ -32,6 +34,8 @@
 
 ## 核验边界
 
+本轮按用户要求不执行构建。上轮完整构建发现AnthraciteVeins调用不存在的slabGeneration接口，本轮不处理矿层或更新CEu。下文265项测试/43项世界通过为历史证据，不代表本轮源码已完成复跑；当前计划世界门槛55尚未通过。上轮新增危险/碰撞/接触测试源码只单独编译通过，本轮取料与显示检查源码尚未编译，未改变本节外部Mixin归属结论。
+
 静态核对源码目标、import、JSON引用及被删除类引用；使用实际依赖JAR确认TOP的`allowDisplaying`读取`IEnergyContainer.isOneProbeHidden`。用户恢复验证后，最新完整build及265项测试已通过（含4项Mixin归属检查及3项玩家拆除边界字节码检查）；启用RFG注解处理、early/late资源展开和EarlyMixin核心插件入口，verifyMixinPackaging检查开发包及生产包的入口、配置、class和比较器SRG映射，并禁止发布测试专用smoketest类。独立Forge开发服务端已完成运行验收：11个通用Mixin覆盖的14个目标类均在实际变换字节码中含有对应钩子的调用。43项世界场景也已通过，包括原33项及10项真实缓存、流体边界、同材料相变合并、雨水及玩家蒸汽防护场景。客户端AnthraciteOreByProductMixin、生产重混淆环境及未列出的实际玩法仍未验收。后续新增Mixin须在此表记录外部目标和必要入口，不用Mixin改本模组类。
 
 `MixinOwnershipTest` 已接入常规test/check，直接读取编译字节码的 `@Mixin` 注解，而非按类名推断目标：检查配置中的所有Mixin只指向外部类、主源码中的Mixin全部列入配置，禁止class literal或字符串targets指向本模组包。两个违规样本测试确认约束不会被字符串目标或内部斜杠类名绕过。这是自动化约束核验，不代表游戏内Mixin应用已成功。
@@ -40,6 +44,6 @@
 
 运行验收命令：`gradlew.bat verifyCrucibleForgeStartup -Pgt6ParitySmoke --console=plain`（JAVA_HOME使用文档中的Java 25，游戏进程使用项目Java 8）。仅显式指定此属性才改变runServer；测试世界/配置/日志位于build/crucible-parity-smoke，绑定127.0.0.1随机端口，无查询/RCON，正常初始化后自动stop。不读取现有run/world或saves，只复制既有eula=true决定；若原决定不存在则拒绝启动，不代用户接受EULA。该验收任务检查Done/正常停止、当前日志每个目标的应用记录，以及导出字节码中的真实钩子调用，不只检查合并后的方法名存在。常规build不会启动服务端。
 
-加 `-Pgt6ParityWorld` 启用独立测试源集，使用每次唯一名称世界执行43项世界检查，验收须含CRUCIBLE_WORLD_PASS 43且无失败标记。创造持CEu扳手会被宿主Chisel兼容事件取消（实际工具被外部ItemGTToolChiselMixin添加IChiselItem，ChiselController取消创造持该接口物品的BreakEvent）；测试确认方块/NBT不变及换空手可拆除，不绕过其他模组的取消决定。这不是本项目注入自己的类。矿石倍率、缺失目标注册、氟石锭形态及相变合并修复直接在自家材料、物品和坩埚解析类实现，未新增Mixin；具体已验证范围和剩余形态问题详见坩埚实施文档。
+加 `-Pgt6ParityWorld` 启用独立测试源集，使用每次唯一名称世界执行检查。历史通过标记为CRUCIBLE_WORLD_PASS 43；新增危险/接触/碰撞后当前门槛为CRUCIBLE_WORLD_PASS 55且无失败标记，尚未执行通过，本轮不启动。创造持CEu扳手会被宿主Chisel兼容事件取消（实际工具被外部ItemGTToolChiselMixin添加IChiselItem，ChiselController取消创造持该接口物品的BreakEvent）；历史测试确认方块/NBT不变及换空手可拆除，不绕过其他模组的取消决定。这不是本项目注入自己的类。矿石倍率、缺失目标注册、氟石锭形态及相变合并修复直接在自家材料、物品和坩埚解析类实现，未新增Mixin；具体已验证范围和剩余形态问题详见坩埚实施文档。
 
 热管预算桥使用实际依赖的transferHeat(JI)J及唯一IHeatable.transferHeat(JI)J调用，remap=false、require=1；预算开始/目标限量/返回清理三个钩子均检查实际变换调用。真实单管双目标确认不再绕过128HU源流率，原有CEu损耗提供量和温度显示流程未重写；递归和异常保护代码仍需复杂环路/异常目标运行验收。

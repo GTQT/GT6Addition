@@ -127,7 +127,7 @@ if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
                     !latest.contains('Forge Mod Loader has successfully loaded')) {
                 throw new GradleException('Forge did not complete startup and normal shutdown')
             }
-            if (worldChecks && (!latest.contains('CRUCIBLE_WORLD_PASS 43') || latest.contains('CRUCIBLE_WORLD_FAIL'))) {
+            if (worldChecks && (!latest.contains('CRUCIBLE_WORLD_PASS 55') || latest.contains('CRUCIBLE_WORLD_FAIL'))) {
                 throw new GradleException('Actual Forge world crucible checks did not all pass')
             }
             if (latest.contains('Invalid Recipe Found: Recipe output cannot be an empty ItemStack. Recipe: wheat_to_dust')) {
