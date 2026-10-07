@@ -1,7 +1,6 @@
 package com.drppp.gt6addition.smoketest;
 
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
-import com.drppp.gt6addition.common.material.GT6MachineMaterials;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import com.mojang.authlib.GameProfile;
 import gregtech.api.GTValues;
@@ -28,13 +27,14 @@ import java.util.UUID;
 /** Opt-in full-registry input checks; never packaged in the production mod. */
 final class CrucibleInputWorldSmoke {
     static int run(WorldServer world, MinecraftServer server) {
-        // This is a registration gate, not just diagnostic logging: every
-        // target of MT.java's explicit crushing rules must now be available.
+        // Host targets are mandatory; optional targets must never trigger addon registration.
         for (String target : new String[]{"adamantine", "hematite", "alumina", "rutile", "scheelite",
                 "uraninite", "fluorite", "tantalite", "columbite", "naquadah", "dolamide"}) {
             LogManager.getLogger("CrucibleParitySmoke").info("CRUCIBLE_CRUSHING_TARGET target={} registered={}",
                     target, MetaTileEntityCrucible.resolveMaterial(target) != null);
-            check(MetaTileEntityCrucible.resolveMaterial(target) != null, "Missing crushing target: " + target);
+            if (!java.util.Arrays.asList("adamantine", "fluorite", "columbite", "dolamide").contains(target)) {
+                check(MetaTileEntityCrucible.resolveMaterial(target) != null, "Missing host crushing target: " + target);
+            }
         }
         // MT.java:1972-2014 and Smeltery.onServerTickPost, not CEu recipe yields.
         input(world, 0, OrePrefix.ore, Materials.Coal, Materials.Coal, GTValues.M);
@@ -49,16 +49,28 @@ final class CrucibleInputWorldSmoke {
         input(world, 9, OrePrefix.rawOre, Materials.Coal, Materials.Coal, GTValues.M);
         input(world, 10, OrePrefix.rawOre, Materials.Iron, Materials.BandedIron, 3 * GTValues.M);
         input(world, 11, OrePrefix.ore, Materials.Iron, Materials.BandedIron, 3 * GTValues.M);
-        input(world, 12, OrePrefix.rawOre, GT6MachineMaterials.ADAMANTIUM,
-                GT6MachineMaterials.ADAMANTINE, 2 * GTValues.M);
-        input(world, 13, OrePrefix.ore, GT6MachineMaterials.COLUMBITE, GT6MachineMaterials.COLUMBITE, GTValues.M);
-        input(world, 14, OrePrefix.dust, GT6MachineMaterials.DOLAMIDE, GT6MachineMaterials.DOLAMIDE, GTValues.M);
+        int optional = optionalInput(world, 12, OrePrefix.rawOre, "adamantium", "adamantine", 2 * GTValues.M);
+        optional += optionalInput(world, 13, OrePrefix.ore, "columbite", "columbite", GTValues.M);
+        optional += optionalInput(world, 14, OrePrefix.dust, "dolamide", "dolamide", GTValues.M);
         input(world, 15, OrePrefix.dust, Materials.BandedIron, Materials.BandedIron, GTValues.M);
         hematitePhase(world);
         hematiteReduction(world);
         refinement(world, 18, Materials.Iron, Materials.WroughtIron, 2011);
         refinement(world, 19, Materials.Copper, Materials.AnnealedCopper, 2800);
-        return 20;
+        return 17 + optional;
+    }
+
+    private static int optionalInput(WorldServer world, int index, OrePrefix prefix, String sourceName,
+                                     String targetName, long amount) {
+        Material source = MetaTileEntityCrucible.resolveMaterial(sourceName);
+        Material target = MetaTileEntityCrucible.resolveMaterial(targetName);
+        if (source == null || target == null || OreDictUnifier.get(prefix, source).isEmpty()) {
+            LogManager.getLogger("CrucibleParitySmoke").info("CRUCIBLE_WORLD_OPTIONAL_INPUT unavailable source={} target={}",
+                    sourceName, targetName);
+            return 0;
+        }
+        input(world, index, prefix, source, target, amount);
+        return 1;
     }
 
     private static void hematitePhase(WorldServer world) {

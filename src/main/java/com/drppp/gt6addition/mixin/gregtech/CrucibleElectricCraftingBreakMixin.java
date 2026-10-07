@@ -19,7 +19,7 @@ public abstract class CrucibleElectricCraftingBreakMixin {
         // These concrete methods pass the original into the default method,
         // which damages its own copy. Normal returned tools stay unchanged.
         ItemStack result = callback.getReturnValue();
-        ItemStack inherited = CrucibleElectricProvenance.inheritBrokenPowerUnit(result, original);
+        ItemStack inherited = CrucibleElectricProvenance.inheritCraftingBrokenPowerUnit(result, original);
         if (inherited != result) callback.setReturnValue(inherited);
     }
 }

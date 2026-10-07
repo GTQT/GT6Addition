@@ -21,7 +21,20 @@ final class CrucibleSmeltingRule {
 
     static CrucibleSmeltingRule find(String name) {
         if (name == null) return null;
-        switch (name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "")) {
+        GT6TechnicalMaterialData.Profile family = GT6TechnicalMaterialData.find(name);
+        if (family != null) {
+            if (family.targetsSource == null) return null; // Constructor self/U; steal is not target copying.
+            CrucibleSmeltingRule source = find(family.targetsSource);
+            // Native default self/U and explicit self targets both refer to
+            // the native material, not the technical family doing the copy.
+            // Heat still comes from statsSource, notably for ANY.MagicIron.
+            return source == null ? ratio(family.nativeSelfOutput, 1, 1) :
+                    ratio(source.target == null ? family.nativeSelfOutput : source.target,
+                            source.numerator, source.denominator);
+        }
+        if (GT6WoodMaterialData.contains(name)) return new CrucibleSmeltingRule("ash", 1, 4, 400, 500);
+        switch (GT6MaterialIdentity.canonicalOreName(name.toLowerCase(Locale.ROOT)
+                .replace("_", "").replace("-", "").replace(" ", ""))) {
             // MT.java:414,418 retain default self smelting. Wrought Iron and
             // Annealed Copper are separate alloy refinements (1655-1656),
             // not CEu IngotProperty targets applied at the base melting point.
@@ -30,16 +43,8 @@ final class CrucibleSmeltingRule {
             // GTQTCore's explicitly configured Fe2O3 is GT6's Hematite. CEu's
             // BandedIron already is that same identity and retains self targets.
             case "ironiiioxide": return new CrucibleSmeltingRule("hematite", 1, 1, 1207, 2414);
-            // ANY.Phosphorus copies MT.Phosphorus's self target (one U),
-            // rather than the technical family's own material identity.
-            case "anyphosphorus": return ratio("gregtech:tricalcium_phosphate", 1, 1);
-            // Copies Fe's processing targets while stealing Manasteel's heat.
-            case "anymagiciron": return ratio("gregtech:iron", 1, 1);
             // MT.java:167 wax() grants MELTING; default one-U self target.
             case "wax": return ratio(null, 1, 1);
-            // ANY.Prismarine copies Light Prismarine, not its own identity.
-            case "anyprismarine": return ratio("gt6addition:prismarine", 1, 1);
-            case "anygrains": return ratio("gregtech:wheat", 1, 1);
             // MT.java:217,1281-1286; clay() always has the same explicit
             // ceramic target, regardless of its trace component/divider.
             case "clay":
@@ -171,9 +176,9 @@ final class CrucibleSmeltingRule {
             case "coalcoke": return new CrucibleSmeltingRule("carbon", 1, 1, 1700, 4300);
             case "graphene": return new CrucibleSmeltingRule("carbon", 1, 2, 4300, 4400);
             case "wood":
-            case "marshmallow":
             case "bark": return new CrucibleSmeltingRule("ash", 1, 4, 400, 500);
-            case "peanutwood": return new CrucibleSmeltingRule("ash", 1, 4, 350, 450);
+            // Peanutwood's steal(Wood) copies heat/stats, not processing
+            // targets. Marshmallow only uses wood(); both retain self/U.
             case "woodtreated":
             case "treatedwood":
             case "woodpolished": return new CrucibleSmeltingRule("ash", 1, 4, 500, 600);

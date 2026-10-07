@@ -9,7 +9,6 @@ import gregtech.api.unification.material.event.MaterialEvent;
 import gregtech.api.unification.material.event.MaterialRegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
 
 
 @Mod.EventBusSubscriber(modid = Tags.MOD_ID)
@@ -29,13 +28,6 @@ public class EventHandlers {
     public static void registerMaterials(MaterialEvent event) {
         GT6MachineMaterials.register();
         MaterialColorUtil.init();
-    }
-
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void registerCrucibleTargets(MaterialEvent event) {
-        // GTQTCore registers its materials at HIGH. PostMaterialEvent is too
-        // late to add missing materials because CEu has closed the registries.
-        GT6MachineMaterials.registerCrucibleTargets();
     }
 
 }

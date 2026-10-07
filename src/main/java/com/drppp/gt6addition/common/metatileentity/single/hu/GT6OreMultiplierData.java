@@ -67,7 +67,7 @@ final class GT6OreMultiplierData {
     }
 
     private static String normalize(String name) {
-        return name == null ? "" : GT6MaterialIdentity.canonicalOxideName(
-                name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", ""));
+        return name == null ? "" : GT6MaterialIdentity.canonicalOreName(GT6MaterialIdentity.canonicalOxideName(
+                name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "")));
     }
 }

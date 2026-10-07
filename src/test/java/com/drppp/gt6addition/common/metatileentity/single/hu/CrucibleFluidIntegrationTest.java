@@ -60,10 +60,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -71,6 +75,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /** Actual MTE fill/drain, tick and NBT paths, with no chunks or save files. */
 class CrucibleFluidIntegrationTest {
+    private static final Map<Field, Object> previousFluidRegistry = new LinkedHashMap<>();
+    private static final Map<Field, Object> previousToolRemapper = new LinkedHashMap<>();
     private static IMaterialRegistryManager previousMaterials;
     private static MTEManager previousMtes;
     private static MarkerMaterialRegistry previousMarkers;
@@ -91,11 +97,20 @@ class CrucibleFluidIntegrationTest {
     private static Material zeroDensity;
     private static Material glowingShell;
     private static Material enderAmethyst, amethyst, unknownCombustibleGem;
+    private static Material nativeOak, lateZeolite, ash;
+    private static Material cryolite, anyFluorite, neutralCalcite;
+    private static Material liveRoot, marshmallow, silverwood, peanutwood, nativeWood;
+    private static Material[] woodFamilies, grainFamilies;
+    private static final Map<String, Material> technicalFixtures = new LinkedHashMap<>();
+    private static final Map<String, Material> mineralFixtures = new LinkedHashMap<>();
+    private static final Map<String, Material> registrationAliasFixtures = new LinkedHashMap<>();
 
     @BeforeAll
     @SuppressWarnings("unchecked")
     static void bootstrap() throws Exception {
         Bootstrap.register();
+        isolateFluidRegistry();
+        prepareToolReflection();
         previousMaterials = GregTechAPI.materialManager;
         previousMtes = GregTechAPI.mteManager;
         previousCapability = CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY;
@@ -114,6 +129,7 @@ class CrucibleFluidIntegrationTest {
         MaterialRegistryManager registry = registryConstructor.newInstance();
         GregTechAPI.materialManager = registry;
         registry.createRegistry("gtqtcore");
+        registry.createRegistry("gt6addition");
         registry.unfreezeRegistries();
         ResourceLocation texture = new ResourceLocation("gt6addition", "fluid_integration_test");
         Materials.Water = Material.builder(269, new ResourceLocation("gregtech", "water"))
@@ -221,7 +237,99 @@ class CrucibleFluidIntegrationTest {
                 .dust().flags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE).build();
         unknownCombustibleGem = Material.builder(1915, new ResourceLocation("gregtech", "parity_unknown_gem"))
                 .dust().flags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE).build();
+        ash = Material.builder(1916, new ResourceLocation("gregtech", "ash")).dust().build();
+        nativeOak = Material.builder(1917, new ResourceLocation("gregtech", "oak"))
+                .dust().flags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE).build();
+        lateZeolite = Material.builder(1918, new ResourceLocation("gregtech", "zeolite"))
+                .dust().flags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE).build();
+        // Source-verified solids have ACID independently of any fluid binding.
+        // Match Core's Cryolite registry name without loading or editing Core.
+        cryolite = Material.builder(1919, new ResourceLocation("gtqtcore", "cryolite")).dust().build();
+        anyFluorite = Material.builder(1920, new ResourceLocation("gregtech", "any_fluorite")).dust().build();
+        // Deliberately conflicting host metadata: none of these attributes may
+        // override Calcite's source-verified absence of the GT6 ACID tag.
+        neutralCalcite = Material.builder(1921, new ResourceLocation("gregtech", "calcite"))
+                .dust().fluid(new HazardProbeFluid("parity_calcite_molten", texture, FluidState.LIQUID, true)
+                                .setTemperature(600), FluidStorageKeys.MOLTEN, FluidState.LIQUID).build();
+        FluidProperty calcitePhases = neutralCalcite.getProperty(PropertyKey.FLUID);
+        calcitePhases.store(FluidStorageKeys.LIQUID,
+                new HazardProbeFluid("parity_calcite_liquid", texture, FluidState.LIQUID, true));
+        calcitePhases.store(FluidStorageKeys.GAS,
+                new HazardProbeFluid("parity_calcite_gas", texture, FluidState.GAS, true));
+        calcitePhases.store(FluidStorageKeys.PLASMA,
+                new HazardProbeFluid("parity_calcite_plasma", texture, FluidState.PLASMA, true));
+        // These source identities were absent from the old zero-tag table;
+        // intentionally conflicting metadata must not be rewritten or adopted.
+        liveRoot = Material.builder(1922, new ResourceLocation("gregtech", "liveroot"))
+                .dust().flags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE).build();
+        marshmallow = Material.builder(1923, new ResourceLocation("gregtech", "marshmallow"))
+                .ingot().flags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE).build();
+        marshmallow.getProperty(PropertyKey.INGOT).setSmeltingInto(ash);
+        // Source-positive FLAMMABLE must also work without a host flag.
+        silverwood = Material.builder(1924, new ResourceLocation("gregtech", "silverwood"))
+                .dust().flags(MaterialFlags.EXPLOSIVE).build();
+        peanutwood = Material.builder(1925, new ResourceLocation("gregtech", "peanutwood"))
+                .dust().flags(MaterialFlags.EXPLOSIVE).build();
+        String[] woodNames = {"any_wood", "any_default_wood", "any_normal_wood", "any_magical_wood",
+                "any_treated_wood", "any_untreated_wood"};
+        woodFamilies = new Material[woodNames.length];
+        for (int i = 0; i < woodNames.length; i++) {
+            woodFamilies[i] = Material.builder(1926 + i, new ResourceLocation("gregtech", woodNames[i]))
+                    .dust().flags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE).build();
+        }
+        String[] grainNames = {"any_grains", "any_flour", "any_flour_or_grains"};
+        grainFamilies = new Material[grainNames.length];
+        for (int i = 0; i < grainNames.length; i++) {
+            grainFamilies[i] = Material.builder(1932 + i, new ResourceLocation("gregtech", grainNames[i]))
+                    .dust().flags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE).build();
+        }
+        nativeWood = Material.builder(1935, new ResourceLocation("gregtech", "wood")).dust().build();
+        String[] technicalNames = {"rubber", "plastic", "any_rubber", "any_plastic", "any_hard_plastic",
+                "any_amethyst", "any_magic_iron", "any_clay", "clay", "ceramic", "any_sand", "glass",
+                "quartz", "silicon_dioxide", "any_steel", "any_bronze", "any_metal", "any_diamond", "carbon",
+                "any_sapphire", "alumina", "any_emerald", "beryllium"};
+        for (int i = 0; i < technicalNames.length; i++) {
+            Material material = Material.builder(1936 + i, new ResourceLocation("gregtech", technicalNames[i]))
+                    .ingot().flags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE).build();
+            material.getProperty(PropertyKey.INGOT).setSmeltingInto(ash); // Deliberately conflicting host target.
+            technicalFixtures.put(technicalNames[i], material);
+        }
+        technicalFixtures.put("sand", Material.builder(1959, new ResourceLocation("gregtech", "sand"))
+                .dust().build());
+        String[] mineralNames = {"sheldonite", "raspite", "bog_iron", "illmenite", "calcium_tungstate",
+                "anthracite", "garnierite", "quartzite", "platinum", "tungsten_trioxide"};
+        for (int i = 0; i < mineralNames.length; i++) {
+            Material material = Material.builder(1960 + i, new ResourceLocation("gregtech", mineralNames[i]))
+                    .ingot().flags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE)
+                    .components(new gregtech.api.unification.stack.MaterialStack(iron, 1)).build();
+            material.getProperty(PropertyKey.INGOT).setSmeltingInto(ash);
+            mineralFixtures.put(mineralNames[i], material);
+        }
+        String[] registrationNames = {"polytetrafluoroethylene", "polyvinyl_chloride", "bakelite",
+                "polycarbonate", "chrome", "wood_sealed", "paduak", "germanium",
+                "osmium_elemental", "trinium", "vibranium", "naquadah", "atlarus",
+                "ununennium", "unbinilium", "photon", "neutrino", "neutron", "proton", "electron"};
+        for (int i = 0; i < registrationNames.length; i++) {
+            Material material = Material.builder(1970 + i, new ResourceLocation("gregtech", registrationNames[i]))
+                    .ingot().flags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE)
+                    .components(new gregtech.api.unification.stack.MaterialStack(iron, 1)).build();
+            material.getProperty(PropertyKey.INGOT).setSmeltingInto(ash);
+            registrationAliasFixtures.put(registrationNames[i], material);
+        }
         registry.closeRegistries();
+        // Material.Builder stores a binding, but does not register supplied
+        // Forge Fluid instances. FluidStack needs a real registry delegate.
+        for (Material material : registry.getRegisteredMaterials()) {
+            if (!material.hasProperty(PropertyKey.FLUID)) continue;
+            FluidProperty property = material.getProperty(PropertyKey.FLUID);
+            for (FluidStorageKey key : new FluidStorageKey[]{FluidStorageKeys.MOLTEN,
+                    FluidStorageKeys.LIQUID, FluidStorageKeys.GAS, FluidStorageKeys.PLASMA}) {
+                Fluid fluid = property.get(key);
+                if (fluid == null) continue;
+                if (!FluidRegistry.isFluidRegistered(fluid)) assertTrue(FluidRegistry.registerFluid(fluid));
+                assertSame(fluid, FluidRegistry.getFluid(fluid.getName()));
+            }
+        }
         if (previousMtes == null) GregTechAPI.mteManager = MTEManager.getInstance();
         if (previousCapability == null) {
             Constructor<?> constructor = Capability.class.getDeclaredConstructor(
@@ -240,7 +348,7 @@ class CrucibleFluidIntegrationTest {
     }
 
     @AfterAll
-    static void restoreGlobals() {
+    static void restoreGlobals() throws IllegalAccessException {
         GregTechAPI.materialManager = previousMaterials;
         GregTechAPI.mteManager = previousMtes;
         GregTechAPI.markerMaterialRegistry = previousMarkers;
@@ -250,6 +358,54 @@ class CrucibleFluidIntegrationTest {
         Materials.Obsidian = previousObsidian;
         Materials.Ice = previousIce;
         Materials.BandedIron = previousBandedIron;
+        for (Map.Entry<Field, Object> entry : previousFluidRegistry.entrySet()) {
+            entry.getKey().set(null, entry.getValue());
+        }
+        for (Map.Entry<Field, Object> entry : previousToolRemapper.entrySet()) {
+            entry.getKey().set(net.minecraftforge.fml.common.asm.transformers.deobf
+                    .FMLDeobfuscatingRemapper.INSTANCE, entry.getValue());
+        }
+        previousFluidRegistry.clear();
+        previousToolRemapper.clear();
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static void isolateFluidRegistry() throws ReflectiveOperationException {
+        // Force WATER/LAVA registration before cloning the exact Forge maps;
+        // restore their original references and ID counter after this class.
+        FluidRegistry.getRegisteredFluids();
+        for (String name : new String[]{"fluids", "fluidIDs", "fluidNames", "masterFluidReference",
+                "defaultFluidName", "delegates", "maxID"}) {
+            Field field = FluidRegistry.class.getDeclaredField(name);
+            field.setAccessible(true);
+            Object original = field.get(null);
+            previousFluidRegistry.put(field, original);
+            if (original instanceof com.google.common.collect.BiMap) {
+                field.set(null, com.google.common.collect.HashBiMap.create((Map) original));
+            } else if (original instanceof Map) {
+                field.set(null, new HashMap<>((Map) original));
+            }
+        }
+    }
+
+    private static void prepareToolReflection() throws ReflectiveOperationException {
+        // JUnit uses MCP-named Block, without Forge's LaunchWrapper remapping.
+        // ToolHelper's actual SRG reflection target is the silk-touch method.
+        // Supply only that source-verified mapping; do not replace the tool API
+        // or weaken the recovery/durability assertions.
+        Class<?> type = net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper.class;
+        Object remapper = net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper.INSTANCE;
+        String owner = "net/minecraft/block/Block";
+        Field classes = type.getDeclaredField("classNameBiMap");
+        classes.setAccessible(true);
+        previousToolRemapper.put(classes, classes.get(remapper));
+        classes.set(remapper, com.google.common.collect.ImmutableBiMap.of(owner, owner));
+        Field methods = type.getDeclaredField("methodNameMaps");
+        methods.setAccessible(true);
+        previousToolRemapper.put(methods, methods.get(remapper));
+        methods.set(remapper, Collections.singletonMap(owner, Collections.singletonMap(
+                "func_180643_i(Lnet/minecraft/block/state/IBlockState;)Lnet/minecraft/item/ItemStack;",
+                "getSilkTouchDrop")));
     }
 
     @Test
@@ -423,6 +579,138 @@ class CrucibleFluidIntegrationTest {
             }
         } finally {
             property.setPrimaryKey(primary);
+        }
+    }
+
+    @Test
+    void knownNonAcidMaterialIgnoresConflictingAttributesWithoutChangingHostBindings() {
+        FluidProperty property = neutralCalcite.getProperty(PropertyKey.FLUID);
+        FluidStorageKey primary = property.getPrimaryKey();
+        assertEquals(Boolean.FALSE, GT6MaterialHazardData.knownAcidFlag(neutralCalcite.getName()));
+        try {
+            for (FluidStorageKey key : new FluidStorageKey[]{FluidStorageKeys.MOLTEN, FluidStorageKeys.LIQUID,
+                    FluidStorageKeys.GAS, FluidStorageKeys.PLASMA}) {
+                Fluid fluid = property.get(key);
+                assertTrue(((AttributedFluid) fluid).getAttributes().contains(FluidAttributes.ACID));
+                property.setPrimaryKey(key);
+                assertFalse(GT6MaterialHazardData.isAcidMaterial(neutralCalcite));
+                assertSame(key, property.getPrimaryKey());
+                assertSame(fluid, property.get(key));
+                assertEquals(1, ((AttributedFluid) fluid).getAttributes().size());
+            }
+        } finally {
+            property.setPrimaryKey(primary);
+        }
+    }
+
+    @Test
+    void knownNeutralFluidUsesNormalTemperatureClampAndNeverCorrodesAfterReload() {
+        Vessel vessel = new Vessel();
+        vessel.readFromNBT(emptyAt(600));
+        Fluid fluid = neutralCalcite.getProperty(PropertyKey.FLUID).get(FluidStorageKeys.MOLTEN);
+        FluidStack offered = new FluidStack(fluid, GTValues.L);
+        NBTTagCompound before = vessel.save();
+        int dirty = vessel.dirtyCalls, renders = vessel.renderCalls;
+        assertEquals(GTValues.L, vessel.fluids().fill(offered, false));
+        assertEquals(before, vessel.save());
+        assertEquals(dirty, vessel.dirtyCalls);
+        assertEquals(renders, vessel.renderCalls);
+        assertEquals(0, vessel.world.blockChanges);
+        assertEquals(GTValues.L, offered.amount);
+        assertEquals(GTValues.L, vessel.fluids().fill(offered, true));
+        // Calcite melts at 1612 K, so ordinary fluid input is bounded to at
+        // least 1637 K before weighted intake. Misclassifying it as acid would
+        // skip this clamp and leave the 600 K vessel at precisely 600 K.
+        assertTrue(vessel.save().getLong("Temperature") > 600);
+        assertEquals(neutralCalcite.getRegistryName(), onlyContent(vessel.save()).getString("Material"));
+        assertEquals(GTValues.M, onlyContent(vessel.save()).getLong("Amount"));
+        vessel.update();
+        assertEquals(0, vessel.world.blockChanges);
+        NBTTagCompound saved = vessel.save();
+        Vessel restored = new Vessel();
+        restored.readFromNBT(saved);
+        // The legacy-compatible reader reconstructs an implicit self target;
+        // it must preserve every stored content field while adding that target.
+        NBTTagCompound expected = onlyContent(saved).copy();
+        expected.setString("SolidifyTarget", neutralCalcite.getRegistryName());
+        assertEquals(expected, onlyContent(restored.save()));
+        restored.update();
+        assertEquals(GTValues.M, onlyContent(restored.save()).getLong("Amount"));
+        assertEquals(0, restored.world.blockChanges);
+        Vessel reloaded = new Vessel();
+        reloaded.readFromNBT(restored.save());
+        assertEquals(onlyContent(restored.save()), onlyContent(reloaded.save()));
+        assertTrue(((AttributedFluid) fluid).getAttributes().contains(FluidAttributes.ACID));
+    }
+
+    @Test
+    void sourceTaggedSolidAcidsCorrodeBeforeMeltingAndRespectAcidProofAfterReload() {
+        for (Material material : new Material[]{cryolite, anyFluorite}) {
+            assertFalse(material.hasProperty(PropertyKey.FLUID));
+            assertTrue(GT6MaterialHazardData.isAcidMaterial(material));
+            for (int temperature : new int[]{300, 1284, 1285, 2569}) {
+                for (boolean proof : new boolean[]{false, true}) {
+                    Vessel vessel = new Vessel(null, 10_000, proof);
+                    NBTTagCompound initial = state(temperature, material.getRegistryName(), GTValues.L, GTValues.L);
+                    onlyContent(initial).setBoolean("Molten", false);
+                    vessel.readFromNBT(initial);
+                    // Loading alone must never mutate a world or discard the
+                    // acid. The actual server tick applies the source tag.
+                    assertEquals(GTValues.M, onlyContent(vessel.save()).getLong("Amount"));
+                    assertEquals(0, vessel.world.blockChanges);
+                    vessel.update();
+                    if (proof) {
+                        assertEquals(GTValues.M, onlyContent(vessel.save()).getLong("Amount"));
+                        assertEquals(material.getRegistryName(), onlyContent(vessel.save()).getString("Material"));
+                        assertEquals(0, vessel.world.blockChanges);
+                        Vessel restored = new Vessel(null, 10_000, true);
+                        restored.readFromNBT(vessel.save());
+                        restored.update();
+                        assertEquals(GTValues.M, onlyContent(restored.save()).getLong("Amount"));
+                        assertEquals(0, restored.world.blockChanges);
+                    } else {
+                        assertEquals(1, vessel.world.blockChanges);
+                        assertEquals(Blocks.AIR, vessel.world.lastBlockState.getBlock());
+                        assertEquals(0, vessel.world.lavaChanges);
+                        assertEquals(0, vessel.save().getTagList("Contents", 10).tagCount());
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    void cryoliteBoilingStillPrecedesAcidCorrosionAtTheSourceBoundary() {
+        assertEquals(2570, CrucibleMaterialPhaseData.boilingPoint(cryolite.getName()));
+        for (boolean proof : new boolean[]{false, true}) {
+            Vessel vessel = new Vessel(null, 10_000, proof);
+            vessel.readFromNBT(state(2570, cryolite.getRegistryName(), GTValues.L, GTValues.L));
+            vessel.update();
+            assertEquals(0, vessel.save().getTagList("Contents", 10).tagCount());
+            assertEquals(0, vessel.world.lavaChanges);
+            // The source's >=2000 K vapor effect may place fire, never delete
+            // the vessel via the lower-priority acid branch.
+            assertEquals(vessel.world.fireChanges, vessel.world.blockChanges);
+        }
+    }
+
+    @Test
+    void pouringSpoutRejectsSourceAcidsBeforeOverheatForBothSimulationAndRealTransfer() {
+        for (Material material : new Material[]{cryolite, anyFluorite}) {
+            Spout spout = new Spout(false);
+            NBTTagCompound before = spout.writeToNBT(new NBTTagCompound());
+            for (boolean simulate : new boolean[]{true, false}) {
+                assertEquals(0, spout.fillMold(material, GTValues.M, 10_001, spout.getFrontFacing(), simulate));
+                assertEquals(before, spout.writeToNBT(new NBTTagCompound()));
+                assertEquals(0, spout.world.blockChanges);
+            }
+            // A proof spout may accept the material; overheat remains a
+            // separate real-only world mutation, even without a target below.
+            Spout proof = new Spout(true);
+            assertEquals(0, proof.fillMold(material, GTValues.M, 10_001, proof.getFrontFacing(), true));
+            assertEquals(0, proof.world.blockChanges);
+            assertEquals(0, proof.fillMold(material, GTValues.M, 10_001, proof.getFrontFacing(), false));
+            assertEquals(1, proof.world.lavaChanges);
         }
     }
 
@@ -792,9 +1080,11 @@ class CrucibleFluidIntegrationTest {
         assertEquals(GTValues.L, CrucibleFluidUnits.defaultFluidUnit(sharedCandidate));
         assertEquals(1000, CrucibleFluidUnits.defaultFluidUnit(primaryGas));
         assertEquals(20736, CrucibleFluidUnits.defaultFluidUnit(primaryPlasma));
-        assertNull(CrucibleFluidInput.resolve(new FluidStack(
-                new Fluid("unbound_phase", new ResourceLocation("test", "a"),
-                        new ResourceLocation("test", "b")), 1)));
+        Fluid unbound = new Fluid("unbound_phase", new ResourceLocation("test", "a"),
+                new ResourceLocation("test", "b"));
+        // Registered with Forge, but deliberately not bound to a Material.
+        assertTrue(FluidRegistry.registerFluid(unbound));
+        assertNull(CrucibleFluidInput.resolve(new FluidStack(unbound, 1)));
     }
 
     @Test
@@ -1637,6 +1927,165 @@ class CrucibleFluidIntegrationTest {
     }
 
     @Test
+    void visIgnisMatchesHuHeatingAndRestoresBufferedEnergyWithoutSimulationSideEffects() {
+        for (ICrucibleEnergyReceiver.Type type : new ICrucibleEnergyReceiver.Type[]{
+                ICrucibleEnergyReceiver.Type.HU, ICrucibleEnergyReceiver.Type.VIS_IGNIS}) {
+            Vessel vessel = new Vessel(osmium);
+            vessel.readFromNBT(state(293, "gregtech:iron", 16 * GTValues.L, GTValues.L));
+            NBTTagCompound before = vessel.save();
+            int dirtyCalls = vessel.dirtyCalls;
+            int renderCalls = vessel.renderCalls;
+            assertEquals(128, vessel.receiveCrucibleEnergy(type, 128, true));
+            assertEquals(before, vessel.save());
+            assertEquals(dirtyCalls, vessel.dirtyCalls);
+            assertEquals(renderCalls, vessel.renderCalls);
+            assertEquals(0, vessel.world.blockChanges);
+            assertEquals(0, vessel.world.entityQueries);
+
+            assertEquals(128, vessel.receiveCrucibleEnergy(type, 128, false));
+            assertEquals(293, vessel.getCurrentTemperature(), "Input must buffer energy, not directly change K");
+            assertEquals(128, vessel.save().getLong("StoredHeat"));
+            Vessel restored = new Vessel(osmium);
+            restored.readFromNBT(vessel.save());
+            assertEquals(128, restored.save().getLong("StoredHeat"));
+            restored.update();
+            for (int tick = 1; tick < 20; tick++) {
+                assertEquals(128, restored.receiveCrucibleEnergy(type, 128, false));
+                restored.update();
+            }
+            assertEquals(301, restored.getCurrentTemperature());
+            assertEquals(16L * GTValues.M, onlyContent(restored.save()).getLong("Amount"));
+            assertEquals(0, restored.world.blockChanges);
+        }
+    }
+
+    @Test
+    void huVisIgnisAndCuRespectSignedBufferLimitsAndCancelWithoutOverflow() {
+        for (ICrucibleEnergyReceiver.Type hot : new ICrucibleEnergyReceiver.Type[]{
+                ICrucibleEnergyReceiver.Type.HU, ICrucibleEnergyReceiver.Type.VIS_IGNIS}) {
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = emptyAt(293);
+            initial.setLong("StoredHeat", Long.MAX_VALUE - 2);
+            vessel.readFromNBT(initial);
+            NBTTagCompound before = vessel.save();
+            int dirtyCalls = vessel.dirtyCalls;
+            assertEquals(2, vessel.receiveCrucibleEnergy(hot, Long.MAX_VALUE, true));
+            assertEquals(before, vessel.save());
+            assertEquals(dirtyCalls, vessel.dirtyCalls);
+            assertEquals(2, vessel.receiveCrucibleEnergy(hot, Long.MAX_VALUE, false));
+            assertEquals(Long.MAX_VALUE, vessel.save().getLong("StoredHeat"));
+            assertEquals(0, vessel.receiveCrucibleEnergy(hot, 1, false));
+            assertEquals(7, vessel.receiveCrucibleEnergy(ICrucibleEnergyReceiver.Type.CU, 7, false));
+            assertEquals(Long.MAX_VALUE - 7, vessel.save().getLong("StoredHeat"));
+            assertEquals(7, vessel.receiveCrucibleEnergy(hot, 7, false));
+            assertEquals(Long.MAX_VALUE, vessel.save().getLong("StoredHeat"));
+
+            initial.setLong("StoredHeat", -Long.MAX_VALUE + 2);
+            vessel.readFromNBT(initial);
+            before = vessel.save();
+            dirtyCalls = vessel.dirtyCalls;
+            assertEquals(2, vessel.receiveCrucibleEnergy(ICrucibleEnergyReceiver.Type.CU, Long.MAX_VALUE, true));
+            assertEquals(before, vessel.save());
+            assertEquals(dirtyCalls, vessel.dirtyCalls);
+            assertEquals(2, vessel.receiveCrucibleEnergy(ICrucibleEnergyReceiver.Type.CU, Long.MAX_VALUE, false));
+            assertEquals(-Long.MAX_VALUE, vessel.save().getLong("StoredHeat"));
+            assertEquals(0, vessel.receiveCrucibleEnergy(ICrucibleEnergyReceiver.Type.CU, 1, false));
+            assertEquals(7, vessel.receiveCrucibleEnergy(hot, 7, false));
+            assertEquals(-Long.MAX_VALUE + 7, vessel.save().getLong("StoredHeat"));
+            assertEquals(7, vessel.receiveCrucibleEnergy(ICrucibleEnergyReceiver.Type.CU, 7, false));
+            assertEquals(-Long.MAX_VALUE, vessel.save().getLong("StoredHeat"));
+            assertEquals(293, vessel.getCurrentTemperature());
+            assertEquals(0, vessel.world.blockChanges);
+            assertEquals(0, vessel.world.entityQueries);
+        }
+    }
+
+    @Test
+    void perCraftToolAccountUsesExactRemainingDurabilityAndPreservesInputNbt() {
+        Vessel vessel = new Vessel();
+        ItemStack stack = toolAccount(25, 100);
+        ItemStack original = stack.copy();
+        List<gregtech.api.unification.stack.MaterialStack> parsed = CrucibleToolProvenance.resolve(stack);
+        assertEquals(1, parsed.size());
+        assertSame(Materials.Obsidian, parsed.get(0).material);
+        assertEquals(3 * GTValues.M / 4, parsed.get(0).amount);
+        assertTrue(ItemStack.areItemStacksEqual(original, stack));
+        EntityItem dropped = new EntityItem(vessel.world, .5, .5, .5, stack.copy());
+        vessel.world.entities.add(dropped);
+        vessel.update();
+        assertTrue(dropped.isDead);
+        assertEquals(3 * GTValues.M / 4, onlyContent(vessel.save()).getLong("Amount"));
+        assertTrue(ItemStack.areItemStacksEqual(original, stack));
+    }
+
+    @Test
+    void invalidPerCraftToolAccountCannotFallBackToStaticOrExplicitMaterials() {
+        for (int fault = 0; fault < 7; fault++) {
+            Vessel vessel = new Vessel();
+            ItemStack stack = toolAccount(0, 100);
+            NBTTagCompound root = stack.getTagCompound();
+            NBTTagCompound account = root.getCompoundTag(CrucibleToolProvenance.TAG);
+            switch (fault) {
+                case 0: account.setString("item", "minecraft:stick"); break;
+                case 1: account.setInteger("metadata", 1); break;
+                case 2: account.setString("toolMaterial", "other_material"); break;
+                case 3: account.setInteger("version", 99); break;
+                case 4: root.getCompoundTag("GT.Tool").setInteger("Durability", 100); break;
+                case 5: account.getTagList("materials", 10).getCompoundTagAt(0).setLong("amount", -1); break;
+                default: account.getTagList("materials", 10).getCompoundTagAt(0).setString("material", "missing:material");
+            }
+            // Valid additive GT6 data must not rescue an invalid base account.
+            root.setTag(CrucibleRecyclingOverride.TAG, recycledObsidian("Extra", 1, 1).getTagCompound()
+                    .getCompoundTag(CrucibleRecyclingOverride.TAG).copy());
+            ItemStack original = stack.copy();
+            assertTrue(CrucibleToolProvenance.resolve(stack).isEmpty());
+            assertTrue(ItemStack.areItemStacksEqual(original, stack));
+            EntityItem dropped = new EntityItem(vessel.world, .5, .5, .5, stack.copy());
+            vessel.world.entities.add(dropped);
+            vessel.update();
+            assertFalse(dropped.isDead);
+            assertTrue(ItemStack.areItemStacksEqual(original, dropped.getItem()));
+            assertEquals(0, vessel.getPendingItemCount());
+            assertEquals(0, vessel.save().getTagList("Contents", 10).tagCount());
+        }
+    }
+
+    @Test
+    void validPerCraftToolAccountAndGt6ExtraMaterialsAreAddedOnce() {
+        Vessel vessel = new Vessel();
+        ItemStack stack = toolAccount(25, 100);
+        stack.getTagCompound().setTag(CrucibleRecyclingOverride.TAG,
+                recycledObsidian("Extra", 1, 1).getTagCompound().getCompoundTag(CrucibleRecyclingOverride.TAG).copy());
+        EntityItem dropped = new EntityItem(vessel.world, .5, .5, .5, stack.copy());
+        vessel.world.entities.add(dropped);
+        vessel.update();
+        assertTrue(dropped.isDead);
+        assertEquals(GTValues.M + 3 * GTValues.M / 4, onlyContent(vessel.save()).getLong("Amount"));
+    }
+
+    private static ItemStack toolAccount(int damage, int maximum) {
+        ItemStack stack = new ItemStack(Items.PAPER);
+        NBTTagCompound root = new NBTTagCompound(), tool = new NBTTagCompound(), account = new NBTTagCompound();
+        tool.setString("Material", Materials.Obsidian.getRegistryName());
+        tool.setInteger("Durability", damage);
+        tool.setInteger("MaxDurability", maximum);
+        root.setTag("GT.Tool", tool);
+        account.setInteger("version", 1);
+        account.setString("item", Items.PAPER.getRegistryName().toString());
+        account.setInteger("metadata", 0);
+        account.setString("toolMaterial", Materials.Obsidian.getRegistryName());
+        NBTTagList list = new NBTTagList();
+        NBTTagCompound component = new NBTTagCompound();
+        component.setString("material", Materials.Obsidian.getRegistryName());
+        component.setLong("amount", GTValues.M);
+        list.appendTag(component);
+        account.setTag("materials", list);
+        root.setTag(CrucibleToolProvenance.TAG, account);
+        stack.setTagCompound(root);
+        return stack;
+    }
+
+    @Test
     void actualCuUsesTheSameThermalMassAndSimulationDoesNotSpendEnergy() {
         Vessel vessel = new Vessel(osmium);
         vessel.readFromNBT(state(293, "gregtech:iron", 16 * GTValues.L, GTValues.L));
@@ -2015,6 +2464,591 @@ class CrucibleFluidIntegrationTest {
         assertTrue(GT6MaterialHazardData.isExplosiveMaterial(unknownCombustibleGem));
     }
 
+    @Test
+    void sourceWoodMeltsToQuarterAshAt400KWithoutHostBurningOrExplosion() {
+        assertSame(ash, MetaTileEntityCrucible.getSmeltingTarget(nativeOak));
+        assertEquals(GTValues.M / 4, MetaTileEntityCrucible.getSmeltingOutputAmount(nativeOak, GTValues.M));
+        for (int temperature : new int[]{399, 400}) {
+            Vessel vessel = new Vessel();
+            NBTTagCompound state = state(temperature, nativeOak.getRegistryName(), GTValues.L, GTValues.L);
+            state.setLong("OldTemperature", 399);
+            onlyContent(state).setBoolean("Molten", false);
+            vessel.readFromNBT(state);
+            vessel.update();
+            NBTTagCompound result = onlyContent(vessel.save());
+            assertEquals(temperature == 399 ? nativeOak.getRegistryName() : ash.getRegistryName(), result.getString("Material"));
+            assertEquals(temperature == 399 ? GTValues.M : GTValues.M / 4, result.getLong("Amount"));
+            assertEquals(0, result.getInteger("FluidRemainder"));
+            assertEquals(0, vessel.world.blockChanges);
+            Vessel restored = new Vessel();
+            restored.readFromNBT(vessel.save());
+            restored.update();
+            assertEquals(result.getString("Material"), onlyContent(restored.save()).getString("Material"));
+            assertEquals(result.getLong("Amount"), onlyContent(restored.save()).getLong("Amount"));
+        }
+        assertTrue(nativeOak.hasFlags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE));
+        assertFalse(GT6MaterialHazardData.isExplosiveMaterial(nativeOak));
+    }
+
+    @Test
+    void tinyWoodAmountKeepsExactQuarterRemainderAcrossNbtReload() {
+        Vessel vessel = new Vessel();
+        NBTTagCompound initial = state(400, nativeOak.getRegistryName(), GTValues.L, GTValues.L);
+        initial.setLong("OldTemperature", 399);
+        NBTTagCompound source = onlyContent(initial);
+        source.setLong("Amount", 1);
+        source.setBoolean("Molten", false);
+        vessel.readFromNBT(initial);
+        vessel.update();
+        NBTTagCompound result = onlyContent(vessel.save());
+        assertEquals(ash.getRegistryName(), result.getString("Material"));
+        assertEquals(0, result.getLong("Amount"));
+        assertEquals(CrucibleFluidUnits.STORAGE_UNIT / 4, result.getInteger("FluidRemainder"));
+        Vessel loaded = new Vessel();
+        loaded.readFromNBT(vessel.save());
+        loaded.update();
+        assertEquals(0, onlyContent(loaded.save()).getLong("Amount"));
+        assertEquals(result.getInteger("FluidRemainder"), onlyContent(loaded.save()).getInteger("FluidRemainder"));
+        assertEquals(0, loaded.world.blockChanges);
+    }
+
+    @Test
+    void lateMineralUsesItsBoilingPointWithoutChangingConflictingHostTags() {
+        for (int temperature : new int[]{2288, 2289}) {
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = state(temperature, lateZeolite.getRegistryName(), GTValues.L, GTValues.L);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            if (temperature == 2288) {
+                assertEquals(GTValues.M, onlyContent(vessel.save()).getLong("Amount"));
+                assertEquals(lateZeolite.getRegistryName(), onlyContent(vessel.save()).getString("Material"));
+                assertEquals(0, vessel.world.blockChanges);
+            } else {
+                assertEquals(0, vessel.save().getTagList("Contents", 10).tagCount());
+                assertEquals(vessel.world.fireChanges, vessel.world.blockChanges);
+                assertEquals(0, vessel.world.lavaChanges);
+            }
+        }
+        assertFalse(GT6MaterialHazardData.shouldBurn(lateZeolite, 2288));
+        assertFalse(GT6MaterialHazardData.isExplosiveMaterial(lateZeolite));
+        assertTrue(lateZeolite.hasFlags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE));
+    }
+
+    @Test
+    void knownUnlistedNoncombustibleIdentitiesIgnoreHostTagsDuringRealTicks() {
+        for (Material material : new Material[]{liveRoot, marshmallow}) {
+            assertEquals(Integer.valueOf(0), GT6MaterialHazardData.knownCombustionFlags(material.getName()));
+            assertFalse(GT6MaterialHazardData.shouldBurn(material, 600));
+            assertFalse(GT6MaterialHazardData.isExplosiveMaterial(material));
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = state(600, material.getRegistryName(), GTValues.L, GTValues.L);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            NBTTagCompound result = onlyContent(vessel.save());
+            assertEquals(material.getRegistryName(), result.getString("Material"));
+            assertEquals(GTValues.M, result.getLong("Amount"));
+            assertFalse(result.getBoolean("Molten"));
+            assertEquals(0, vessel.world.blockChanges);
+            Vessel restored = new Vessel();
+            restored.readFromNBT(vessel.save());
+            restored.update();
+            assertEquals(result, onlyContent(restored.save()));
+            assertTrue(material.hasFlags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE));
+        }
+        assertTrue(GT6MaterialHazardData.shouldBurn(unknownCombustibleGem, 314));
+        assertTrue(GT6MaterialHazardData.isExplosiveMaterial(unknownCombustibleGem));
+    }
+
+    @Test
+    void marshmallowKeepsDefaultSelfQuantityAndThermalBoundaryNotHostAshTarget() {
+        assertSame(ash, marshmallow.getProperty(PropertyKey.INGOT).getSmeltingInto());
+        assertSame(marshmallow, MetaTileEntityCrucible.getSmeltingTarget(marshmallow));
+        assertSame(marshmallow, MetaTileEntityCrucible.getSolidifyingTarget(marshmallow));
+        assertEquals(GTValues.M, MetaTileEntityCrucible.getSmeltingOutputAmount(marshmallow, GTValues.M));
+        for (int temperature : new int[]{999, 1000}) {
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = state(temperature, marshmallow.getRegistryName(), GTValues.L, GTValues.L);
+            onlyContent(initial).setBoolean("Molten", false);
+            initial.setLong("OldTemperature", 999);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            NBTTagCompound result = onlyContent(vessel.save());
+            assertEquals(marshmallow.getRegistryName(), result.getString("Material"));
+            assertEquals(GTValues.M, result.getLong("Amount"));
+            assertEquals(temperature == 1000, result.getBoolean("Molten"));
+            assertEquals(0, vessel.world.blockChanges);
+            Vessel restored = new Vessel();
+            restored.readFromNBT(vessel.save());
+            restored.update();
+            assertEquals(result.getString("Material"), onlyContent(restored.save()).getString("Material"));
+            assertEquals(GTValues.M, onlyContent(restored.save()).getLong("Amount"));
+        }
+    }
+
+    @Test
+    void silverwoodAndPeanutwoodBurnOnlyAbove313KWithoutAdoptingHostExplosion() {
+        assertNull(MetaTileEntityCrucible.getSmeltingTarget(silverwood));
+        assertSame(peanutwood, MetaTileEntityCrucible.getSmeltingTarget(peanutwood));
+        assertEquals(GTValues.M, MetaTileEntityCrucible.getSmeltingOutputAmount(peanutwood, GTValues.M));
+        for (Material material : new Material[]{silverwood, peanutwood}) {
+            assertFalse(material.hasFlags(MaterialFlags.FLAMMABLE));
+            assertTrue(material.hasFlags(MaterialFlags.EXPLOSIVE));
+            assertFalse(GT6MaterialHazardData.isExplosiveMaterial(material));
+            for (int temperature : new int[]{313, 314}) {
+                Vessel vessel = new Vessel();
+                NBTTagCompound initial = state(temperature, material.getRegistryName(), GTValues.L, GTValues.L);
+                onlyContent(initial).setBoolean("Molten", false);
+                vessel.readFromNBT(initial);
+                vessel.update();
+                if (temperature == 313) {
+                    assertEquals(material.getRegistryName(), onlyContent(vessel.save()).getString("Material"));
+                    assertEquals(GTValues.M, onlyContent(vessel.save()).getLong("Amount"));
+                } else {
+                    assertEquals(0, vessel.save().getTagList("Contents", 10).tagCount());
+                }
+                assertEquals(0, vessel.world.blockChanges);
+            }
+        }
+    }
+
+    @Test
+    void actualWoodFamiliesUseIndependentHotAndColdCopiedTargets() {
+        for (Material material : woodFamilies) {
+            assertSame(ash, MetaTileEntityCrucible.getSmeltingTarget(material));
+            assertSame(nativeWood, MetaTileEntityCrucible.getSolidifyingTarget(material));
+            assertEquals(GTValues.M / 4, MetaTileEntityCrucible.getSmeltingOutputAmount(material, GTValues.M));
+            assertFalse(GT6MaterialHazardData.isExplosiveMaterial(material));
+            for (int temperature : new int[]{399, 400}) {
+                Vessel vessel = new Vessel();
+                NBTTagCompound initial = state(temperature, material.getRegistryName(), GTValues.L, GTValues.L);
+                initial.setLong("OldTemperature", temperature == 399 ? 400 : 399);
+                // Exercise an actual cooling/heating crossing, not an already
+                // solid unchanged-temperature save with no new input.
+                onlyContent(initial).setBoolean("Molten", temperature == 399);
+                vessel.readFromNBT(initial);
+                vessel.update();
+                NBTTagCompound result = onlyContent(vessel.save());
+                assertEquals((temperature == 399 ? nativeWood : ash).getRegistryName(), result.getString("Material"));
+                assertEquals(temperature == 399 ? GTValues.M : GTValues.M / 4, result.getLong("Amount"));
+                assertEquals(0, result.getInteger("FluidRemainder"));
+                assertEquals(0, vessel.world.blockChanges);
+                Vessel restored = new Vessel();
+                restored.readFromNBT(vessel.save());
+                restored.update();
+                assertEquals(result.getString("Material"), onlyContent(restored.save()).getString("Material"));
+                assertEquals(result.getLong("Amount"), onlyContent(restored.save()).getLong("Amount"));
+            }
+            assertTrue(material.hasFlags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE));
+        }
+    }
+
+    @Test
+    void grainFamilyCopiesDoNotTransferTheirMeltingExemptionToNativeWheat() {
+        Material wheat = GregTechAPI.materialManager.getMaterial("gregtech:wheat");
+        assertNotNull(wheat);
+        for (Material material : grainFamilies) {
+            assertSame(wheat, MetaTileEntityCrucible.getSmeltingTarget(material));
+            assertSame(wheat, MetaTileEntityCrucible.getSolidifyingTarget(material));
+            assertFalse(GT6MaterialHazardData.shouldBurn(material, 314));
+            assertFalse(GT6MaterialHazardData.isExplosiveMaterial(material));
+            for (int temperature : new int[]{314, 1000}) {
+                Vessel vessel = new Vessel();
+                NBTTagCompound initial = state(temperature, material.getRegistryName(), GTValues.L, GTValues.L);
+                initial.setLong("OldTemperature", temperature == 314 ? 1000 : 999);
+                onlyContent(initial).setBoolean("Molten", temperature == 314);
+                vessel.readFromNBT(initial);
+                vessel.update();
+                NBTTagCompound result = onlyContent(vessel.save());
+                assertEquals(wheat.getRegistryName(), result.getString("Material"));
+                assertEquals(GTValues.M, result.getLong("Amount"));
+                assertEquals(temperature == 1000, result.getBoolean("Molten"));
+                assertEquals(0, vessel.world.blockChanges);
+                // GT6 copied positive setSmelting grants MELTING only to ANY.
+                // On the next tick the native Wheat's own FLAMMABLE tag wins.
+                vessel.update();
+                assertEquals(0, vessel.save().getTagList("Contents", 10).tagCount());
+                assertEquals(vessel.world.fireChanges, vessel.world.blockChanges);
+            }
+            assertTrue(material.hasFlags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE));
+        }
+    }
+
+    @Test
+    void technicalPolymersMeltWithTwoThirdsYieldAndDoNotShrinkAgainAfterSaveReload() {
+        String[] families = {"any_rubber", "any_plastic", "any_hard_plastic"};
+        for (String name : families) {
+            Material source = technicalFixtures.get(name);
+            Material target = technicalFixtures.get(name.equals("any_rubber") ? "rubber" : "plastic");
+            int melting = name.equals("any_rubber") ? 410 : 423;
+            assertSame(target, MetaTileEntityCrucible.getSmeltingTarget(source));
+            assertSame(target, MetaTileEntityCrucible.getSolidifyingTarget(source));
+            for (int temperature : new int[]{melting - 1, melting}) {
+                Vessel vessel = new Vessel();
+                NBTTagCompound initial = state(temperature, source.getRegistryName(), 3 * GTValues.L, GTValues.L);
+                initial.setLong("OldTemperature", melting - 1);
+                onlyContent(initial).setBoolean("Molten", temperature < melting);
+                vessel.readFromNBT(initial);
+                vessel.update();
+                NBTTagCompound result = onlyContent(vessel.save());
+                assertEquals(target.getRegistryName(), result.getString("Material"), name);
+                assertEquals((temperature < melting ? 3 : 2) * GTValues.M, result.getLong("Amount"), name);
+                assertEquals(temperature == melting, result.getBoolean("Molten"), name);
+                Vessel restored = new Vessel();
+                restored.readFromNBT(vessel.save());
+                restored.update();
+                assertEquals(result.getString("Material"), onlyContent(restored.save()).getString("Material"));
+                assertEquals(result.getLong("Amount"), onlyContent(restored.save()).getLong("Amount"));
+                assertEquals(0, vessel.world.blockChanges);
+                assertEquals(0, restored.world.blockChanges);
+            }
+        }
+    }
+
+    @Test
+    void copiedGemYieldsExpandAndShrinkInActualTicksWithoutUsingHostAshTargets() {
+        String[] families = {"any_diamond", "any_sapphire", "any_emerald"};
+        String[] outputs = {"carbon", "alumina", "beryllium"};
+        int[] melting = {4200, 2345, CrucibleMaterialPhaseData.knownMeltingPoint("emerald")};
+        int[] input = {2, 4, 1};
+        long[] amounts = {4 * GTValues.M, 3 * GTValues.M, GTValues.M / 36};
+        for (int i = 0; i < families.length; i++) {
+            Material source = technicalFixtures.get(families[i]), target = technicalFixtures.get(outputs[i]);
+            assertSame(target, MetaTileEntityCrucible.getSmeltingTarget(source));
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = state(melting[i], source.getRegistryName(), input[i] * GTValues.L, GTValues.L);
+            initial.setLong("OldTemperature", melting[i] - 1);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            NBTTagCompound result = onlyContent(vessel.save());
+            assertEquals(target.getRegistryName(), result.getString("Material"), families[i]);
+            assertEquals(amounts[i], result.getLong("Amount"), families[i]);
+            assertEquals(0, result.getInteger("FluidRemainder"));
+            assertTrue(result.getBoolean("Molten"));
+            assertEquals(0, vessel.world.blockChanges);
+        }
+    }
+
+    @Test
+    void technicalAmethystCopiesDisabledHotTargetButNativeColdIdentity() {
+        Material source = technicalFixtures.get("any_amethyst");
+        assertNull(MetaTileEntityCrucible.getSmeltingTarget(source));
+        assertSame(amethyst, MetaTileEntityCrucible.getSolidifyingTarget(source));
+        for (int temperature : new int[]{1950, 1951, 2000}) {
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = state(temperature, source.getRegistryName(), GTValues.L, GTValues.L);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            NBTTagCompound result = onlyContent(vessel.save());
+            assertEquals(source.getRegistryName(), result.getString("Material"));
+            assertEquals(GTValues.M, result.getLong("Amount"));
+            assertFalse(result.getBoolean("Molten"));
+            assertEquals(0, vessel.world.blockChanges);
+        }
+        Vessel cold = new Vessel();
+        cold.readFromNBT(state(1950, source.getRegistryName(), GTValues.L, GTValues.L));
+        cold.update();
+        assertEquals(amethyst.getRegistryName(), onlyContent(cold.save()).getString("Material"));
+        assertEquals(GTValues.M, onlyContent(cold.save()).getLong("Amount"));
+        assertFalse(onlyContent(cold.save()).getBoolean("Molten"));
+    }
+
+    @Test
+    void magicIronUsesManasteelTemperatureRatherThanItsIronOutputTemperature() {
+        Material source = technicalFixtures.get("any_magic_iron");
+        Material target = GregTechAPI.materialManager.getMaterial("gregtech:iron");
+        assertSame(target, MetaTileEntityCrucible.getSmeltingTarget(source));
+        assertSame(target, MetaTileEntityCrucible.getSolidifyingTarget(source));
+        for (int temperature : new int[]{1811, 2310, 2311}) {
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = state(temperature, source.getRegistryName(), GTValues.L, GTValues.L);
+            initial.setLong("OldTemperature", 1800);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            NBTTagCompound result = onlyContent(vessel.save());
+            assertEquals((temperature < 2311 ? source : target).getRegistryName(), result.getString("Material"));
+            assertEquals(GTValues.M, result.getLong("Amount"));
+            assertEquals(temperature == 2311, result.getBoolean("Molten"));
+            assertEquals(0, vessel.world.blockChanges);
+        }
+    }
+
+    @Test
+    void claySandAndQuartzUseIndependentSourceColdAndHotOutputsInActualTicks() {
+        String[] families = {"any_clay", "any_sand", "quartz"};
+        String[] cold = {"clay", "sand", "silicon_dioxide"};
+        String[] hot = {"ceramic", "glass", "silicon_dioxide"};
+        int[] melting = {2000, 1000, 1986};
+        for (int i = 0; i < families.length; i++) {
+            Material source = technicalFixtures.get(families[i]);
+            assertSame(technicalFixtures.get(cold[i]), MetaTileEntityCrucible.getSolidifyingTarget(source));
+            assertSame(technicalFixtures.get(hot[i]), MetaTileEntityCrucible.getSmeltingTarget(source));
+            for (int temperature : new int[]{melting[i] - 1, melting[i]}) {
+                Vessel vessel = new Vessel();
+                NBTTagCompound initial = state(temperature, source.getRegistryName(), GTValues.L, GTValues.L);
+                onlyContent(initial).setBoolean("Molten", temperature < melting[i]);
+                initial.setLong("OldTemperature", melting[i] - 1);
+                vessel.readFromNBT(initial);
+                vessel.update();
+                NBTTagCompound result = onlyContent(vessel.save());
+                assertEquals(technicalFixtures.get(temperature < melting[i] ? cold[i] : hot[i]).getRegistryName(),
+                        result.getString("Material"), families[i]);
+                assertEquals(GTValues.M, result.getLong("Amount"), families[i]);
+                assertEquals(temperature == melting[i], result.getBoolean("Molten"), families[i]);
+                assertEquals(0, vessel.world.blockChanges);
+            }
+        }
+    }
+
+    @Test
+    void looksOnlyFamiliesRetainSelfTargetsDefaultTemperatureAndNoHostCombustion() {
+        for (String name : new String[]{"any_steel", "any_bronze", "any_metal"}) {
+            Material source = technicalFixtures.get(name);
+            assertSame(source, MetaTileEntityCrucible.getSmeltingTarget(source));
+            assertSame(source, MetaTileEntityCrucible.getSolidifyingTarget(source));
+            assertEquals(1000D, CrucibleTransferLogic.knownGt6MaterialDensityKgPerCubicMeter(name));
+            for (int temperature : new int[]{999, 1000}) {
+                Vessel vessel = new Vessel();
+                NBTTagCompound initial = state(temperature, source.getRegistryName(), GTValues.L, GTValues.L);
+                onlyContent(initial).setBoolean("Molten", false);
+                initial.setLong("OldTemperature", 999);
+                vessel.readFromNBT(initial);
+                vessel.update();
+                NBTTagCompound result = onlyContent(vessel.save());
+                assertEquals(source.getRegistryName(), result.getString("Material"));
+                assertEquals(GTValues.M, result.getLong("Amount"));
+                assertEquals(temperature == 1000, result.getBoolean("Molten"));
+                assertEquals(0, vessel.world.blockChanges);
+            }
+        }
+    }
+
+    @Test
+    void mineralAliasesUseSourceYieldsInActualTicksAndRetainResultsOnReload() {
+        String[] sources = {"sheldonite", "raspite", "bog_iron"};
+        Material[] outputs = {mineralFixtures.get("platinum"), mineralFixtures.get("tungsten_trioxide"),
+                Materials.BandedIron};
+        int[] numerator = {1, 4, 1}, denominator = {3, 6, 2};
+        for (int i = 0; i < sources.length; i++) {
+            Material source = mineralFixtures.get(sources[i]);
+            assertSame(outputs[i], MetaTileEntityCrucible.getSmeltingTarget(source), sources[i]);
+            int melting = CrucibleMaterialPhaseData.knownMeltingPoint(source.getName());
+            assertTrue(melting > 0);
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = state(melting, source.getRegistryName(), 6 * GTValues.L, GTValues.L);
+            initial.setLong("OldTemperature", melting - 1);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            NBTTagCompound result = onlyContent(vessel.save());
+            assertEquals(outputs[i].getRegistryName(), result.getString("Material"), sources[i]);
+            assertEquals(6L * GTValues.M * numerator[i] / denominator[i], result.getLong("Amount"));
+            assertEquals(0, result.getInteger("FluidRemainder"));
+            assertEquals(0, vessel.world.blockChanges, "Host flags must not burn/explode a source mineral");
+            Vessel reloaded = new Vessel();
+            reloaded.readFromNBT(vessel.save());
+            assertEquals(result, onlyContent(reloaded.save()), "Save/reload must not repeat the ore yield");
+        }
+    }
+
+    @Test
+    void nativeMineralDensityOverridesConflictingHostComponentsInHeatAndSavedEnergy() {
+        String[] names = {"anthracite", "garnierite", "quartzite"};
+        double[] densities = {4534, 8912 + 1.429, 1000};
+        for (int i = 0; i < names.length; i++) {
+            Vessel vessel = new Vessel(osmium);
+            NBTTagCompound initial = state(300, mineralFixtures.get(names[i]).getRegistryName(),
+                    16 * GTValues.L, GTValues.L);
+            onlyContent(initial).setBoolean("Molten", false);
+            initial.setLong("StoredHeat", 2560); // Twenty ticks at 128 HU/t.
+            vessel.readFromNBT(initial);
+            vessel.update();
+            // GT6 seven-U osmium shell plus sixteen-U contents, weight/100.
+            long cost = 1 + (long) (((7 * 22610 + 16 * densities[i]) / 9) / 100);
+            assertEquals(300 + 2560 / cost, vessel.getCurrentTemperature(), names[i]);
+            assertEquals(2560 % cost, vessel.save().getLong("StoredHeat"), names[i]);
+            assertEquals(16L * GTValues.M, onlyContent(vessel.save()).getLong("Amount"));
+            assertEquals(0, vessel.world.blockChanges);
+            Vessel reloaded = new Vessel(osmium);
+            reloaded.readFromNBT(vessel.save());
+            assertEquals(vessel.getCurrentTemperature(), reloaded.getCurrentTemperature());
+            assertEquals(2560 % cost, reloaded.save().getLong("StoredHeat"));
+        }
+    }
+
+    @Test
+    void sourceAliasesResolveForLegacySavesWithoutAcceptingForeignNamespacesOrHostTargets() {
+        String[] sourceNames = {"Cooperite", "Stolzite", "YellowLimonite", "Ilmenite", "Scheelite"};
+        String[] hostNames = {"sheldonite", "raspite", "bog_iron", "illmenite", "calcium_tungstate"};
+        for (int i = 0; i < sourceNames.length; i++) {
+            Material expected = mineralFixtures.get(hostNames[i]);
+            assertSame(expected, MetaTileEntityCrucible.resolveMaterial(sourceNames[i]));
+            assertNull(MetaTileEntityCrucible.resolveMaterial("thirdparty:" + hostNames[i]));
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = state(300, sourceNames[i], GTValues.L, GTValues.L);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            assertEquals(expected.getRegistryName(), onlyContent(vessel.save()).getString("Material"));
+            assertEquals(GTValues.M, onlyContent(vessel.save()).getLong("Amount"));
+            assertSame(expected, MetaTileEntityCrucible.getSolidifyingTarget(expected));
+        }
+        for (String name : new String[]{"illmenite", "calcium_tungstate"}) {
+            Material source = mineralFixtures.get(name);
+            assertSame(source, MetaTileEntityCrucible.getSmeltingTarget(source), name);
+            Vessel vessel = new Vessel();
+            int melting = CrucibleMaterialPhaseData.knownMeltingPoint(name);
+            NBTTagCompound initial = state(melting, source.getRegistryName(), GTValues.L, GTValues.L);
+            initial.setLong("OldTemperature", melting - 1);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            assertEquals(source.getRegistryName(), onlyContent(vessel.save()).getString("Material"));
+            assertEquals(GTValues.M, onlyContent(vessel.save()).getLong("Amount"));
+            assertEquals(0, vessel.world.blockChanges);
+        }
+    }
+
+    @Test
+    void hostPolymerAliasesKeepSelfTargetsAtBothPhaseBoundariesAndDoNotLoseQuantityOnReload() {
+        for (String name : new String[]{"polytetrafluoroethylene", "polyvinyl_chloride", "bakelite", "polycarbonate"}) {
+            Material material = registrationAliasFixtures.get(name);
+            assertSame(material, MetaTileEntityCrucible.getSmeltingTarget(material), name);
+            assertSame(material, MetaTileEntityCrucible.getSolidifyingTarget(material), name);
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = state(422, material.getRegistryName(), 3 * GTValues.L, GTValues.L);
+            initial.setLong("OldTemperature", 421);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            assertEquals(3 * GTValues.M, onlyContent(vessel.save()).getLong("Amount"), name);
+            assertFalse(onlyContent(vessel.save()).getBoolean("Molten"), name);
+            NBTTagCompound heated = vessel.save();
+            heated.setLong("Temperature", 423);
+            heated.setLong("OldTemperature", 422);
+            vessel.readFromNBT(heated);
+            vessel.update();
+            NBTTagCompound molten = onlyContent(vessel.save());
+            assertEquals(material.getRegistryName(), molten.getString("Material"), name);
+            assertEquals(2 * GTValues.M, molten.getLong("Amount"), name);
+            assertTrue(molten.getBoolean("Molten"), name);
+            Vessel restored = new Vessel();
+            restored.readFromNBT(vessel.save());
+            restored.update();
+            assertEquals(molten, onlyContent(restored.save()), name);
+            NBTTagCompound cooled = restored.save();
+            cooled.setLong("Temperature", 422);
+            cooled.setLong("OldTemperature", 423);
+            restored.readFromNBT(cooled);
+            restored.update();
+            NBTTagCompound solid = onlyContent(restored.save());
+            assertEquals(material.getRegistryName(), solid.getString("Material"), name);
+            assertEquals(2 * GTValues.M, solid.getLong("Amount"), name);
+            assertFalse(solid.getBoolean("Molten"), name);
+            assertEquals(0, vessel.world.blockChanges, name);
+            assertEquals(0, restored.world.blockChanges, name);
+        }
+    }
+
+    @Test
+    void nativePolymerAndChromeStatisticsOverrideConflictingHostComponentsDuringActualHeating() {
+        double polymerDensity = (2267D + 2 * 0.08988D) / 3;
+        for (String name : new String[]{"polytetrafluoroethylene", "polyvinyl_chloride", "bakelite", "polycarbonate", "chrome"}) {
+            double density = "chrome".equals(name) ? 7150 : polymerDensity;
+            Material material = registrationAliasFixtures.get(name);
+            Vessel vessel = new Vessel(osmium);
+            NBTTagCompound initial = state(300, material.getRegistryName(), 16 * GTValues.L, GTValues.L);
+            initial.setLong("StoredHeat", 2560);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            long cost = 1 + (long) (((7 * 22610 + 16 * density) / 9) / 100);
+            assertEquals(300 + 2560 / cost, vessel.getCurrentTemperature(), name);
+            assertEquals(2560 % cost, vessel.save().getLong("StoredHeat"), name);
+            assertEquals(16 * GTValues.M, onlyContent(vessel.save()).getLong("Amount"), name);
+            assertEquals(material.getRegistryName(), onlyContent(vessel.save()).getString("Material"), name);
+            assertEquals(0, vessel.world.blockChanges, name);
+            Vessel restored = new Vessel(osmium);
+            restored.readFromNBT(vessel.save());
+            assertEquals(vessel.getCurrentTemperature(), restored.getCurrentTemperature(), name);
+            assertEquals(2560 % cost, restored.save().getLong("StoredHeat"), name);
+        }
+    }
+
+    @Test
+    void registrationAliasesResolveLegacyNamesAndWoodColdTargetsWithoutCrossingNamespaces() {
+        String[][] aliases = {{"Teflon", "polytetrafluoroethylene"}, {"PTFE", "polytetrafluoroethylene"},
+                {"Polymer", "polytetrafluoroethylene"}, {"PVC", "polyvinyl_chloride"},
+                {"HardPlastic", "polycarbonate"}, {"Chromium", "chrome"},
+                {"WoodTreated", "wood_sealed"}, {"Padauk", "paduak"}};
+        for (String[] pair : aliases) {
+            Material material = registrationAliasFixtures.get(pair[1]);
+            assertSame(material, MetaTileEntityCrucible.resolveMaterial(pair[0]), pair[0]);
+            assertNull(MetaTileEntityCrucible.resolveMaterial("thirdparty:" + pair[1]));
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = state(300, pair[0], GTValues.L, GTValues.L);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            assertEquals(material.getRegistryName(), onlyContent(vessel.save()).getString("Material"), pair[0]);
+            assertEquals(GTValues.M, onlyContent(vessel.save()).getLong("Amount"), pair[0]);
+        }
+        Material wood = registrationAliasFixtures.get("wood_sealed");
+        assertSame(nativeWood, MetaTileEntityCrucible.getSolidifyingTarget(wood));
+        Vessel cold = new Vessel();
+        NBTTagCompound initial = state(499, wood.getRegistryName(), GTValues.L, GTValues.L);
+        initial.setLong("OldTemperature", 500);
+        cold.readFromNBT(initial);
+        cold.update();
+        assertEquals(nativeWood.getRegistryName(), onlyContent(cold.save()).getString("Material"));
+        assertEquals(GTValues.M, onlyContent(cold.save()).getLong("Amount"));
+        assertEquals(0, cold.world.blockChanges);
+    }
+
+    @Test
+    void remainingExplicitElementDensitiesOverrideHostComponentsDuringHeatingAndReload() {
+        String[] names = {"osmium_elemental", "trinium", "vibranium", "naquadah", "atlarus"};
+        double[] densities = {22610, 1068.74, 3239.78365, 21000, 21246.25421};
+        for (int i = 0; i < names.length; i++) {
+            Material material = registrationAliasFixtures.get(names[i]);
+            Vessel vessel = new Vessel(osmium);
+            NBTTagCompound initial = state(300, material.getRegistryName(), 16 * GTValues.L, GTValues.L);
+            initial.setLong("StoredHeat", 2560);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            long cost = 1 + (long) (((7 * 22610 + 16 * densities[i]) / 9) / 100);
+            assertEquals(300 + 2560 / cost, vessel.getCurrentTemperature(), names[i]);
+            assertEquals(2560 % cost, vessel.save().getLong("StoredHeat"), names[i]);
+            assertEquals(16 * GTValues.M, onlyContent(vessel.save()).getLong("Amount"), names[i]);
+            assertEquals(material.getRegistryName(), onlyContent(vessel.save()).getString("Material"), names[i]);
+            assertEquals(0, vessel.world.blockChanges, names[i]);
+            Vessel loaded = new Vessel(osmium);
+            loaded.readFromNBT(vessel.save());
+            assertEquals(vessel.save(), loaded.save(), names[i]);
+        }
+    }
+
+    @Test
+    void sourceZeroDensityElementsAndParticlesAreNotReplacedByHostMassOrDefaultDensity() {
+        for (String name : new String[]{"ununennium", "unbinilium", "photon", "neutrino", "neutron", "proton", "electron"}) {
+            Material material = registrationAliasFixtures.get(name);
+            assertEquals(0D, CrucibleTransferLogic.gt6MaterialDensityKgPerCubicMeter(material.getName(), 7874), name);
+            Vessel vessel = new Vessel();
+            vessel.readFromNBT(state(300, material.getRegistryName(), GTValues.L, GTValues.L));
+            assertEquals(GTValues.M, onlyContent(vessel.save()).getLong("Amount"), name);
+            Vessel loaded = new Vessel();
+            loaded.readFromNBT(vessel.save());
+            assertEquals(GTValues.M, onlyContent(loaded.save()).getLong("Amount"), name);
+            loaded.update();
+            assertEquals(0, loaded.save().getTagList("Contents", 10).tagCount(), name);
+            assertEquals(0, loaded.world.blockChanges, name);
+            assertEquals(GTValues.M, onlyContent(vessel.save()).getLong("Amount"), name);
+        }
+    }
+
     private static NBTTagCompound onlyContent(NBTTagCompound data) {
         NBTTagList contents = data.getTagList("Contents", 10);
         assertEquals(1, contents.tagCount());
@@ -2050,6 +3084,16 @@ class CrucibleFluidIntegrationTest {
             return handler;
         }
         NBTTagCompound save() { return writeToNBT(new NBTTagCompound()); }
+    }
+
+    private static final class Spout extends MetaTileEntityCruciblePouringSpout {
+        final TestWorld world = new TestWorld();
+        Spout(boolean acidProof) { super(new ResourceLocation("gt6addition", "spout_acid_test"),
+                2, 0xFFFFFF, acidProof, 6, 6, 10_000); }
+        @Override public World getWorld() { return world; }
+        @Override public BlockPos getPos() { return BlockPos.ORIGIN; }
+        @Override public void markDirty() {}
+        @Override public void scheduleRenderUpdate() {}
     }
 
     private static final class Vessel extends MetaTileEntityCrucible {

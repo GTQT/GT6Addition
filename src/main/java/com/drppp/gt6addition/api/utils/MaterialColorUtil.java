@@ -1,6 +1,6 @@
 package com.drppp.gt6addition.api.utils;
 
-import com.drppp.gt6addition.common.material.GT6MachineMaterials;
+import com.drppp.gt6addition.common.material.GT6MaterialCompatibility;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
 
@@ -78,11 +78,11 @@ public final class MaterialColorUtil {
         bind(Materials.Vanadium, MaterialName.VANADIUM);
         bind(Materials.Clay, MaterialName.CLAY);
         bind(Materials.Brick, MaterialName.BRICK);
-        bind(GT6MachineMaterials.ARSENIC_COPPER, MaterialName.ARSENIC_COPPER);
-        bind(GT6MachineMaterials.ARSENIC_BRONZE, MaterialName.ARSENIC_BRONZE);
-        bind(GT6MachineMaterials.ANCIENT_DEBRIS, MaterialName.ANCIENT_DEBRIS);
-        bind(GT6MachineMaterials.NETHERITE, MaterialName.NETHERITE);
-        bind(GT6MachineMaterials.TANTALUM_HAFNIUM_CARBIDE, MaterialName.TANTALUM_HAFNIUM_CARBIDE);
+        bind(GT6MaterialCompatibility.findExternal("arsenic_copper"), MaterialName.ARSENIC_COPPER);
+        bind(GT6MaterialCompatibility.findExternal("arsenic_bronze"), MaterialName.ARSENIC_BRONZE);
+        bind(GT6MaterialCompatibility.findExternal("ancient_debris"), MaterialName.ANCIENT_DEBRIS);
+        bind(GT6MaterialCompatibility.findExternal("netherite"), MaterialName.NETHERITE);
+        bind(GT6MaterialCompatibility.findExternal("tantalum_hafnium_carbide"), MaterialName.TANTALUM_HAFNIUM_CARBIDE);
     }
 
     public static int get(MaterialName name) {

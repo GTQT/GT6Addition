@@ -1,5 +1,7 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
+import com.drppp.gt6addition.common.material.GT6MaterialCompatibility;
+
 import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.raytracer.IndexedCuboid6;
 import codechicken.lib.render.CCRenderState;
@@ -43,8 +45,7 @@ import gregtech.api.unification.stack.MaterialStack;
 import gregtech.api.unification.stack.RecyclingData;
 import gregtech.api.unification.stack.UnificationEntry;
 import gregtech.api.util.GTUtility;
-import gregtech.api.util.EntityDamageUtil;
-import gregtech.api.damagesources.DamageSources;
+import gregtech.api.util.Hazard;
 import gregtech.client.renderer.cclop.LightMapOperation;
 import gregtech.client.renderer.texture.Textures;
 import net.minecraft.block.state.BlockFaceShape;
@@ -624,6 +625,9 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
     }
 
     private List<MaterialStack> getInputMaterials(ItemStack stack) {
+        if (stack.hasTagCompound() && stack.getTagCompound().hasKey(CrucibleComponentProvenance.TAG)) {
+            return CrucibleComponentProvenance.resolve(stack);
+        }
         if (!CrucibleToolRecycling.isTool(stack) && stack.copy().hasCapability(
                 GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM, null)) {
             return CrucibleElectricRecycling.resolve(stack, MetaTileEntityCrucible::resolveMaterial);
@@ -633,6 +637,16 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
                 return CrucibleElectricProvenance.resolveTool(stack, MetaTileEntityCrucible::resolveMaterial);
             }
             if (!CrucibleToolRecycling.isSafeTool(stack)) return Collections.emptyList();
+            if (stack.getTagCompound().hasKey(CrucibleToolProvenance.TAG)) {
+                List<MaterialStack> account = CrucibleToolProvenance.resolve(stack);
+                if (account.isEmpty()) return Collections.emptyList();
+                if (stack.getTagCompound().hasKey(CrucibleRecyclingOverride.TAG)) {
+                    List<MaterialStack> extra = CrucibleRecyclingOverride.parse(stack.getTagCompound(),
+                            MetaTileEntityCrucible::resolveMaterial);
+                    return extra.isEmpty() ? Collections.emptyList() : CrucibleRecyclingOverride.combine(account, extra);
+                }
+                return account;
+            }
             List<MaterialStack> toolData = CrucibleToolRecycling.resolve(stack);
             if (stack.getTagCompound().hasKey(CrucibleRecyclingOverride.TAG)) {
                 List<MaterialStack> overrideData = CrucibleRecyclingOverride.parse(stack.getTagCompound(),
@@ -1820,6 +1834,11 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
     @Nullable
     public static Material resolveMaterial(@Nullable String materialName) {
         materialName = GT6MaterialIdentity.migrateOwnRegistryName(materialName);
+        String retiredPath = GT6MaterialCompatibility.retiredPath(materialName);
+        if (retiredPath != null) {
+            // Known retired addon identities may reuse an existing external material, never create one.
+            return GT6MaterialCompatibility.findExternal(retiredPath);
+        }
         if (!GT6MaterialIdentity.allowsRegistryNamespace(materialName, materialName)) {
             return null;
         }
@@ -1861,9 +1880,9 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
         String normalized = path.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
         // GT6 uses British spelling in several material identifiers; CEu
         // integrations may register the same canonical material as aluminum.
-        return GT6MaterialIdentity.canonicalAlloyName(
+        return GT6MaterialIdentity.canonicalOreName(GT6MaterialIdentity.canonicalAlloyName(
                 GT6MaterialIdentity.canonicalElementName(GT6MaterialIdentity.canonicalCompoundName(
-                        normalized.replace("aluminum", "aluminium"))));
+                        normalized.replace("aluminum", "aluminium")))));
     }
 
     public long getCurrentTemperature() {
@@ -2111,8 +2130,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
             if (damage <= 0 || !entity.isEntityAlive()) return;
             // GT6 frost damage has no Blaze/fire-resistance exemption. Use the
             // host's frost armor resistance, not its integer 273 K pipe formula.
-            EntityDamageUtil.applyHazardDamage(entity, DamageSources.getFrostDamage(), damage,
-                    EntityDamageUtil.ResistanceType.FROST);
+            Hazard.FROST.applyTo(entity, damage);
         } else {
             applyHeatHazard(entity, damage);
         }
@@ -2121,8 +2139,9 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
     private void applyHeatHazard(EntityLivingBase entity, float damage) {
         if (damage <= 0 || !entity.isEntityAlive() || entity instanceof EntityBlaze ||
                 entity.isPotionActive(MobEffects.FIRE_RESISTANCE)) return;
-        EntityDamageUtil.applyHazardDamage(entity, DamageSources.getHeatDamage(), damage,
-                EntityDamageUtil.ResistanceType.HEAT);
+        // Use the host's float-valued hazard path: its temperature/pipe helper
+        // truncates damage and uses a different formula from GT6 contact/steam.
+        Hazard.HEAT.applyTo(entity, damage);
     }
 
     @Override

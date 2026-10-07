@@ -295,11 +295,15 @@ class CrucibleTransferLogicTest {
             assertEquals(before, root);
         }
         for (String member : new String[]{"WoodTreated", "WoodPolished", "WoodRubber", "Greatwood",
-                "Silverwood", "DarkAsh", "VolcanicAsh", "RawRubber", "SiliconeRubber", "RockSalt",
-                "Polycarbonate", "HardPlastic",
+                "Silverwood", "RawRubber", "SiliconeRubber", "HardPlastic",
                 "gtqtcore:AnyRubber", "gregtech:AnyWood"}) {
             assertEquals(member, GT6MaterialIdentity.hostRecyclingName(member));
         }
+        // MT.java:1229-1230,1147,1306 explicitly registers identical names;
+        // unlike an ANY membership, they are aliases of the native identity.
+        for (String[] alias : new String[][]{{"DarkAsh", "darkashes"}, {"VolcanicAsh", "volcanicashes"},
+                {"RockSalt", "sylvite"}, {"Polycarbonate", "hardplastic"}})
+            assertEquals(alias[1], GT6MaterialIdentity.hostRecyclingName(alias[0]));
     }
 
     @Test
@@ -327,10 +331,13 @@ class CrucibleTransferLogicTest {
             assertEquals(423, CrucibleMaterialPhaseData.knownMeltingPoint("plastic"));
             assertEquals(846, CrucibleMaterialPhaseData.boilingPoint("plastic"));
         }
-        for (String member : new String[]{"Polycarbonate", "HardPlastic", "PVC", "PTFE", "Bakelite",
+        for (String member : new String[]{"HardPlastic", "Bakelite",
                 "gregtech:AnyPlastic", "gtqtcore:AnyHardPlastic"}) {
             assertEquals(member, GT6MaterialIdentity.hostRecyclingName(member));
         }
+        assertEquals("hardplastic", GT6MaterialIdentity.hostRecyclingName("Polycarbonate"));
+        assertEquals("gregtech:polyvinyl_chloride", GT6MaterialIdentity.hostRecyclingName("PVC"));
+        assertEquals("gregtech:polytetrafluoroethylene", GT6MaterialIdentity.hostRecyclingName("PTFE"));
     }
 
     @Test
@@ -425,10 +432,11 @@ class CrucibleTransferLogicTest {
         for (String member : new String[]{"spessartine", "jasper", "tigereye", "greenaventurine"}) {
             assertEquals("", CrucibleSmeltingRule.find(member).target);
         }
-        for (String unchanged : new String[]{"Spessartine", "Jasper", "TigerEye", "GreenAventurine", "Amber",
+        for (String unchanged : new String[]{"Spessartine", "TigerEye", "GreenAventurine", "Amber",
                 "gregtech:AnyGarnet", "gtqtcore:AnyJasper", "gt6addition:any_amber"}) {
             assertEquals(unchanged, GT6MaterialIdentity.hostRecyclingName(unchanged));
         }
+        assertEquals("redjasper", GT6MaterialIdentity.hostRecyclingName("Jasper")); // MT.java:1401 literal alias.
     }
 
     @Test
@@ -1336,19 +1344,23 @@ class CrucibleTransferLogicTest {
     }
 
     @Test
-    void meltingTagsSurviveExplicitFactoryAndLaterDisabledTargetOverrides() {
+    void meltingTagsFollowExplicitFactoriesNotTheWoodFactoryName() {
         for (String name : new String[]{"carbon", "carbon_13", "carbon_14", "sulfur", "sulphur"}) {
             assertTrue(GT6ElementPhaseData.hasMeltingFlag(name), name);
             assertFalse(GT6MaterialHazardData.shouldBurn(name, 314, true), name);
         }
-        for (String name : new String[]{"silverwood", "peanutwood", "marshmallow", "wood", "coal",
+        for (String name : new String[]{"marshmallow", "wood", "coal",
                 "rubber", "ptfe", "polymer", "sugar", "netherrack", "hafnium"}) {
             assertFalse(GT6MaterialHazardData.shouldBurn(name, 314, true), name);
         }
         assertEquals(0, CrucibleSmeltingRule.find("silverwood").convert(GTValues.M));
-        assertTrue(GT6InheritedBurningExemptions.contains("silverwood"));
-        assertEquals(GTValues.M / 4, CrucibleSmeltingRule.find("peanutwood").convert(GTValues.M));
-        assertEquals(GTValues.M / 4, CrucibleSmeltingRule.find("marshmallow").convert(GTValues.M));
+        assertFalse(GT6InheritedBurningExemptions.contains("silverwood"));
+        assertTrue(GT6MaterialHazardData.shouldBurn("silverwood", 314, false));
+        assertTrue(GT6MaterialHazardData.shouldBurn("peanutwood", 314, false));
+        assertNull(CrucibleSmeltingRule.find("peanutwood"));
+        assertNull(CrucibleSmeltingRule.find("marshmallow"));
+        assertTrue(CrucibleSmeltingRule.hasDefaultSelfTarget("peanutwood"));
+        assertTrue(CrucibleSmeltingRule.hasDefaultSelfTarget("marshmallow"));
         assertEquals(2 * GTValues.M / 3, CrucibleSmeltingRule.find("ptfe").convert(GTValues.M));
     }
 
@@ -2847,8 +2859,10 @@ class CrucibleTransferLogicTest {
             assertFalse(GT6MaterialHazardData.shouldBurn(name, 5000, true), name);
             assertFalse(GT6MaterialHazardData.isExplosive(name), name);
         }
-        // A disabled smelting target is not itself proof of noncombustibility.
+        // wood() never grants MELTING; Silverwood's only setSmelting call
+        // has zero output, so its explicit FLAMMABLE tag is not exempt.
         assertEquals(0, CrucibleSmeltingRule.find("silverwood").convert(GTValues.M));
+        assertFalse(GT6InheritedBurningExemptions.contains("silverwood"));
         assertTrue(GT6MaterialHazardData.shouldBurn("silverwood", 314, false));
         assertFalse(GT6MaterialHazardData.shouldBurn("parity_unknown_gem", 314, false));
         assertTrue(GT6MaterialHazardData.shouldBurn("parity_unknown_gem", 314, true));

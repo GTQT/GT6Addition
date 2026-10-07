@@ -169,7 +169,8 @@ final class GT6ElementPhaseData {
     }
 
     private static int[] find(String name) {
-        return name == null ? null : DATA.get(name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", ""));
+        return name == null ? null : DATA.get(GT6MaterialIdentity.canonicalOreName(
+                name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "")));
     }
 
     static int meltingPoint(String name) {

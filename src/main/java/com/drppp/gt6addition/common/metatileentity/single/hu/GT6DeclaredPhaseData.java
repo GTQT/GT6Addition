@@ -13,6 +13,13 @@ final class GT6DeclaredPhaseData {
     private static final Map<String, int[]> DATA = new HashMap<>();
 
     static {
+        // MT.java:531-535 explicitly uses heat(0,0,0), not constructor
+        // defaults. Particle tags do not grant MELTING/UNBURNABLE.
+        put("photon", 0, 0, false);
+        put("neutrino", 0, 0, false);
+        put("neutron", 0, 0, false);
+        put("proton", 0, 0, false);
+        put("electron", 0, 0, false);
         // MT.java:1055: explicit alloyElectrolyzer thermal override.
         put("carborundum", 3000, 3100, true);
         DATA.put("siliconcarbide", DATA.get("carborundum"));
@@ -50,8 +57,6 @@ final class GT6DeclaredPhaseData {
         put("knightmetal", 2146, 3234, true); // Steel heat +100/+100; MT.java:1766
         put("fierysteel", 2934, 3634, true); // Steel boiling -200/+500; MT.java:1767
         put("manasteel", 2311, 4134, true); // Fe heat +500/+1000; MT.java:1820
-        put("anymagiciron", 2311, 4134, true); // ANY.java:124 steals Manasteel, copies Fe targets.
-        put("anywoodorplastic", 400, 500, false); // ANY.java:145 steals Wood, not its flags/targets.
         put("terrasteel", 2561, 4634, true); // Fe heat +750/+1500; MT.java:1821
         put("elvenelementium", 2811, 5134, true); // Fe heat +1000/+2000; MT.java:1822
         put("elementium", 2811, 5134, true); // Explicit ore name alias on MT.java:1822
@@ -98,7 +103,6 @@ final class GT6DeclaredPhaseData {
         DATA.put("bluephosphorus", DATA.get("tricalciumphosphate"));
         DATA.put("redphosphorus", DATA.get("tricalciumphosphate"));
         DATA.put("whitephosphorus", DATA.get("tricalciumphosphate"));
-        DATA.put("anyphosphorus", DATA.get("tricalciumphosphate")); // ANY.java:108 steals heat.
         put("tungstentrioxide", 1746, 1970, true); // MT.java:1077
         put("tungsticacid", 373, 1746, true); // MT.java:1078
         put("alumina", 2345, 3250, true); // MT.java:1081
@@ -206,6 +210,7 @@ final class GT6DeclaredPhaseData {
         put("greatwood", 400, 600, true); // MT.java:1254
         put("silverwood", 450, 650, false); // MT.java:1255
         put("peanutwood", 350, 450, false); // MT.java:1256
+        put("marshmallow", 1000, 3000, false); // MT.java:1257 wood() retains defaults, no MELTING/FLAMMABLE.
         put("liveroot", 1178, 2465, false); // MT.java:1258
         put("petrifiedwood", 350, 450, false); // MT.java:1259
         put("wax", 350, 700, false); // MT.java:1262
@@ -217,13 +222,15 @@ final class GT6DeclaredPhaseData {
         put("waxamnesic", 350, 700, false); // MT.java:1268
         put("waxsoulful", 350, 700, false); // MT.java:1269
         put("blaze", 4000, 8000, true); // MT.java:1275
-        put("anyblaze", 4000, 8000, false); // ANY.java:109 steals heat, not flags/targets.
         put("prismarine", 1000, 3000, false); // MT.java:1639 default values; stone factory.
         put("prismarinedark", 1000, 3000, false); // MT.java:1640
-        put("anyprismarine", 1000, 3000, true); // ANY.java:110 copies positive Light targets.
         put("ceramic", 2000, 4000, false); // MT.java:1279
         put("claybrick", 2000, 4000, false); // MT.java:1280
         put("clay", 2000, 4000, true); // MT.java:1281
+        // clay() ends with the same explicit heat and ceramic target.
+        for (String name : new String[]{"claybrown", "clayred", "bentonite", "palygorskite", "fullersearth", "kaolinite"}) {
+            put(name, 2000, 4000, true);
+        }
         put("porcelain", 1800, 3600, false); // MT.java:1289
         put("niter", 607, 1214, false); // MT.java:1293
         put("rubber", 410, 820, true); // MT.java:1301
@@ -245,11 +252,13 @@ final class GT6DeclaredPhaseData {
         for (String name : new String[]{"barley", "rye", "rice", "oat", "abyssaloat", "corn", "potato"}) {
             put(name, 1000, 3000, false); // MT.java:1324-1330; no later thermal overrides.
         }
-        put("anygrains", 1000, 3000, true); // ANY.java:111-113 copies positive Wheat targets.
-        // ANY.java:134-135 steals InfusedDull / HexoriumWhite statistics,
-        // without copying UNBURNABLE or the latter's disabled smelting.
-        put("anythaumiccrystal", 1000, 3000, false);
-        put("anyhexorium", 1000, 3000, false);
+        // MT.java:1228,1585,1611 retain the OreDictMaterial constructor heat.
+        // InfusedDull's factory adds UNBURNABLE; HexoriumWhite disables
+        // smelting. Neither exemption/target is copied by ANY's steal().
+        put("ash", 1000, 3000, false);
+        put("ashes", 1000, 3000, false);
+        put("infuseddull", 1000, 3000, true);
+        put("hexoriumwhite", 1000, 3000, false);
         put("soylentgreen", 422, 500, true); // MT.java:1332
         put("cheese", 320, 500, true); // MT.java:1333
         put("amber", 473, 946, false); // MT.java:1439
@@ -497,6 +506,16 @@ final class GT6DeclaredPhaseData {
         putComposition("duraniumalloy", 0, new String[]{"duranium", "magnesium"}, new long[]{7, 1});
         putComposition("tritaniumalloy", 0, new String[]{"tritanium", "duranium"}, new long[]{3, 1});
         put("naquadah", 1500, 3000, true);
+        // MT.java:745-746,757-760,811,944: explicit fictional elements.
+        put("naquadahenriched", 1500, 3000, true);
+        DATA.put("enrichednaquadah", DATA.get("naquadahenriched"));
+        put("naquadria", 1500, 3000, true);
+        put("abyssalnite", 1500, 3000, true);
+        put("coralium", 2000, 4000, true);
+        put("dreadium", 2500, 5000, true);
+        put("ethaxium", 3000, 6000, true);
+        put("macguffium", 200, 1000, false);
+        put("gravitonium", 112, 1275, false);
         putComposition("trinaquadalloy", 0, new String[]{"trinium", "naquadah", "carbon"}, new long[]{6, 2, 1});
         DATA.put("naquadahalloy", DATA.get("trinaquadalloy")); // Explicit MT.java:1871 ore alias.
         putComposition("trinitanium", 0, new String[]{"trinium", "titanium"}, new long[]{2, 1});
@@ -585,12 +604,6 @@ final class GT6DeclaredPhaseData {
         DATA.put("garnet", DATA.get("spessartine"));
         DATA.put("garnetyellow", DATA.get("andradite"));
         DATA.put("garnetgreen", DATA.get("uvarovite"));
-        // ANY.java:102-106 only steals heat/stats, not member processing flags.
-        DATA.put("anygarnet", DATA.get("spessartine"));
-        DATA.put("anyjasper", DATA.get("jasper"));
-        DATA.put("anytigereye", DATA.get("tigereye"));
-        DATA.put("anyaventurine", DATA.get("greenaventurine"));
-        DATA.put("anyamber", DATA.get("amber"));
 
         // MT.java:1237,1516-1518; dependencies must be evaluated before Lapis.
         // ore-dust/elec/cent factories do not imply a MELTING flag.
@@ -627,6 +640,12 @@ final class GT6DeclaredPhaseData {
         putComposition("stolzite", 0, new String[]{"lead", "tungstentrioxide", "oxygen"}, new long[]{1, 4, 1}); // MT.java:3730
         putComposition("russellite", 0, new String[]{"bismuth", "tungstentrioxide", "oxygen"}, new long[]{2, 4, 3}); // MT.java:3731
         putComposition("pinalite", 0, new String[]{"lead", "tungstentrioxide", "chlorine", "oxygen"}, new long[]{3, 4, 2, 2}); // MT.java:3732
+        // MT.java:3734-3737: no later heat override or MELTING tag.
+        putComposition("wollastonite", 0, new String[]{"calcium", "silicondioxide", "oxygen"}, new long[]{1, 3, 1}, false);
+        putComposition("zeolite", 0, new String[]{"alumina", "sodium", "silicondioxide", "water", "oxygen"}, new long[]{5, 2, 12, 6, 1}, false);
+        putComposition("pollucite", 0, new String[]{"alumina", "caesium", "silicondioxide", "water", "oxygen"}, new long[]{5, 2, 12, 6, 1}, false);
+        // MT.java:3742: the literal saved name, distinct from the field alias.
+        DATA.put("vanadiummagnetite", DATA.get("ferrovanadium"));
         putComposition("niobiumpentoxide", 0, new String[]{"niobium", "oxygen"}, new long[]{2, 5}, false); // MT.java:1068
         putComposition("tantalumpentoxide", 0, new String[]{"tantalum", "oxygen"}, new long[]{2, 5}, false); // MT.java:1071
         putComposition("tantalite", 0, new String[]{"tantalumpentoxide", "pyrolusite"}, new long[]{7, 1}, false); // MT.java:3743, MnO2 internal name Pyrolusite.
@@ -659,6 +678,78 @@ final class GT6DeclaredPhaseData {
         putComposition("alunite", 0, new String[]{"alumina", "potassiumhydroxide", "sulfurtrioxide", "water", "oxygen"}, new long[]{15, 6, 16, 15, 9}, false);
         putComposition("diatomite", 0, new String[]{"flint", "hematite", "sapphire"}, new long[]{8, 1, 1}, false); // MT.java:3765
         putComposition("garnetsand", 0, new String[]{"almandine", "andradite", "grossular", "pyrope", "spessartine", "uvarovite"}, new long[]{1, 1, 1, 1, 1, 1}, false); // MT.java:3776
+        // MT.java:3779-3790: elemental Dn/Tn, not their similarly named alloys.
+        putComposition("diduraniumtrioxide", 0, new String[]{"duraniumelemental", "oxygen"}, new long[]{2, 3}, false);
+        putComposition("tritaniumdioxide", 0, new String[]{"tritaniumelemental", "oxygen"}, new long[]{1, 2}, false);
+        for (String halogen : new String[]{"fluorine", "chlorine", "bromine", "iodine", "astatine"}) {
+            String suffix = halogen.equals("fluorine") ? "fluoride" : halogen.equals("chlorine") ? "chloride" :
+                    halogen.equals("bromine") ? "bromide" : halogen.equals("iodine") ? "iodide" : "astatide";
+            putComposition("duraniumhexa" + suffix, 0, new String[]{"duraniumelemental", halogen}, new long[]{1, 6}, false);
+            putComposition("tritaniumhexa" + suffix, 0, new String[]{"tritaniumelemental", halogen}, new long[]{1, 6}, false);
+        }
+        // MT.java:3813-3814. Generifying Stone does not copy its temperatures.
+        putComposition("shale", 0, new String[]{"calcite", "milkyquartz", "clay"}, new long[]{2, 1, 1}, false);
+        putComposition("redrock", 0, new String[]{"calcite", "flint", "clayred"}, new long[]{2, 1, 1}, false);
+        for (String name : GT6WoodMaterialData.names()) put(name, 400, 500, true);
+
+        // MT.java:1024,1039,1061-1062,1124-1125,1132-1159,1189-1191.
+        // Explicit configuration thermal averages, NOT host molecular weights.
+        putComposition("heliumneon", 0, new String[]{"helium", "neon"}, new long[]{1, 1}, false);
+        putComposition("vanilla", 0, new String[]{"carbon", "hydrogen", "oxygen"}, new long[]{8, 8, 3}, false);
+        putComposition("hydrogenborate", 0, new String[]{"hydrogen", "boron", "oxygen"}, new long[]{3, 1, 3}, false);
+        putComposition("datolite", 0, new String[]{"hydrogen", "calcium", "boron", "silicon", "oxygen"}, new long[]{2, 2, 2, 2, 10}, false);
+        putComposition("lithiumoxide", 0, new String[]{"lithium", "oxygen"}, new long[]{2, 1}, false);
+        putComposition("ferrite", 0, new String[]{"lithium", "iron", "oxygen"}, new long[]{2, 2, 4}, false);
+        putComposition("sodiumhydrogencarbonate", 0, new String[]{"sodium", "hydrogen", "carbon", "oxygen"}, new long[]{1, 1, 1, 3}, false);
+        putComposition("sodiumbisulfate", 0, new String[]{"sodium", "hydrogen", "sulfur", "oxygen"}, new long[]{1, 1, 1, 4}, false);
+        putComposition("sodiumpersulfate", 0, new String[]{"sodium", "sulfur", "oxygen"}, new long[]{1, 1, 4}, false);
+        putComposition("sodiumsulfide", 0, new String[]{"sodium", "sulfur"}, new long[]{2, 1}, false);
+        putComposition("potassiumbisulfate", 0, new String[]{"potassium", "hydrogen", "sulfur", "oxygen"}, new long[]{1, 1, 1, 4}, false);
+        putComposition("potassiumpersulfate", 0, new String[]{"potassium", "sulfur", "oxygen"}, new long[]{1, 1, 4}, false);
+        putComposition("potassiumsulfide", 0, new String[]{"potassium", "sulfur"}, new long[]{2, 1}, false);
+        putComposition("potassiumheptafluorotantalate", 0, new String[]{"potassium", "tantalum", "fluorine"}, new long[]{2, 1, 7}, false);
+        put("saltwater", 273, 363, false); // :1143 heat(C,C+90), AFTER configuration.
+        put("saltedwater", 273, 363, false); // :1160, KCl rather than NaCl.
+        putComposition("cobalthexahydrate", 0, new String[]{"cobalt", "water"}, new long[]{1, 6}, false);
+        putComposition("methaneice", 2, new String[]{"methane", "ice"}, new long[]{1, 2}, false);
+        putComposition("nitrocarbon", 0, new String[]{"nitrogen", "carbon"}, new long[]{1, 1}, false);
+
+        // :1230,1233-1239,1298-1299,1308-1310,1350-1351,1478-1479.
+        putComposition("volcanicashes", 0, new String[]{"flint", "hematite", "magnesium"}, new long[]{6, 1, 1}, false);
+        putComposition("chalk", 0, new String[]{"calcite"}, new long[]{1}, false);
+        putComposition("dolomite", 0, new String[]{"calcite", "magnesiumcarbonate"}, new long[]{1, 1}, false);
+        putComposition("asbestos", 0, new String[]{"magnesium", "silicondioxide", "water", "oxygen"}, new long[]{3, 6, 6, 3}, false);
+        putComposition("talc", 0, new String[]{"magnesium", "silicondioxide", "water", "oxygen"}, new long[]{3, 12, 3, 3}, false);
+        putComposition("potassiumfeldspar", 0, new String[]{"potassium", "alumina", "silicondioxide", "oxygen"}, new long[]{2, 5, 18, 1}, false);
+        putComposition("biotite", 0, new String[]{"potassium", "magnesium", "alumina", "fluorine", "silicondioxide"}, new long[]{2, 6, 15, 4, 18}, false);
+        putComposition("apatite", 0, new String[]{"calcium", "phosphate", "chlorine"}, new long[]{5, 3, 1}, false);
+        putComposition("phosphorite", 0, new String[]{"calcium", "phosphate", "fluorine"}, new long[]{5, 3, 1}, false);
+        putComposition("slimybone", 8, new String[]{"calcium"}, new long[]{1}, false);
+        putComposition("gunpowder", 4, new String[]{"carbon", "sulfur", "sodiumnitrate"}, new long[]{2, 1, 1}, false);
+        putComposition("dynamite", 0, new String[]{"glyceryl", "wood"}, new long[]{1, 1}, false);
+        put("chocolate", 313, 400, false); // :1336 heat(C+40,400), AFTER configuration.
+        put("butter", 313, 500, false); // :1350
+        put("saltedbutter", 313, 500, false); // :1351
+        // A zero-temperature component still produces the source's clamped 1/2 K.
+        putComposition("vinteum", 0, new String[]{"magic"}, new long[]{1}, false);
+        putComposition("vinteumpurified", 0, new String[]{"magic"}, new long[]{1}, false);
+
+        // :1511-1513,1525-1528,1534,1581-1582,1626,1845,3777,3819-3820.
+        putComposition("zircon", 0, new String[]{"zirconium", "silicondioxide", "oxygen"}, new long[]{1, 3, 2}, false);
+        putComposition("azurite", 0, new String[]{"copper", "carbontrioxide", "oxygen", "water"}, new long[]{3, 8, 1, 3}, false);
+        putComposition("eudialyte", 0, new String[]{"zircon", "pyrolusite", "sodium", "calcium", "chlorine", "silicondioxide", "oxygen"}, new long[]{18, 3, 15, 6, 2, 75, 12}, false);
+        putComposition("prismane", 1, new String[]{"carbon"}, new long[]{4}, false);
+        putComposition("lonsdaleite", 1, new String[]{"carbon"}, new long[]{8}, false);
+        putComposition("lignite", 7, new String[]{"carbon", "water", "darkashes"}, new long[]{2, 4, 1}, false);
+        putComposition("lignitecoke", 7, new String[]{"carbon", "darkashes"}, new long[]{2, 1}, false);
+        putComposition("hydratedcoal", 8, new String[]{"coal", "water"}, new long[]{8, 1}, false);
+        putComposition("energiumred", 0, new String[]{"sapphire", "redstone"}, new long[]{4, 5}, false);
+        putComposition("energiumcyan", 0, new String[]{"sapphire", "nikolite"}, new long[]{4, 5}, false);
+        putComposition("monazite", 0, new String[]{"rareearth", "phosphate"}, new long[]{1, 1}, false);
+        putComposition("duralumin", 0, new String[]{"aluminium", "copper"}, new long[]{1, 1}, false);
+        putComposition("quartzsand", 0, new String[]{"certusquartz", "milkyquartz"}, new long[]{1, 1}, false);
+        putComposition("marble", 0, new String[]{"magnesium", "calcite"}, new long[]{1, 7}, false);
+        putComposition("limestone", 0, new String[]{"calcite"}, new long[]{1}, false);
     }
 
     static {
@@ -694,6 +785,11 @@ final class GT6DeclaredPhaseData {
             if (declared == null && boiling[i] == Long.MAX_VALUE) {
                 boiling[i] = GT6InheritedPhaseData.boilingPoint(components[i]);
             }
+            GT6NativeScalarData.Profile scalar = GT6NativeScalarData.find(components[i]);
+            if (scalar != null) {
+                if (melting[i] < 0) melting[i] = scalar.melting;
+                if (boiling[i] == Long.MAX_VALUE) boiling[i] = scalar.boiling;
+            }
         }
         long melt = compositionPoint(melting, weights, divider);
         long boil = compositionPoint(boiling, weights, divider);
@@ -726,22 +822,36 @@ final class GT6DeclaredPhaseData {
     }
 
     private static int[] find(String name) {
-        return name == null ? null : DATA.get(GT6MaterialIdentity.canonicalCompoundName(
+        return name == null ? null : DATA.get(GT6MaterialIdentity.canonicalOreName(GT6MaterialIdentity.canonicalCompoundName(
                 GT6MaterialIdentity.canonicalOxideName(name.toLowerCase(Locale.ROOT)
-                .replace("_", "").replace("-", "").replace(" ", ""))));
+                .replace("_", "").replace("-", "").replace(" ", "")))));
     }
 
     static int meltingPoint(String name) {
+        GT6TechnicalMaterialData.Profile family = GT6TechnicalMaterialData.find(name);
+        if (family != null) return GT6TechnicalMaterialData.meltingPoint(family);
         int[] value = find(name);
-        return value == null ? -1 : value[0];
+        if (value != null) return value[0];
+        GT6NativeScalarData.Profile scalar = GT6NativeScalarData.find(name);
+        return scalar == null ? -1 : scalar.melting;
     }
 
     static long boilingPoint(String name) {
+        GT6TechnicalMaterialData.Profile family = GT6TechnicalMaterialData.find(name);
+        if (family != null) return GT6TechnicalMaterialData.boilingPoint(family);
         int[] value = find(name);
-        return value == null ? Long.MAX_VALUE : value[1];
+        if (value != null) return value[1];
+        GT6NativeScalarData.Profile scalar = GT6NativeScalarData.find(name);
+        return scalar == null ? Long.MAX_VALUE : scalar.boiling;
     }
 
     static boolean hasBurningExemption(String name) {
+        if (GT6TechnicalMaterialData.contains(name)) {
+            // Positive copied setSmelting adds MELTING to the family. The
+            // only independently declared UNBURNABLE family is ANY.W.
+            return "anytungsten".equals(name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "")) ||
+                    CrucibleSmeltingRule.hasMeltingFlag(name);
+        }
         int[] value = find(name);
         return value != null && value[2] != 0;
     }

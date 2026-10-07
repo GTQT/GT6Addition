@@ -81,6 +81,47 @@ tasks.register('verifyMixinPackaging') {
 
 tasks.named('check') { dependsOn tasks.named('verifyMixinPackaging') }
 
+// Human policy: the already existing Anthracite is the only addon Material.
+// Inspect production bytecode so helper methods or fully qualified builders cannot bypass this gate.
+tasks.register('verifyMaterialRegistrationPolicy') {
+    group = 'verification'
+    dependsOn tasks.named('classes')
+    inputs.files(sourceSets.main.output.classesDirs)
+    doLast {
+        int builders = 0
+        sourceSets.main.output.classesDirs.asFileTree.matching { include '**/*.class' }.each { classFile ->
+            new ClassReader(classFile.bytes).accept(new ClassVisitor(Opcodes.ASM9) {
+                String owner
+                @Override
+                void visit(int version, int access, String name, String signature, String parent, String[] interfaces) {
+                    owner = name
+                }
+                @Override
+                MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+                    return new MethodVisitor(Opcodes.ASM9) {
+                        @Override
+                        void visitTypeInsn(int opcode, String type) {
+                            if (opcode != Opcodes.NEW || type != 'gregtech/api/unification/material/Material$Builder') return
+                            builders++
+                            if (owner != 'com/drppp/gt6addition/common/material/GT6MachineMaterials' || name != 'register') {
+                                throw new GradleException("New production material registration is forbidden: ${owner}.${name}")
+                            }
+                        }
+                        @Override
+                        void visitMethodInsn(int opcode, String target, String method, String descriptor, boolean isInterface) {
+                            if (target == 'gregtech/api/unification/material/Material' && method == 'builder') {
+                                throw new GradleException("New production material factory is forbidden: ${owner}.${name}")
+                            }
+                        }
+                    }
+                }
+            }, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+        }
+        if (builders != 1) throw new GradleException("Only the existing Anthracite builder is allowed; found ${builders}")
+    }
+}
+tasks.named('check') { dependsOn tasks.named('verifyMaterialRegistrationPolicy') }
+
 // Opt-in real Forge startup, isolated from the developer's run directory.
 // Reuse an existing EULA decision; this task must never accept it for the user.
 if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
@@ -127,7 +168,10 @@ if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
                     !latest.contains('Forge Mod Loader has successfully loaded')) {
                 throw new GradleException('Forge did not complete startup and normal shutdown')
             }
-            if (worldChecks && (!latest.contains('CRUCIBLE_WORLD_PASS 55') || latest.contains('CRUCIBLE_WORLD_FAIL'))) {
+            def worldPass = latest =~ /CRUCIBLE_WORLD_PASS (\d+)/
+            if (worldChecks && (!worldPass.find() || Integer.parseInt(worldPass.group(1)) < 72 ||
+                    !latest.contains('CRUCIBLE_WORLD_MATERIAL_POLICY passed owned=1 crucibles=23') ||
+                    latest.contains('CRUCIBLE_WORLD_FAIL'))) {
                 throw new GradleException('Actual Forge world crucible checks did not all pass')
             }
             if (latest.contains('Invalid Recipe Found: Recipe output cannot be an empty ItemStack. Recipe: wheat_to_dust')) {

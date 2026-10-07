@@ -1,6 +1,6 @@
 package com.drppp.gt6addition.smoketest;
 
-import com.drppp.gt6addition.common.material.GT6MachineMaterials;
+import com.drppp.gt6addition.common.material.GT6MaterialCompatibility;
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
 import com.drppp.gt6addition.common.metatileentity.single.hu.CrucibleHazardFire;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
@@ -129,7 +129,8 @@ final class CrucibleHazardWorldSmoke {
         resistant.update();
         check(amount(resistant, Materials.SulfuricAcid) == GTValues.M, "Chrome lost nonboiling acid");
         installed(world, resistant);
-        for (Material acid : new Material[]{Materials.SulfuricAcid, GT6MachineMaterials.FLUORITE}) {
+        for (Material acid : new Material[]{Materials.SulfuricAcid, GT6MaterialCompatibility.findExternal("fluorite")}) {
+            if (acid == null) continue;
             MetaTileEntityCrucible ordinary = place(world, player, 15);
             // The solid acid must destroy its shell before conversion can neutralize it.
             seed(ordinary, acid == Materials.SulfuricAcid ? 300 : 1633, 1, acid);
@@ -271,9 +272,15 @@ final class CrucibleHazardWorldSmoke {
         fatal.setHealth(.5F);
         temperature(vessel, 321);
         vessel.update();
-        check(fatal.getHealth() == 0 && amount(vessel, GT6MachineMaterials.MEAT_RAW) == 3L * GTValues.M,
-                "Fatal hot cow contact did not insert exactly GT6's three raw meat units");
-        check(amount(vessel, GT6MachineMaterials.MEAT_COOKED) == 0, "Cow contact inserted cooked rather than raw meat");
+        Material rawMeat = GT6MaterialCompatibility.findExternal("meat_raw");
+        Material cookedMeat = GT6MaterialCompatibility.findExternal("meat_cooked");
+        check(fatal.getHealth() == 0, "Fatal hot cow contact did not deal damage");
+        if (rawMeat == null) {
+            check(save(vessel).getTagList("Contents", 10).isEmpty(), "Missing meat target invented a replacement material");
+        } else {
+            check(amount(vessel, rawMeat) == 3L * GTValues.M, "Fatal contact lost external raw meat quantity");
+        }
+        check(cookedMeat == null || amount(vessel, cookedMeat) == 0, "Cow contact inserted cooked rather than raw meat");
         fatal.setDead();
         // Full contents refuse the whole death-product batch without displacing existing material.
         MetaTileEntityCrucible full = place(world, player, 15);
@@ -282,7 +289,7 @@ final class CrucibleHazardWorldSmoke {
         refused.setHealth(.5F);
         full.update();
         check(refused.getHealth() == 0 && amount(full, Materials.Iron) == 16L * GTValues.M &&
-                amount(full, GT6MachineMaterials.MEAT_RAW) == 0, "Fatal contact overfilled or displaced full contents");
+                (rawMeat == null || amount(full, rawMeat) == 0), "Fatal contact overfilled or displaced full contents");
         refused.setDead();
         MetaTileEntityCrucible protectedVessel = place(world, player, 15);
         temperature(protectedVessel, 321);

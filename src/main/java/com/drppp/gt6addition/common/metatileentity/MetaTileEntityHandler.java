@@ -42,7 +42,6 @@ import com.drppp.gt6addition.common.recipes.GT6AdditionRecipeMaps;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
-import com.drppp.gt6addition.common.material.GT6MachineMaterials;
 import gregtech.client.renderer.texture.cube.OrientedOverlayRenderer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Loader;
@@ -124,10 +123,15 @@ public class MetaTileEntityHandler {
     public static void InitMte() {
         String[] names = {"lead", "bismuth", "bronze", "arsenic_copper", "arsenic_bronze", "invar", "steel",
                 "chrome", "titanium", "netherite", "tungsten", "tungstensteel", "tantalum_hafnium_carbide"};
-        Material[] burningMaterials = {Materials.Lead, Materials.Bismuth, Materials.Bronze,
-                GT6MachineMaterials.ARSENIC_COPPER, GT6MachineMaterials.ARSENIC_BRONZE, Materials.Invar,
-                Materials.Steel, Materials.Chrome, Materials.Titanium, GT6MachineMaterials.NETHERITE,
-                Materials.Tungsten, Materials.TungstenSteel, GT6MachineMaterials.TANTALUM_HAFNIUM_CARBIDE};
+        // Machine identities/colours survive even when optional crafting materials are absent.
+        MaterialColorUtil.MaterialName[] burningMaterials = {
+                MaterialColorUtil.MaterialName.LEAD, MaterialColorUtil.MaterialName.BISMUTH,
+                MaterialColorUtil.MaterialName.BRONZE, MaterialColorUtil.MaterialName.ARSENIC_COPPER,
+                MaterialColorUtil.MaterialName.ARSENIC_BRONZE, MaterialColorUtil.MaterialName.INVAR,
+                MaterialColorUtil.MaterialName.STEEL, MaterialColorUtil.MaterialName.CHROME,
+                MaterialColorUtil.MaterialName.TITANIUM, MaterialColorUtil.MaterialName.NETHERITE,
+                MaterialColorUtil.MaterialName.TUNGSTEN, MaterialColorUtil.MaterialName.TUNGSTEN_STEEL,
+                MaterialColorUtil.MaterialName.TANTALUM_HAFNIUM_CARBIDE};
         double[] burningEfficiency = {0.50D, 0.45D, 0.75D, 0.80D, 0.90D, 1.00D, 0.70D,
                 0.85D, 0.85D, 0.90D, 1.00D, 0.90D, 1.00D};
         int[] burningOutput = {16, 20, 24, 24, 28, 16, 32, 112, 96, 96, 128, 128, 256};

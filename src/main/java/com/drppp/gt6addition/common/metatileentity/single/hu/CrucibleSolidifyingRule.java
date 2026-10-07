@@ -26,18 +26,12 @@ final class CrucibleSolidifyingRule {
             int separator = hostName.indexOf(':');
             names.add(normalize(separator < 0 ? hostName : hostName.substring(separator + 1)));
         }
-        // ANY.WoodPlastic has default self targets, not MT.Wood's ash target.
-        names.add("anywoodorplastic");
-        java.util.Collections.addAll(names, "anygarnet", "anyjasper", "anytigereye", "anyaventurine", "anyamber");
-        names.add("anyblaze");
-        names.add("anythaumiccrystal");
-        names.add("anyhexorium");
         return names;
     }
 
     private static String normalize(String name) {
-        return name == null ? "" : GT6MaterialIdentity.canonicalOxideName(GT6MaterialIdentity.canonicalElementName(
-                name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "")));
+        return name == null ? "" : GT6MaterialIdentity.canonicalOreName(GT6MaterialIdentity.canonicalOxideName(GT6MaterialIdentity.canonicalElementName(
+                name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", ""))));
     }
 
     static boolean hasAuthoritativeSelfTarget(String name) {
@@ -46,17 +40,20 @@ final class CrucibleSolidifyingRule {
 
     /** Shared identity membership, not a statement about hot or cold targets. */
     static boolean isSnapshotMaterial(String name) {
-        return name != null && SNAPSHOT_MATERIALS.contains(normalize(name));
+        return name != null && (GT6TechnicalMaterialData.contains(name) || SNAPSHOT_MATERIALS.contains(normalize(name)));
     }
 
     static String target(String name) {
         if (name == null) return null;
-        switch (name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "")) {
+        GT6TechnicalMaterialData.Profile family = GT6TechnicalMaterialData.find(name);
+        if (family != null) {
+            if (family.targetsSource == null) return null;
+            String target = target(family.targetsSource);
+            return target == null ? family.nativeSelfOutput : target;
+        }
+        switch (GT6MaterialIdentity.canonicalOreName(name.toLowerCase(Locale.ROOT)
+                .replace("_", "").replace("-", "").replace(" ", ""))) {
             case "ironiiioxide": return "hematite";
-            case "anyphosphorus": return "gregtech:tricalcium_phosphate";
-            case "anymagiciron": return "gregtech:iron";
-            case "anyprismarine": return "gt6addition:prismarine";
-            case "anygrains": return "gregtech:wheat";
             // gem_aa copies targetSolidifying independently of targetSmelting.
             case "redstonia": return "redstone";
             case "palis": return "lapis";

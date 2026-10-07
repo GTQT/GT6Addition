@@ -3042,7 +3042,12 @@ gregtech:flint_and_steel, item.gt.tool.flint_and_steel.name.name
 gregtech:pincers, item.gt.tool.pincers.name.name
 gregtech:bending_cylinder, item.gt.tool.bending_cylinder.name.name
 gregtech:bending_cylinder_small, item.gt.tool.bending_cylinder_small.name.name
-gregtech:universal_tool, item.gt.tool.universal_tool.name.name
+gregtech:multitool_closed, item.gt.tool.multitool_closed.name.name
+gregtech:multitool_cutter, item.gt.tool.multitool_cutter.name.name
+gregtech:multitool_file, item.gt.tool.multitool_file.name.name
+gregtech:multitool_knife, item.gt.tool.multitool_knife.name.name
+gregtech:multitool_screwdriver, item.gt.tool.multitool_screwdriver.name.name
+gregtech:multitool_saw, item.gt.tool.multitool_saw.name.name
 gregtech:chisel, item.gt.tool.chisel.name.name
 gt6addition:mte:1, 蒸汽涡轮机(铅)
 gt6addition:mte:2, 蒸汽涡轮机(青铜)
@@ -4213,15 +4218,15 @@ gregtech:mte:3384, §aUEV§r除尘器
 gregtech:mte:3385, §2UIV§r除尘器
 gregtech:mte:3386, §eUXV§r除尘器
 gregtech:mte:3387, §9OpV§r除尘器
-gregtech:mte:3560, §8ULV§r 电加热器
-gregtech:mte:3561, §7LV§r 电加热器
-gregtech:mte:3562, §bMV§r 电加热器
-gregtech:mte:3563, §6HV§r 电加热器
-gregtech:mte:3564, §5EV§r 电加热器
-gregtech:mte:3565, §1IV§r 电加热器
-gregtech:mte:3566, §dLuV§r 电加热器
-gregtech:mte:3567, §cZPM§r 电加热器
-gregtech:mte:3568, §3UV§r 电加热器
+gregtech:mte:3480, §8ULV§r电加热器
+gregtech:mte:3481, §7LV§r电加热器
+gregtech:mte:3482, §bMV§r电加热器
+gregtech:mte:3483, §6HV§r电加热器
+gregtech:mte:3484, §5EV§r电加热器
+gregtech:mte:3485, §1IV§r电加热器
+gregtech:mte:3486, §dLuV§r电加热器
+gregtech:mte:3487, §cZPM§r电加热器
+gregtech:mte:3488, §3UV§r电加热器
 gregtech:mte:4000, 上锁的保险柜
 gregtech:mte:4002, 合成站
 gregtech:mte:4003, 创造模式能量单元
@@ -5279,7 +5284,10 @@ gregtech:item_pipe_huge_restrictive:301, 巨型加固玫瑰金物品管道
 gregtech:item_pipe_huge_restrictive:300, 巨型加固标准纯银物品管道
 gregtech:item_pipe_huge_restrictive:112, 巨型加固锡物品管道
 gregtech:item_pipe_huge_restrictive:331, 巨型加固哈氏合金物品管道
-gregtech:optical_pipe_normal:0, 光缆
+gregtech:optical_pipe_normal:2038, 硼硅玻璃光缆
+gregtech:optical_pipe_normal:2000, 玻璃光缆
+gregtech:optical_pipe_normal:2040, GST玻璃光缆
+gregtech:optical_pipe_normal:2041, ZBLAN玻璃光缆
 gregtech:laser_pipe_normal:0, 激光传导线缆
 gregtech:ld_item_pipe, 长距离物品管道
 gregtech:ld_fluid_pipe, 长距离流体管道
@@ -5849,11 +5857,41 @@ gregtech:rubber_leaves, 橡胶树叶
 gregtech:rubber_sapling, 橡胶树苗
 gregtech:powderbarrel, 火药桶
 gregtech:itnt, 工业TNT
+gt6addition:meta_block_compressed_138:12, 艾德曼合金块
+gt6addition:meta_block_compressed_514:11, 蜡块
+gt6addition:meta_block_compressed_522:10, 无烟煤块
+gt6addition:meta_block_compressed_528:10, 蓝磷块
+gt6addition:meta_block_compressed_528:11, 红磷块
+gt6addition:meta_block_compressed_528:12, 白磷块
 gt6addition:meta_block_compressed_538:6, 砷铜块
 gt6addition:meta_block_compressed_538:7, 砷青铜块
 gt6addition:meta_block_compressed_546:8, 远古残骸块
 gt6addition:meta_block_compressed_546:9, 下界合金块
+gt6addition:meta_block_compressed_546:15, 杜兰合金块
+gt6addition:meta_block_compressed_547:0, 特里坦合金块
+gt6addition:meta_block_compressed_549:0, 血石块
 gt6addition:meta_block_compressed_550:2, 钽铪碳化物块
+gt6addition:meta_block_compressed_575:15, 氟石块
+gt6addition:meta_block_compressed_576:3, 浅色海晶石块
+gt6addition:meta_block_compressed_576:4, 深色海晶石块
+gt6addition:meta_block_compressed_606:4, 生肉块
+gt6addition:meta_block_compressed_606:5, 熟肉块
+gt6addition:meta_block_compressed_606:14, 腐肉块
+gt6addition:meta_block_compressed_606:15, 熟鱼肉粉块
+gt6addition:meta_block_compressed_607:0, 生鱼肉粉块
+gt6addition:meta_block_compressed_607:1, 腐败鱼肉粉块
+gt6addition:meta_block_compressed_611:2, 豆腐块
+gt6addition:meta_block_compressed_611:3, 翡翠绿块
+gt6addition:meta_block_compressed_1875:1, 磷回收材料族块
+gt6addition:meta_block_compressed_1875:2, 魔法铁回收材料族块
+gt6addition:meta_block_compressed_1875:4, 石榴石回收材料族块
+gt6addition:meta_block_compressed_1875:5, 碧玉回收材料族块
+gt6addition:meta_block_compressed_1875:6, 虎眼石回收材料族块
+gt6addition:meta_block_compressed_1875:7, 砂金石回收材料族块
+gt6addition:meta_block_compressed_1875:8, 琥珀回收材料族块
+gt6addition:meta_block_compressed_1875:10, 海晶石回收材料族块
+gt6addition:meta_block_compressed_1875:12, 神秘水晶回收材料族块
+gt6addition:meta_block_compressed_1875:13, Hexorium回收材料族块
 gregtech:meta_block_compressed_0:1, 锕块
 gregtech:meta_block_compressed_0:2, 铝块
 gregtech:meta_block_compressed_0:3, 镅块
@@ -6106,6 +6144,8 @@ gregtech:meta_block_compressed_127:3, 磁化钢块
 gregtech:meta_block_compressed_127:4, 钒钢块
 gregtech:meta_block_compressed_127:5, 粗青铜合金块
 gregtech:meta_block_compressed_127:6, 硼硅玻璃块
+gregtech:meta_block_compressed_127:8, GST玻璃块
+gregtech:meta_block_compressed_127:9, ZBLAN玻璃块
 gregtech:meta_block_compressed_127:10, 硅岩合金块
 gregtech:meta_block_compressed_128:1, 燧石块
 gregtech:meta_block_compressed_128:14, 镀铑钯块
@@ -6137,11 +6177,25 @@ gregtech:meta_block_compressed_157:15, 蓝色合金块
 gregtech:meta_block_compressed_625:2, 磁流体动力约束星体物质块
 gregtech:meta_block_compressed_625:3, 引力子碎片块
 gregtech:meta_block_compressed_625:5, 磁物质块
+gt6addition:meta_block_frame_138:12, 艾德曼合金框架
+gt6addition:meta_block_frame_514:11, 蜡框架
 gt6addition:meta_block_frame_538:6, 砷铜框架
 gt6addition:meta_block_frame_538:7, 砷青铜框架
 gt6addition:meta_block_frame_546:8, 远古残骸框架
 gt6addition:meta_block_frame_546:9, 下界合金框架
+gt6addition:meta_block_frame_546:15, 杜兰合金框架
+gt6addition:meta_block_frame_547:0, 特里坦合金框架
+gt6addition:meta_block_frame_549:0, 血石框架
 gt6addition:meta_block_frame_550:2, 钽铪碳化物框架
+gt6addition:meta_block_frame_606:4, 生肉框架
+gt6addition:meta_block_frame_606:5, 熟肉框架
+gt6addition:meta_block_frame_606:14, 腐肉框架
+gt6addition:meta_block_frame_606:15, 熟鱼肉粉框架
+gt6addition:meta_block_frame_607:0, 生鱼肉粉框架
+gt6addition:meta_block_frame_607:1, 腐败鱼肉粉框架
+gt6addition:meta_block_frame_611:2, 豆腐框架
+gt6addition:meta_block_frame_611:3, 翡翠绿框架
+gt6addition:meta_block_frame_1875:2, 魔法铁回收材料族框架
 gregtech:meta_block_frame_0:1, 锕框架
 gregtech:meta_block_frame_0:2, 铝框架
 gregtech:meta_block_frame_0:3, 镅框架
@@ -6355,6 +6409,8 @@ gregtech:meta_block_frame_127:3, 磁化钢框架
 gregtech:meta_block_frame_127:4, 钒钢框架
 gregtech:meta_block_frame_127:5, 粗青铜合金框架
 gregtech:meta_block_frame_127:6, 硼硅玻璃框架
+gregtech:meta_block_frame_127:8, GST玻璃框架
+gregtech:meta_block_frame_127:9, ZBLAN玻璃框架
 gregtech:meta_block_frame_127:10, 硅岩合金框架
 gregtech:meta_block_frame_128:14, 镀铑钯框架
 gregtech:meta_block_frame_128:15, 粘土框架
@@ -6392,6 +6448,102 @@ gregtech:meta_block_sheet_18:8, 铌钛合金薄板框架
 gregtech:meta_block_sheet_20:3, 不锈钢薄板框架
 gregtech:meta_block_sheet_20:4, 钢薄板框架
 gregtech:meta_block_sheet_125:13, 钨钢薄板框架
+gregtech:ore_adamantium_0:0, 艾德曼合金矿石
+gregtech:ore_adamantium_0:1, 地狱岩艾德曼合金矿石
+gregtech:ore_adamantium_0:2, 末地石艾德曼合金矿石
+gregtech:ore_adamantium_0:3, 沙子艾德曼合金矿石
+gregtech:ore_adamantium_0:4, 红沙艾德曼合金矿石
+gregtech:ore_adamantium_0:5, 花岗岩艾德曼合金矿石
+gregtech:ore_adamantium_0:6, 闪长岩艾德曼合金矿石
+gregtech:ore_adamantium_0:7, 安山岩艾德曼合金矿石
+gregtech:ore_anthracite_0:0, 无烟煤矿石
+gregtech:ore_anthracite_0:1, 地狱岩无烟煤矿石
+gregtech:ore_anthracite_0:2, 末地石无烟煤矿石
+gregtech:ore_anthracite_0:3, 沙子无烟煤矿石
+gregtech:ore_anthracite_0:4, 红沙无烟煤矿石
+gregtech:ore_anthracite_0:5, 花岗岩无烟煤矿石
+gregtech:ore_anthracite_0:6, 闪长岩无烟煤矿石
+gregtech:ore_anthracite_0:7, 安山岩无烟煤矿石
+gregtech:ore_blue_phosphorus_0:0, 蓝磷矿石
+gregtech:ore_blue_phosphorus_0:1, 地狱岩蓝磷矿石
+gregtech:ore_blue_phosphorus_0:2, 末地石蓝磷矿石
+gregtech:ore_blue_phosphorus_0:3, 沙子蓝磷矿石
+gregtech:ore_blue_phosphorus_0:4, 红沙蓝磷矿石
+gregtech:ore_blue_phosphorus_0:5, 花岗岩蓝磷矿石
+gregtech:ore_blue_phosphorus_0:6, 闪长岩蓝磷矿石
+gregtech:ore_blue_phosphorus_0:7, 安山岩蓝磷矿石
+gregtech:ore_red_phosphorus_0:0, 红磷矿石
+gregtech:ore_red_phosphorus_0:1, 地狱岩红磷矿石
+gregtech:ore_red_phosphorus_0:2, 末地石红磷矿石
+gregtech:ore_red_phosphorus_0:3, 沙子红磷矿石
+gregtech:ore_red_phosphorus_0:4, 红沙红磷矿石
+gregtech:ore_red_phosphorus_0:5, 花岗岩红磷矿石
+gregtech:ore_red_phosphorus_0:6, 闪长岩红磷矿石
+gregtech:ore_red_phosphorus_0:7, 安山岩红磷矿石
+gregtech:ore_white_phosphorus_0:0, 白磷矿石
+gregtech:ore_white_phosphorus_0:1, 地狱岩白磷矿石
+gregtech:ore_white_phosphorus_0:2, 末地石白磷矿石
+gregtech:ore_white_phosphorus_0:3, 沙子白磷矿石
+gregtech:ore_white_phosphorus_0:4, 红沙白磷矿石
+gregtech:ore_white_phosphorus_0:5, 花岗岩白磷矿石
+gregtech:ore_white_phosphorus_0:6, 闪长岩白磷矿石
+gregtech:ore_white_phosphorus_0:7, 安山岩白磷矿石
+gregtech:ore_niobium_pentoxide_0:0, 五氧化二铌矿石
+gregtech:ore_niobium_pentoxide_0:1, 地狱岩五氧化二铌矿石
+gregtech:ore_niobium_pentoxide_0:2, 末地石五氧化二铌矿石
+gregtech:ore_niobium_pentoxide_0:3, 沙子五氧化二铌矿石
+gregtech:ore_niobium_pentoxide_0:4, 红沙五氧化二铌矿石
+gregtech:ore_niobium_pentoxide_0:5, 花岗岩五氧化二铌矿石
+gregtech:ore_niobium_pentoxide_0:6, 闪长岩五氧化二铌矿石
+gregtech:ore_niobium_pentoxide_0:7, 安山岩五氧化二铌矿石
+gregtech:ore_dolamide_0:0, 酰胺矿石
+gregtech:ore_dolamide_0:1, 地狱岩酰胺矿石
+gregtech:ore_dolamide_0:2, 末地石酰胺矿石
+gregtech:ore_dolamide_0:3, 沙子酰胺矿石
+gregtech:ore_dolamide_0:4, 红沙酰胺矿石
+gregtech:ore_dolamide_0:5, 花岗岩酰胺矿石
+gregtech:ore_dolamide_0:6, 闪长岩酰胺矿石
+gregtech:ore_dolamide_0:7, 安山岩酰胺矿石
+gregtech:ore_adamantine_0:0, 血石矿石
+gregtech:ore_adamantine_0:1, 地狱岩血石矿石
+gregtech:ore_adamantine_0:2, 末地石血石矿石
+gregtech:ore_adamantine_0:3, 沙子血石矿石
+gregtech:ore_adamantine_0:4, 红沙血石矿石
+gregtech:ore_adamantine_0:5, 花岗岩血石矿石
+gregtech:ore_adamantine_0:6, 闪长岩血石矿石
+gregtech:ore_adamantine_0:7, 安山岩血石矿石
+gregtech:ore_fluorite_0:0, 氟石矿石
+gregtech:ore_fluorite_0:1, 地狱岩氟石矿石
+gregtech:ore_fluorite_0:2, 末地石氟石矿石
+gregtech:ore_fluorite_0:3, 沙子氟石矿石
+gregtech:ore_fluorite_0:4, 红沙氟石矿石
+gregtech:ore_fluorite_0:5, 花岗岩氟石矿石
+gregtech:ore_fluorite_0:6, 闪长岩氟石矿石
+gregtech:ore_fluorite_0:7, 安山岩氟石矿石
+gregtech:ore_prismarine_0:0, 浅色海晶石矿石
+gregtech:ore_prismarine_0:1, 地狱岩浅色海晶石矿石
+gregtech:ore_prismarine_0:2, 末地石浅色海晶石矿石
+gregtech:ore_prismarine_0:3, 沙子浅色海晶石矿石
+gregtech:ore_prismarine_0:4, 红沙浅色海晶石矿石
+gregtech:ore_prismarine_0:5, 花岗岩浅色海晶石矿石
+gregtech:ore_prismarine_0:6, 闪长岩浅色海晶石矿石
+gregtech:ore_prismarine_0:7, 安山岩浅色海晶石矿石
+gregtech:ore_prismarine_dark_0:0, 深色海晶石矿石
+gregtech:ore_prismarine_dark_0:1, 地狱岩深色海晶石矿石
+gregtech:ore_prismarine_dark_0:2, 末地石深色海晶石矿石
+gregtech:ore_prismarine_dark_0:3, 沙子深色海晶石矿石
+gregtech:ore_prismarine_dark_0:4, 红沙深色海晶石矿石
+gregtech:ore_prismarine_dark_0:5, 花岗岩深色海晶石矿石
+gregtech:ore_prismarine_dark_0:6, 闪长岩深色海晶石矿石
+gregtech:ore_prismarine_dark_0:7, 安山岩深色海晶石矿石
+gregtech:ore_columbite_0:0, 铌铁矿矿石
+gregtech:ore_columbite_0:1, 地狱岩铌铁矿矿石
+gregtech:ore_columbite_0:2, 末地石铌铁矿矿石
+gregtech:ore_columbite_0:3, 沙子铌铁矿矿石
+gregtech:ore_columbite_0:4, 红沙铌铁矿矿石
+gregtech:ore_columbite_0:5, 花岗岩铌铁矿矿石
+gregtech:ore_columbite_0:6, 闪长岩铌铁矿矿石
+gregtech:ore_columbite_0:7, 安山岩铌铁矿矿石
 gregtech:ore_actinium_0:0, 锕矿石
 gregtech:ore_actinium_0:1, 地狱岩锕矿石
 gregtech:ore_actinium_0:2, 末地石锕矿石
@@ -8408,6 +8560,102 @@ gregtech:ore_basaltic_mineral_sand_0:4, 红沙玄武岩矿砂矿石
 gregtech:ore_basaltic_mineral_sand_0:5, 花岗岩玄武岩矿砂矿石
 gregtech:ore_basaltic_mineral_sand_0:6, 闪长岩玄武岩矿砂矿石
 gregtech:ore_basaltic_mineral_sand_0:7, 安山岩玄武岩矿砂矿石
+gregtech:ore_lean_adamantium_0:0, 贫瘠艾德曼合金矿石
+gregtech:ore_lean_adamantium_0:1, 贫瘠地狱岩艾德曼合金矿石
+gregtech:ore_lean_adamantium_0:2, 贫瘠末地石艾德曼合金矿石
+gregtech:ore_lean_adamantium_0:3, 贫瘠沙子艾德曼合金矿石
+gregtech:ore_lean_adamantium_0:4, 贫瘠红沙艾德曼合金矿石
+gregtech:ore_lean_adamantium_0:5, 贫瘠花岗岩艾德曼合金矿石
+gregtech:ore_lean_adamantium_0:6, 贫瘠闪长岩艾德曼合金矿石
+gregtech:ore_lean_adamantium_0:7, 贫瘠安山岩艾德曼合金矿石
+gregtech:ore_lean_anthracite_0:0, 贫瘠无烟煤矿石
+gregtech:ore_lean_anthracite_0:1, 贫瘠地狱岩无烟煤矿石
+gregtech:ore_lean_anthracite_0:2, 贫瘠末地石无烟煤矿石
+gregtech:ore_lean_anthracite_0:3, 贫瘠沙子无烟煤矿石
+gregtech:ore_lean_anthracite_0:4, 贫瘠红沙无烟煤矿石
+gregtech:ore_lean_anthracite_0:5, 贫瘠花岗岩无烟煤矿石
+gregtech:ore_lean_anthracite_0:6, 贫瘠闪长岩无烟煤矿石
+gregtech:ore_lean_anthracite_0:7, 贫瘠安山岩无烟煤矿石
+gregtech:ore_lean_blue_phosphorus_0:0, 贫瘠蓝磷矿石
+gregtech:ore_lean_blue_phosphorus_0:1, 贫瘠地狱岩蓝磷矿石
+gregtech:ore_lean_blue_phosphorus_0:2, 贫瘠末地石蓝磷矿石
+gregtech:ore_lean_blue_phosphorus_0:3, 贫瘠沙子蓝磷矿石
+gregtech:ore_lean_blue_phosphorus_0:4, 贫瘠红沙蓝磷矿石
+gregtech:ore_lean_blue_phosphorus_0:5, 贫瘠花岗岩蓝磷矿石
+gregtech:ore_lean_blue_phosphorus_0:6, 贫瘠闪长岩蓝磷矿石
+gregtech:ore_lean_blue_phosphorus_0:7, 贫瘠安山岩蓝磷矿石
+gregtech:ore_lean_red_phosphorus_0:0, 贫瘠红磷矿石
+gregtech:ore_lean_red_phosphorus_0:1, 贫瘠地狱岩红磷矿石
+gregtech:ore_lean_red_phosphorus_0:2, 贫瘠末地石红磷矿石
+gregtech:ore_lean_red_phosphorus_0:3, 贫瘠沙子红磷矿石
+gregtech:ore_lean_red_phosphorus_0:4, 贫瘠红沙红磷矿石
+gregtech:ore_lean_red_phosphorus_0:5, 贫瘠花岗岩红磷矿石
+gregtech:ore_lean_red_phosphorus_0:6, 贫瘠闪长岩红磷矿石
+gregtech:ore_lean_red_phosphorus_0:7, 贫瘠安山岩红磷矿石
+gregtech:ore_lean_white_phosphorus_0:0, 贫瘠白磷矿石
+gregtech:ore_lean_white_phosphorus_0:1, 贫瘠地狱岩白磷矿石
+gregtech:ore_lean_white_phosphorus_0:2, 贫瘠末地石白磷矿石
+gregtech:ore_lean_white_phosphorus_0:3, 贫瘠沙子白磷矿石
+gregtech:ore_lean_white_phosphorus_0:4, 贫瘠红沙白磷矿石
+gregtech:ore_lean_white_phosphorus_0:5, 贫瘠花岗岩白磷矿石
+gregtech:ore_lean_white_phosphorus_0:6, 贫瘠闪长岩白磷矿石
+gregtech:ore_lean_white_phosphorus_0:7, 贫瘠安山岩白磷矿石
+gregtech:ore_lean_niobium_pentoxide_0:0, 贫瘠五氧化二铌矿石
+gregtech:ore_lean_niobium_pentoxide_0:1, 贫瘠地狱岩五氧化二铌矿石
+gregtech:ore_lean_niobium_pentoxide_0:2, 贫瘠末地石五氧化二铌矿石
+gregtech:ore_lean_niobium_pentoxide_0:3, 贫瘠沙子五氧化二铌矿石
+gregtech:ore_lean_niobium_pentoxide_0:4, 贫瘠红沙五氧化二铌矿石
+gregtech:ore_lean_niobium_pentoxide_0:5, 贫瘠花岗岩五氧化二铌矿石
+gregtech:ore_lean_niobium_pentoxide_0:6, 贫瘠闪长岩五氧化二铌矿石
+gregtech:ore_lean_niobium_pentoxide_0:7, 贫瘠安山岩五氧化二铌矿石
+gregtech:ore_lean_dolamide_0:0, 贫瘠酰胺矿石
+gregtech:ore_lean_dolamide_0:1, 贫瘠地狱岩酰胺矿石
+gregtech:ore_lean_dolamide_0:2, 贫瘠末地石酰胺矿石
+gregtech:ore_lean_dolamide_0:3, 贫瘠沙子酰胺矿石
+gregtech:ore_lean_dolamide_0:4, 贫瘠红沙酰胺矿石
+gregtech:ore_lean_dolamide_0:5, 贫瘠花岗岩酰胺矿石
+gregtech:ore_lean_dolamide_0:6, 贫瘠闪长岩酰胺矿石
+gregtech:ore_lean_dolamide_0:7, 贫瘠安山岩酰胺矿石
+gregtech:ore_lean_adamantine_0:0, 贫瘠血石矿石
+gregtech:ore_lean_adamantine_0:1, 贫瘠地狱岩血石矿石
+gregtech:ore_lean_adamantine_0:2, 贫瘠末地石血石矿石
+gregtech:ore_lean_adamantine_0:3, 贫瘠沙子血石矿石
+gregtech:ore_lean_adamantine_0:4, 贫瘠红沙血石矿石
+gregtech:ore_lean_adamantine_0:5, 贫瘠花岗岩血石矿石
+gregtech:ore_lean_adamantine_0:6, 贫瘠闪长岩血石矿石
+gregtech:ore_lean_adamantine_0:7, 贫瘠安山岩血石矿石
+gregtech:ore_lean_fluorite_0:0, 贫瘠氟石矿石
+gregtech:ore_lean_fluorite_0:1, 贫瘠地狱岩氟石矿石
+gregtech:ore_lean_fluorite_0:2, 贫瘠末地石氟石矿石
+gregtech:ore_lean_fluorite_0:3, 贫瘠沙子氟石矿石
+gregtech:ore_lean_fluorite_0:4, 贫瘠红沙氟石矿石
+gregtech:ore_lean_fluorite_0:5, 贫瘠花岗岩氟石矿石
+gregtech:ore_lean_fluorite_0:6, 贫瘠闪长岩氟石矿石
+gregtech:ore_lean_fluorite_0:7, 贫瘠安山岩氟石矿石
+gregtech:ore_lean_prismarine_0:0, 贫瘠浅色海晶石矿石
+gregtech:ore_lean_prismarine_0:1, 贫瘠地狱岩浅色海晶石矿石
+gregtech:ore_lean_prismarine_0:2, 贫瘠末地石浅色海晶石矿石
+gregtech:ore_lean_prismarine_0:3, 贫瘠沙子浅色海晶石矿石
+gregtech:ore_lean_prismarine_0:4, 贫瘠红沙浅色海晶石矿石
+gregtech:ore_lean_prismarine_0:5, 贫瘠花岗岩浅色海晶石矿石
+gregtech:ore_lean_prismarine_0:6, 贫瘠闪长岩浅色海晶石矿石
+gregtech:ore_lean_prismarine_0:7, 贫瘠安山岩浅色海晶石矿石
+gregtech:ore_lean_prismarine_dark_0:0, 贫瘠深色海晶石矿石
+gregtech:ore_lean_prismarine_dark_0:1, 贫瘠地狱岩深色海晶石矿石
+gregtech:ore_lean_prismarine_dark_0:2, 贫瘠末地石深色海晶石矿石
+gregtech:ore_lean_prismarine_dark_0:3, 贫瘠沙子深色海晶石矿石
+gregtech:ore_lean_prismarine_dark_0:4, 贫瘠红沙深色海晶石矿石
+gregtech:ore_lean_prismarine_dark_0:5, 贫瘠花岗岩深色海晶石矿石
+gregtech:ore_lean_prismarine_dark_0:6, 贫瘠闪长岩深色海晶石矿石
+gregtech:ore_lean_prismarine_dark_0:7, 贫瘠安山岩深色海晶石矿石
+gregtech:ore_lean_columbite_0:0, 贫瘠铌铁矿矿石
+gregtech:ore_lean_columbite_0:1, 贫瘠地狱岩铌铁矿矿石
+gregtech:ore_lean_columbite_0:2, 贫瘠末地石铌铁矿矿石
+gregtech:ore_lean_columbite_0:3, 贫瘠沙子铌铁矿矿石
+gregtech:ore_lean_columbite_0:4, 贫瘠红沙铌铁矿矿石
+gregtech:ore_lean_columbite_0:5, 贫瘠花岗岩铌铁矿矿石
+gregtech:ore_lean_columbite_0:6, 贫瘠闪长岩铌铁矿矿石
+gregtech:ore_lean_columbite_0:7, 贫瘠安山岩铌铁矿矿石
 gregtech:ore_lean_actinium_0:0, 贫瘠锕矿石
 gregtech:ore_lean_actinium_0:1, 贫瘠地狱岩锕矿石
 gregtech:ore_lean_actinium_0:2, 贫瘠末地石锕矿石
@@ -10453,6 +10701,23 @@ gt6addition:clay_spout, 生坩埚浇筑口（粘土）
 gt6addition:clay_channel, 生坩埚浇筑道（粘土）
 gt6addition:clay_basin, 生浇筑盆（粘土）
 gt6addition:clay_mold, 生模具（粘土）
+gt6addition:drain_cover, 排液口（GT6）
+gt6addition:anthracite_ore, 无烟煤矿石
+gt6addition:tree_log_maple, 枫木原木
+gt6addition:tree_log_willow, 柳木原木
+gt6addition:tree_log_hazel, 榛木原木
+gt6addition:tree_log_coconut, 椰木原木
+gt6addition:tree_log_blue_spruce, 蓝云杉原木
+gt6addition:tree_leaves_maple, 枫树树叶
+gt6addition:tree_leaves_willow, 柳树树叶
+gt6addition:tree_leaves_hazel, 榛树树叶
+gt6addition:tree_leaves_coconut, 椰子树树叶
+gt6addition:tree_leaves_blue_spruce, 蓝云杉树叶
+gt6addition:tree_sapling_maple, 枫树树苗
+gt6addition:tree_sapling_willow, 柳树树苗
+gt6addition:tree_sapling_hazel, 榛树树苗
+gt6addition:tree_sapling_coconut, 椰子树树苗
+gt6addition:tree_sapling_blue_spruce, 蓝云杉树苗
 modelloader:tree, Tree
 modelloader:animated_chest, tile.modelloader.animated_chest.name
 modelloader:windmill, tile.modelloader.windmill.name
@@ -11328,11 +11593,41 @@ appliedenergistics2:facade:0, 线缆伪装板 - 黑色无框灯
 appliedenergistics2:facade:0, 线缆伪装板 - 黑色无框灯
 appliedenergistics2:facade:0, 线缆伪装板 - 黑色无框灯
 appliedenergistics2:facade:0, 线缆伪装板 - 黑色无框灯
+appliedenergistics2:facade:0, 线缆伪装板 - 艾德曼合金块
+appliedenergistics2:facade:0, 线缆伪装板 - 蜡块
+appliedenergistics2:facade:0, 线缆伪装板 - 无烟煤块
+appliedenergistics2:facade:0, 线缆伪装板 - 蓝磷块
+appliedenergistics2:facade:0, 线缆伪装板 - 红磷块
+appliedenergistics2:facade:0, 线缆伪装板 - 白磷块
 appliedenergistics2:facade:0, 线缆伪装板 - 砷铜块
 appliedenergistics2:facade:0, 线缆伪装板 - 砷青铜块
 appliedenergistics2:facade:0, 线缆伪装板 - 远古残骸块
 appliedenergistics2:facade:0, 线缆伪装板 - 下界合金块
+appliedenergistics2:facade:0, 线缆伪装板 - 杜兰合金块
+appliedenergistics2:facade:0, 线缆伪装板 - 特里坦合金块
+appliedenergistics2:facade:0, 线缆伪装板 - 血石块
 appliedenergistics2:facade:0, 线缆伪装板 - 钽铪碳化物块
+appliedenergistics2:facade:0, 线缆伪装板 - 氟石块
+appliedenergistics2:facade:0, 线缆伪装板 - 浅色海晶石块
+appliedenergistics2:facade:0, 线缆伪装板 - 深色海晶石块
+appliedenergistics2:facade:0, 线缆伪装板 - 生肉块
+appliedenergistics2:facade:0, 线缆伪装板 - 熟肉块
+appliedenergistics2:facade:0, 线缆伪装板 - 腐肉块
+appliedenergistics2:facade:0, 线缆伪装板 - 熟鱼肉粉块
+appliedenergistics2:facade:0, 线缆伪装板 - 生鱼肉粉块
+appliedenergistics2:facade:0, 线缆伪装板 - 腐败鱼肉粉块
+appliedenergistics2:facade:0, 线缆伪装板 - 豆腐块
+appliedenergistics2:facade:0, 线缆伪装板 - 翡翠绿块
+appliedenergistics2:facade:0, 线缆伪装板 - 磷回收材料族块
+appliedenergistics2:facade:0, 线缆伪装板 - 魔法铁回收材料族块
+appliedenergistics2:facade:0, 线缆伪装板 - 石榴石回收材料族块
+appliedenergistics2:facade:0, 线缆伪装板 - 碧玉回收材料族块
+appliedenergistics2:facade:0, 线缆伪装板 - 虎眼石回收材料族块
+appliedenergistics2:facade:0, 线缆伪装板 - 砂金石回收材料族块
+appliedenergistics2:facade:0, 线缆伪装板 - 琥珀回收材料族块
+appliedenergistics2:facade:0, 线缆伪装板 - 海晶石回收材料族块
+appliedenergistics2:facade:0, 线缆伪装板 - 神秘水晶回收材料族块
+appliedenergistics2:facade:0, 线缆伪装板 - Hexorium回收材料族块
 appliedenergistics2:facade:0, 线缆伪装板 - 锕块
 appliedenergistics2:facade:0, 线缆伪装板 - 铝块
 appliedenergistics2:facade:0, 线缆伪装板 - 镅块
@@ -11585,6 +11880,8 @@ appliedenergistics2:facade:0, 线缆伪装板 - 磁化钢块
 appliedenergistics2:facade:0, 线缆伪装板 - 钒钢块
 appliedenergistics2:facade:0, 线缆伪装板 - 粗青铜合金块
 appliedenergistics2:facade:0, 线缆伪装板 - 硼硅玻璃块
+appliedenergistics2:facade:0, 线缆伪装板 - GST玻璃块
+appliedenergistics2:facade:0, 线缆伪装板 - ZBLAN玻璃块
 appliedenergistics2:facade:0, 线缆伪装板 - 硅岩合金块
 appliedenergistics2:facade:0, 线缆伪装板 - 燧石块
 appliedenergistics2:facade:0, 线缆伪装板 - 镀铑钯块
@@ -11616,11 +11913,25 @@ appliedenergistics2:facade:0, 线缆伪装板 - 蓝色合金块
 appliedenergistics2:facade:0, 线缆伪装板 - 磁流体动力约束星体物质块
 appliedenergistics2:facade:0, 线缆伪装板 - 引力子碎片块
 appliedenergistics2:facade:0, 线缆伪装板 - 磁物质块
+appliedenergistics2:facade:0, 线缆伪装板 - 艾德曼合金框架
+appliedenergistics2:facade:0, 线缆伪装板 - 蜡框架
 appliedenergistics2:facade:0, 线缆伪装板 - 砷铜框架
 appliedenergistics2:facade:0, 线缆伪装板 - 砷青铜框架
 appliedenergistics2:facade:0, 线缆伪装板 - 远古残骸框架
 appliedenergistics2:facade:0, 线缆伪装板 - 下界合金框架
+appliedenergistics2:facade:0, 线缆伪装板 - 杜兰合金框架
+appliedenergistics2:facade:0, 线缆伪装板 - 特里坦合金框架
+appliedenergistics2:facade:0, 线缆伪装板 - 血石框架
 appliedenergistics2:facade:0, 线缆伪装板 - 钽铪碳化物框架
+appliedenergistics2:facade:0, 线缆伪装板 - 生肉框架
+appliedenergistics2:facade:0, 线缆伪装板 - 熟肉框架
+appliedenergistics2:facade:0, 线缆伪装板 - 腐肉框架
+appliedenergistics2:facade:0, 线缆伪装板 - 熟鱼肉粉框架
+appliedenergistics2:facade:0, 线缆伪装板 - 生鱼肉粉框架
+appliedenergistics2:facade:0, 线缆伪装板 - 腐败鱼肉粉框架
+appliedenergistics2:facade:0, 线缆伪装板 - 豆腐框架
+appliedenergistics2:facade:0, 线缆伪装板 - 翡翠绿框架
+appliedenergistics2:facade:0, 线缆伪装板 - 魔法铁回收材料族框架
 appliedenergistics2:facade:0, 线缆伪装板 - 锕框架
 appliedenergistics2:facade:0, 线缆伪装板 - 铝框架
 appliedenergistics2:facade:0, 线缆伪装板 - 镅框架
@@ -11834,6 +12145,8 @@ appliedenergistics2:facade:0, 线缆伪装板 - 磁化钢框架
 appliedenergistics2:facade:0, 线缆伪装板 - 钒钢框架
 appliedenergistics2:facade:0, 线缆伪装板 - 粗青铜合金框架
 appliedenergistics2:facade:0, 线缆伪装板 - 硼硅玻璃框架
+appliedenergistics2:facade:0, 线缆伪装板 - GST玻璃框架
+appliedenergistics2:facade:0, 线缆伪装板 - ZBLAN玻璃框架
 appliedenergistics2:facade:0, 线缆伪装板 - 硅岩合金框架
 appliedenergistics2:facade:0, 线缆伪装板 - 镀铑钯框架
 appliedenergistics2:facade:0, 线缆伪装板 - 粘土框架
@@ -11871,6 +12184,102 @@ appliedenergistics2:facade:0, 线缆伪装板 - 铌钛合金薄板框架
 appliedenergistics2:facade:0, 线缆伪装板 - 不锈钢薄板框架
 appliedenergistics2:facade:0, 线缆伪装板 - 钢薄板框架
 appliedenergistics2:facade:0, 线缆伪装板 - 钨钢薄板框架
+appliedenergistics2:facade:0, 线缆伪装板 - 艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 末地石铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 沙子铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 红沙铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 安山岩铌铁矿矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 锕矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 地狱岩锕矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 末地石锕矿石
@@ -13887,6 +14296,102 @@ appliedenergistics2:facade:0, 线缆伪装板 - 红沙玄武岩矿砂矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 花岗岩玄武岩矿砂矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 闪长岩玄武岩矿砂矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 安山岩玄武岩矿砂矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠沙子艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红沙艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠花岗岩艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠闪长岩艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠安山岩艾德曼合金矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠沙子无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红沙无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠花岗岩无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠闪长岩无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠安山岩无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠沙子蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红沙蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠花岗岩蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠闪长岩蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠安山岩蓝磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠沙子红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红沙红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠花岗岩红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠闪长岩红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠安山岩红磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠沙子白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红沙白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠花岗岩白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠闪长岩白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠安山岩白磷矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠沙子五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红沙五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠花岗岩五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠闪长岩五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠安山岩五氧化二铌矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠沙子酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红沙酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠花岗岩酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠闪长岩酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠安山岩酰胺矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠沙子血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红沙血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠花岗岩血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠闪长岩血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠安山岩血石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠沙子氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红沙氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠花岗岩氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠闪长岩氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠安山岩氟石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠沙子浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红沙浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠花岗岩浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠闪长岩浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠安山岩浅色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠沙子深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红沙深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠花岗岩深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠闪长岩深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠安山岩深色海晶石矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠沙子铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠红沙铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠花岗岩铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠闪长岩铌铁矿矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠安山岩铌铁矿矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠锕矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠地狱岩锕矿石
 appliedenergistics2:facade:0, 线缆伪装板 - 贫瘠末地石锕矿石
@@ -15927,6 +16432,17 @@ appliedenergistics2:facade:0, 线缆伪装板 - 绿色镶板
 appliedenergistics2:facade:0, 线缆伪装板 - 红色镶板
 appliedenergistics2:facade:0, 线缆伪装板 - 黑色镶板
 appliedenergistics2:facade:0, 线缆伪装板 - 核裂变反应堆外壳
+appliedenergistics2:facade:0, 线缆伪装板 - 无烟煤矿石
+appliedenergistics2:facade:0, 线缆伪装板 - 枫木原木
+appliedenergistics2:facade:0, 线缆伪装板 - 柳木原木
+appliedenergistics2:facade:0, 线缆伪装板 - 榛木原木
+appliedenergistics2:facade:0, 线缆伪装板 - 椰木原木
+appliedenergistics2:facade:0, 线缆伪装板 - 蓝云杉原木
+appliedenergistics2:facade:0, 线缆伪装板 - 枫树树叶
+appliedenergistics2:facade:0, 线缆伪装板 - 柳树树叶
+appliedenergistics2:facade:0, 线缆伪装板 - 榛树树叶
+appliedenergistics2:facade:0, 线缆伪装板 - 椰子树树叶
+appliedenergistics2:facade:0, 线缆伪装板 - 蓝云杉树叶
 appliedenergistics2:facade:0, 线缆伪装板 - 铝块
 appliedenergistics2:facade:0, 线缆伪装板 - 铝块
 appliedenergistics2:facade:0, 线缆伪装板 - 铝块

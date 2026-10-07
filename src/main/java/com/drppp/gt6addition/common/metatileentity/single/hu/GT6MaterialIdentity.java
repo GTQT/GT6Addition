@@ -21,6 +21,24 @@ final class GT6MaterialIdentity {
         return "glyceryltrinitrate".equals(normalizedName) ? "glyceryl" : normalizedName;
     }
 
+    /** Literal registration aliases, with explicit host spelling adapters.
+     * Callers normalize spelling first; an explicit namespace is never removed here.
+     */
+    static String canonicalOreName(String normalizedName) {
+        if (normalizedName == null) return null;
+        normalizedName = normalizedName.replace("'", ""); // Cat's Eye / Hawk's Eye native spelling.
+        // CEu's osmium is element 76, not GT6's legacy "Osmium" alias
+        // of Germanium (:421). Raw GT6 records use hostRecyclingName instead.
+        if ("osmium".equals(normalizedName)) return normalizedName;
+        // CEu's phosphorus is elemental; GT6 Phosphorous is an explicit
+        // alias of the distinct Ca3(PO4)2 compound (:1294).
+        if ("phosphorous".equals(normalizedName)) return "tricalciumphosphate";
+        // Existing host polymer bindings, not new GT6 literal aliases.
+        if ("polytetrafluoroethylene".equals(normalizedName)) return "teflon";
+        if ("polyvinylchloride".equals(normalizedName)) return "pvc";
+        return GT6RegistrationAliasData.canonicalName(normalizedName);
+    }
+
     /** One known retired addon identity; do not strip arbitrary namespaces. */
     static String migrateOwnRegistryName(String name) {
         return "gt6addition:wheat".equals(name) ? "gregtech:wheat" : name;
@@ -42,9 +60,13 @@ final class GT6MaterialIdentity {
     /** GT6 recycling names are not the host registry's same-looking names. */
     static String hostRecyclingName(String gt6Name) {
         if (gt6Name == null) return null;
-        String normalized = gt6Name.toLowerCase(java.util.Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "");
+        if (gt6Name.indexOf(':') >= 0) return gt6Name;
+        String originalName = gt6Name.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]", "");
+        String normalized = GT6RegistrationAliasData.canonicalName(originalName);
         switch (normalized) {
             case "glyceryl": return "gregtech:glyceryl_trinitrate";
+            case "teflon": return "gregtech:polytetrafluoroethylene";
+            case "pvc": return "gregtech:polyvinyl_chloride";
             // ANY.java:94-108,117-133: negative-ID technical families
             // save their sanitized name, not an index in MT's numeric array.
             // These families steal the same material's heat/density and
@@ -143,7 +165,8 @@ final class GT6MaterialIdentity {
             case "tritaniumelemental": return "gregtech:tritanium";
             case "duranium": return "gt6addition:duranium_alloy";
             case "tritanium": return "gt6addition:tritanium_alloy";
-            default: return gt6Name;
+            default:
+                return normalized.equals(originalName) ? gt6Name : normalized;
         }
     }
 

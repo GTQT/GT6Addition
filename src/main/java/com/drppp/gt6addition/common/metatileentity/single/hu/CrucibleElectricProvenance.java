@@ -1,15 +1,11 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
-import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.items.toolitem.IGTTool;
-import gregtech.api.recipes.RecyclingHandler;
-import gregtech.api.recipes.ingredients.GTRecipeItemInput;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.MarkerMaterial;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.unification.stack.MaterialStack;
-import gregtech.api.unification.stack.RecyclingData;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -68,7 +64,7 @@ public final class CrucibleElectricProvenance {
         root.setTag(TAG, data);
     }
 
-    private static NBTTagList encode(List<MaterialStack> materials, int outputCount) {
+    static NBTTagList encode(List<MaterialStack> materials, int outputCount) {
         NBTTagList entries = new NBTTagList();
         for (MaterialStack component : materials) {
             long amount = CrucibleToolRecycling.exactPerOutputAmount(component.amount, outputCount);
@@ -128,7 +124,7 @@ public final class CrucibleElectricProvenance {
         root.setTag(TAG, data);
     }
 
-    private static boolean isSubset(List<MaterialStack> subset, List<MaterialStack> all) {
+    static boolean isSubset(List<MaterialStack> subset, List<MaterialStack> all) {
         for (MaterialStack component : subset) {
             long available = 0;
             for (MaterialStack candidate : all) {
@@ -213,6 +209,23 @@ public final class CrucibleElectricProvenance {
         return result;
     }
 
+    /** Crafting lacks the destroy-event capacity transfer; preserve the installed battery here. */
+    public static ItemStack inheritCraftingBrokenPowerUnit(ItemStack hostResult, ItemStack original) {
+        ItemStack result = inheritBrokenPowerUnit(hostResult, original);
+        if (result == hostResult || result.isEmpty() || !matchesItem(result) ||
+                parse(result.getTagCompound(), MetaTileEntityCrucible::resolveMaterial).isEmpty()) return result;
+        gregtech.api.capability.IElectricItem source = original.copy().getCapability(
+                GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM, null);
+        gregtech.api.capability.IElectricItem target = result.getCapability(
+                GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM, null);
+        if (source != null && target instanceof gregtech.api.capability.impl.ElectricItem) {
+            ((gregtech.api.capability.impl.ElectricItem) target).setMaxChargeOverride(source.getMaxCharge());
+            // The host has just consumed the crafting energy. Never duplicate
+            // the pre-use charge from original; only the battery capacity persists.
+        }
+        return result;
+    }
+
     static boolean hasMatchingToolMaterial(NBTTagCompound root) {
         if (root == null || !root.hasKey(TAG, 10) || !root.hasKey("GT.Tool", 10)) return false;
         NBTTagCompound account = root.getCompoundTag(TAG), tool = root.getCompoundTag("GT.Tool");
@@ -221,7 +234,7 @@ public final class CrucibleElectricProvenance {
                 account.getString("toolMaterial").equals(tool.getString("Material"));
     }
 
-    private static void bindItem(NBTTagCompound data, ItemStack stack) {
+    static void bindItem(NBTTagCompound data, ItemStack stack) {
         data.setInteger("version", 2);
         if (stack.getItem().getRegistryName() != null) {
             data.setString("item", stack.getItem().getRegistryName().toString());
@@ -243,23 +256,7 @@ public final class CrucibleElectricProvenance {
     }
 
     private static List<MaterialStack> componentMaterials(ItemStack unit) {
-        if (unit.getMetadata() == GTValues.W || unit.isItemDamaged() || CrucibleToolRecycling.isTool(unit) ||
-                unit.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null) ||
-                unit.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
-            return Collections.emptyList();
-        }
-        if (unit.hasCapability(GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM, null)) {
-            return CrucibleElectricRecycling.resolve(unit, MetaTileEntityCrucible::resolveMaterial);
-        }
-        if (unit.hasTagCompound()) return Collections.emptyList();
-        RecyclingData data = RecyclingHandler.getRecyclingIngredients(1,
-                Collections.singletonList(new GTRecipeItemInput(unit)), null);
-        if (data == null) return Collections.emptyList();
-        for (MaterialStack component : data.getMaterials()) {
-            if (component == null || component.material == null || component.material == Materials.NULL ||
-                    component.material instanceof MarkerMaterial || component.amount <= 0) return Collections.emptyList();
-        }
-        return data.getMaterials();
+        return CrucibleComponentProvenance.componentMaterials(unit);
     }
 
     static List<MaterialStack> parse(NBTTagCompound root, Function<String, Material> resolver) {

@@ -10,11 +10,11 @@ import java.util.Set;
  */
 final class GT6InheritedBurningExemptions {
     private static final Set<String> NAMES = new HashSet<>(Arrays.asList(
-            // wood() calls positive setSmelting before per-material overrides.
-            // Silverwood's later zero target does not remove its existing MELTING tag.
+            // These explicit setSmelting/setAllToTheOutputOf calls grant
+            // MELTING. wood() itself does not: Silverwood and Peanutwood
+            // must not acquire a blanket wood-factory exemption.
             "wood", "woodtreated", "treatedwood", "woodpolished", "woodrubber", "bamboo", "skyroot",
-            "weedwood", "livingwood", "dreamwood", "shimmerwood", "greatwood", "silverwood",
-            "peanutwood", "marshmallow",
+            "weedwood", "livingwood", "dreamwood", "shimmerwood", "greatwood",
             "ad", "adamantine", "adamantite", "adamantium", "alduorite",
             "aluminiumalloy", "aluminiumbrass", "alumite", "amordrine", "ancientdebris",
             "angmallen", "annealedcopper", "ardite", "aredrite", "arsenicbronze",
@@ -68,7 +68,8 @@ final class GT6InheritedBurningExemptions {
     private GT6InheritedBurningExemptions() {}
 
     static boolean contains(String name) {
-        return name != null && NAMES.contains(name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", ""));
+        return name != null && NAMES.contains(GT6MaterialIdentity.canonicalOreName(
+                name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "")));
     }
 }
 

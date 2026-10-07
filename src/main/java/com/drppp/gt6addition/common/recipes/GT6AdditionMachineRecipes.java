@@ -5,7 +5,7 @@ import com.drppp.gt6addition.GT6AdditionMain;
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
 import com.drppp.gt6addition.common.item.GT6AdditionItems;
 import com.drppp.gt6addition.common.material.GT6AdditionOrePrefixes;
-import com.drppp.gt6addition.common.material.GT6MachineMaterials;
+import com.drppp.gt6addition.common.material.GT6MaterialCompatibility;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.recipes.Recipe;
@@ -44,10 +44,10 @@ public final class GT6AdditionMachineRecipes {
             Materials.Chrome, Materials.Titanium, Materials.Tungsten, Materials.TungstenSteel
     };
     private static final Material[] COMBUSTION_MATERIALS = {
-            Materials.Lead, Materials.Bismuth, Materials.Bronze, GT6MachineMaterials.ARSENIC_COPPER,
-            GT6MachineMaterials.ARSENIC_BRONZE, Materials.Invar, Materials.Steel, Materials.Chrome,
-            Materials.Titanium, GT6MachineMaterials.NETHERITE, Materials.Tungsten, Materials.TungstenSteel,
-            GT6MachineMaterials.TANTALUM_HAFNIUM_CARBIDE
+            Materials.Lead, Materials.Bismuth, Materials.Bronze, GT6MaterialCompatibility.findExternal("arsenic_copper"),
+            GT6MaterialCompatibility.findExternal("arsenic_bronze"), Materials.Invar, Materials.Steel, Materials.Chrome,
+            Materials.Titanium, GT6MaterialCompatibility.findExternal("netherite"), Materials.Tungsten, Materials.TungstenSteel,
+            GT6MaterialCompatibility.findExternal("tantalum_hafnium_carbide")
     };
     private static final Material[] HU_MACHINE_MATERIALS = {
             Materials.Steel, Materials.Invar, Materials.Titanium, Materials.TungstenCarbide
@@ -472,6 +472,7 @@ public final class GT6AdditionMachineRecipes {
     private static void registerHuSeries() {
         for (int i = 0; i < COMBUSTION_MATERIALS.length; i++) {
             Material material = COMBUSTION_MATERIALS[i];
+            if (material == null) continue; // Keep the machine, but never invent its crafting material.
             registerShaped("combustion_chamber_" + i, MetaTileEntityHandler.HU_BURRING_BOXS[i].getStackForm(),
                     "PBP", "FCF", "PGP",
                     'P', plate(material, 1),

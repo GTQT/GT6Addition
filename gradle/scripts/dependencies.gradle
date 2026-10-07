@@ -45,6 +45,9 @@ dependencies {
     implementation rfg.deobf(files("libs/gregtech-gtqt-1.12.2-2.9.0-190.jar"))
     // GTCEu's IGTTool extends Forestry's optional IToolGrafter API; compile-only keeps Forestry optional at runtime.
     compileOnly rfg.deobf("curse.maven:forestry-59751:7398359") // Forestry 5.8.2.427 for Minecraft 1.12.2
+    // Standalone tests load IGTTool without Forge's optional-interface stripping.
+    // Supply its Forestry API only to tests; keep Forestry optional in the game.
+    testRuntimeOnly rfg.deobf("curse.maven:forestry-59751:7398359")
     compileOnly rfg.deobf("curse.maven:had-enough-items-557549:7938914")
     // JEI wrappers are exercised by tests; compileOnly does not populate their classpath.
     testImplementation rfg.deobf("curse.maven:had-enough-items-557549:7938914")

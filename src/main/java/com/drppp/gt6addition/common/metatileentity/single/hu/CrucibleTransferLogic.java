@@ -336,7 +336,7 @@ public final class CrucibleTransferLogic {
         if ("lanthanum".equals(normalized)) return "lanthanium";
         if ("phosphorus".equals(normalized)) return "phosphor";
         if ("deuterium".equals(normalized) || "tritium".equals(normalized)) return "hydrogen";
-        return GT6MaterialIdentity.canonicalCompoundName(normalized);
+        return GT6MaterialIdentity.canonicalOreName(GT6MaterialIdentity.canonicalCompoundName(normalized));
     }
 
     private static Double knownMaterialDensity(String normalizedName) {
@@ -408,6 +408,10 @@ public final class CrucibleTransferLogic {
         Map<String, Double> densities = new HashMap<>();
         // Values are GT6 mGramPerCubicCentimeter (and setDensity values) converted to kg/m^3.
         String[] entries = {
+                // MT.java:519-520,531-535,696,722,744,793. Zero is explicit
+                // source data, not a missing-value sentinel or molecular mass.
+                "ununennium=0 unbinilium=0 photon=0 neutrino=0 neutron=0 proton=0 electron=0",
+                "trinium=1068.74 vibranium=3239.78365 naquadah=21000 atlarus=21246.25421",
                 // MT.java:695,715: only the host elemental identities.
                 "duranium=20000 duraniumelemental=20000 tritanium=25000 tritaniumelemental=25000",
                 "hydrogen=0.08988 deuterium=0.08988 tritium=0.08988 helium=0.1785",
@@ -435,6 +439,9 @@ public final class CrucibleTransferLogic {
         }
         densities.put("iron", GT6_IRON_DENSITY_KG_PER_CUBIC_METER);
         densities.put("osmium", GT6_OSMIUM_DENSITY_KG_PER_CUBIC_METER);
+        // :465 saved name of element 76; raw "Osmium" registration alias
+        // of Germanium is handled separately by hostRecyclingName.
+        densities.put("osmiumelemental", GT6_OSMIUM_DENSITY_KG_PER_CUBIC_METER);
         densities.put("aluminum", densities.get("aluminium"));
         densities.put("cesium", densities.get("caesium"));
         densities.put("lanthanum", densities.get("lanthanium"));
@@ -448,16 +455,56 @@ public final class CrucibleTransferLogic {
         densities.put("bluephosphorus", phosphorusCompoundDensity);
         densities.put("redphosphorus", phosphorusCompoundDensity);
         densities.put("whitephosphorus", phosphorusCompoundDensity);
-        densities.put("anyphosphorus", phosphorusCompoundDensity);
-        // Steel's one-U WroughtIron configuration copies Fe density;
-        // Manasteel steals Steel, and ANY.MagicIron steals Manasteel.
-        densities.put("anymagiciron", densities.get("iron"));
-        // ANY.WoodPlastic steals MT.Wood: six C plus fifteen H2O, divider 21.
-        densities.put("anywoodorplastic", (6 * densities.get("carbon") + 15 * densities.get("water")) / 21);
+        // MT.Wood and configured native woods: six C plus fifteen H2O, divider 21.
+        double woodDensity = (6 * densities.get("carbon") + 15 * densities.get("water")) / 21;
+        for (String name : new String[]{"bark", "wood", "woodtreated", "treatedwood",
+                "woodpolished", "woodrubber", "bamboo", "skyroot", "weedwood", "livingwood", "dreamwood",
+                "shimmerwood", "greatwood", "silverwood", "peanutwood", "petrifiedwood"}) {
+            densities.put(name, woodDensity);
+        }
+        // Unlike configured woods, Marshmallow has no components/density override.
+        densities.put("marshmallow", 1000D);
+        // MT.java woodnormal uses the same C6/H2O15 configuration, not
+        // the host's generic wood density or unknown-material fallback.
+        for (String name : GT6WoodMaterialData.names()) densities.put(name, woodDensity);
         // MT.java:1056/1081/1396, 212-214: nested component densities,
         // not real-world gem densities or the host's flattened atom counts.
         double silicaDensity = (densities.get("silicon") + 2 * densities.get("oxygen")) / 3;
         double aluminaDensity = (2 * densities.get("aluminium") + 3 * densities.get("oxygen")) / 5;
+        densities.put("alumina", aluminaDensity);
+        densities.put("sapphire", 5 * aluminaDensity / 6); // MT.java:1380 density divider, not thermal averaging.
+        // Divider 29 does not divide GT6 U: reproduce its per-component
+        // integer truncation, instead of a flattened host atom average.
+        densities.put("emerald", gt6ComponentDensity(29, new long[]{5, 3, 18, 3},
+                aluminaDensity, densities.get("beryllium"), silicaDensity, densities.get("oxygen")));
+        densities.put("fluorite", (densities.get("calcium") + 2 * densities.get("fluorine")) / 3);
+        densities.put("salt", (densities.get("sodium") + densities.get("chlorine")) / 2);
+        densities.put("rubber", (5 * densities.get("carbon") + 8 * densities.get("hydrogen")) / 13);
+        densities.put("plastic", (densities.get("carbon") + 2 * densities.get("hydrogen")) / 3);
+        // MT.java:1303-1305 deliberately configures CH2 for these polymers,
+        // not CEu's C2F4/C2H3Cl components or its registered fluid density.
+        densities.put("teflon", densities.get("plastic"));
+        densities.put("pvc", densities.get("plastic"));
+        densities.put("bakelite", densities.get("plastic"));
+        densities.put("hardplastic", densities.get("plastic")); // MT.Polycarbonate's literal name, :1306.
+        densities.put("polycarbonate", densities.get("hardplastic")); // Explicit ore alias on the same definition.
+        // MT.java:1691-1693,1700,1706-1707,1713-1716,1820. Preserve
+        // nested alloy configurations; neither flattened CEu molecular mass
+        // nor an ANY family's decorative steel texture defines its density.
+        densities.put("electrum", (densities.get("silver") + densities.get("gold")) / 2);
+        densities.put("sterlingsilver", (densities.get("copper") + 4 * densities.get("silver")) / 5);
+        densities.put("rosegold", (densities.get("copper") + 4 * densities.get("gold")) / 5);
+        densities.put("brass", (3 * densities.get("copper") + densities.get("zinc")) / 4);
+        densities.put("blackbronze", (3 * densities.get("copper") + 2 * densities.get("electrum")) / 5);
+        densities.put("bismuthbronze", (densities.get("bismuth") + 4 * densities.get("brass")) / 5);
+        densities.put("steel", densities.get("iron"));
+        densities.put("manasteel", densities.get("steel"));
+        densities.put("blacksteel", (densities.get("nickel") + densities.get("blackbronze") +
+                3 * densities.get("steel")) / 5);
+        densities.put("bluesteel", (densities.get("sterlingsilver") + densities.get("bismuthbronze") +
+                2 * densities.get("steel") + 4 * densities.get("blacksteel")) / 8);
+        densities.put("redsteel", (densities.get("rosegold") + densities.get("brass") +
+                2 * densities.get("steel") + 4 * densities.get("blacksteel")) / 8);
         // MT.java:539,1436,1498. Magic's declared density is zero; both
         // amethysts use density divider 5, but the ender variant's heat averages
         // all six component units. Do not substitute host atom counts or density.
@@ -512,25 +559,60 @@ public final class CrucibleTransferLogic {
         // CaCO3's nested Ca/CO3 1:4 configuration equals Ca/C/O 1:1:3.
         densities.put("calcite", (densities.get("calcium") + densities.get("carbon") +
                 3 * densities.get("oxygen")) / 5);
-        densities.put("anygarnet", (5 * aluminaDensity + 3 * densities.get("manganese") +
+        // MT.java:3734-3742,3779-3790: preserve nested configurations,
+        // including elemental Duranium/Tritanium rather than their alloys.
+        densities.put("wollastonite", (densities.get("calcium") + 3 * silicaDensity + densities.get("oxygen")) / 5);
+        densities.put("zeolite", (5 * aluminaDensity + 2 * densities.get("sodium") +
+                12 * silicaDensity + 6 * densities.get("water") + densities.get("oxygen")) / 26);
+        densities.put("pollucite", (5 * aluminaDensity + 2 * densities.get("caesium") +
+                12 * silicaDensity + 6 * densities.get("water") + densities.get("oxygen")) / 26);
+        double magnetiteDensity = (3 * densities.get("iron") + 4 * densities.get("oxygen")) / 7;
+        double vanadiumPentoxideDensity = (2 * densities.get("vanadium") + 5 * densities.get("oxygen")) / 7;
+        densities.put("vanadiummagnetite", (magnetiteDensity + vanadiumPentoxideDensity) / 2);
+        densities.put("diduraniumtrioxide", (2 * densities.get("duraniumelemental") + 3 * densities.get("oxygen")) / 5);
+        densities.put("tritaniumdioxide", (densities.get("tritaniumelemental") + 2 * densities.get("oxygen")) / 3);
+        String[] halogens = {"fluorine", "chlorine", "bromine", "iodine", "astatine"};
+        String[] halides = {"fluoride", "chloride", "bromide", "iodide", "astatide"};
+        for (int i = 0; i < halogens.length; i++) {
+            densities.put("duraniumhexa" + halides[i], (densities.get("duraniumelemental") + 6 * densities.get(halogens[i])) / 7);
+            densities.put("tritaniumhexa" + halides[i], (densities.get("tritaniumelemental") + 6 * densities.get(halogens[i])) / 7);
+        }
+        // MT.java:1279-1283,3813-3814: common dividers are not atom sums.
+        double ceramicDensity = (5 * aluminaDensity + 12 * silicaDensity) / 18;
+        double clayDensity = (2 * ceramicDensity + densities.get("water")) / 2;
+        densities.put("ceramic", ceramicDensity);
+        densities.put("clay", clayDensity);
+        double potassiumHydroxideDensity = (densities.get("potassium") + densities.get("oxygen") + densities.get("hydrogen")) / 3;
+        double redClayDensity = clayDensity + potassiumHydroxideDensity / 18;
+        densities.put("shale", (2 * densities.get("calcite") + silicaDensity + clayDensity) / 4);
+        densities.put("redrock", (2 * densities.get("calcite") + silicaDensity + redClayDensity) / 4);
+        densities.put("naquadahenriched", 22000D);
+        densities.put("enrichednaquadah", 22000D);
+        densities.put("naquadria", 20000D);
+        densities.put("abyssalnite", 15000D);
+        densities.put("coralium", 20000D);
+        densities.put("dreadium", 25000D);
+        densities.put("ethaxium", 30000D);
+        densities.put("macguffium", 3122D);
+        densities.put("gravitonium", 1768866.761D);
+        densities.put("spessartine", (5 * aluminaDensity + 3 * densities.get("manganese") +
                 9 * silicaDensity + 3 * densities.get("oxygen")) / 20);
-        densities.put("anyjasper", (2 * silicaDensity + densities.get("iron")) / 3);
-        densities.put("anytigereye", silicaDensity);
-        densities.put("anyaventurine", silicaDensity);
-        densities.put("anyamber", 1000D); // MT.Amber retains OreDictMaterial's default 1 g/cm^3.
+        densities.put("jasper", (2 * silicaDensity + densities.get("iron")) / 3);
+        densities.put("redjasper", densities.get("jasper")); // Literal native name of the Jasper alias.
+        densities.put("tigereye", silicaDensity);
+        densities.put("greenaventurine", silicaDensity);
+        densities.put("milkyquartz", silicaDensity);
+        for (String name : new String[]{"amber", "ash", "ashes", "infuseddull", "hexoriumwhite"}) {
+            densities.put(name, 1000D); // Verified constructor defaults, not an unknown-density fallback.
+        }
         // None of these GT6 definitions configures components or overrides density.
         densities.put("blaze", 1000D);
-        densities.put("anyblaze", 1000D);
         densities.put("prismarine", 1000D);
         densities.put("prismarinedark", 1000D);
-        densities.put("anyprismarine", 1000D);
         densities.put("wheat", 1000D);
         for (String name : new String[]{"barley", "rye", "rice", "oat", "abyssaloat", "corn", "potato"}) {
             densities.put(name, 1000D); // GT6 grain/dustfood defaults, no component configuration.
         }
-        densities.put("anygrains", 1000D);
-        densities.put("anythaumiccrystal", 1000D);
-        densities.put("anyhexorium", 1000D);
         densities.put("tofu", 1000D);
         densities.put("fishoil", 1000D); // MT.FishOil has no density/components override.
         // MT.Bone uumMcfg(8, Ca, U): density uses the divided Ca quantity;
@@ -548,7 +630,27 @@ public final class CrucibleTransferLogic {
         densities.put("h2s2o7", densities.get("disulfuricacid"));
         densities.put("h2sif6", densities.get("hexafluorosilicicacid"));
         densities.put("petcoke", densities.get("petroleumcoke"));
+        GT6NativeScalarData.addDensities(densities);
+        GT6MineralDensityData.addTo(densities);
+        for (String name : GT6TechnicalMaterialData.names()) {
+            GT6TechnicalMaterialData.Profile family = GT6TechnicalMaterialData.find(name);
+            // Every native stats source above is explicit. The three
+            // stealLooks-only families retain the constructor's 1 g/cm^3.
+            densities.put(name, family.statsSource == null ? 1000D : densities.get(family.statsSource));
+        }
+        densities.put("anycoal/carbon", densities.get("anycoalcarbon"));
+        densities.put("anyhexorium", densities.get("hexorium"));
         return Collections.unmodifiableMap(densities);
+    }
+
+    /** OreDictConfigurationComponent floors each divided amount before density summation. */
+    private static double gt6ComponentDensity(long divider, long[] weights, double... components) {
+        double density = 0;
+        for (int i = 0; i < weights.length; i++) {
+            long amount = weights[i] * 648648000L / divider;
+            density += components[i] * amount / 648648000D;
+        }
+        return density;
     }
 
     public static boolean shouldCondenseLava(long temperature) {

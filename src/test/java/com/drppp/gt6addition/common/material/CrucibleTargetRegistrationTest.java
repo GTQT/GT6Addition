@@ -1,5 +1,6 @@
 package com.drppp.gt6addition.common.material;
 
+import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import gregtech.api.GregTechAPI;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
@@ -20,7 +21,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Real dependency builders and registry, without pretending to load GTQTCore. */
+/** Isolated external registry fixtures are not production material registrations. */
 class CrucibleTargetRegistrationTest {
     private IMaterialRegistryManager previousManager;
     private MarkerMaterialRegistry previousMarkers;
@@ -32,27 +33,29 @@ class CrucibleTargetRegistrationTest {
         previousManager = GregTechAPI.materialManager;
         previousMarkers = GregTechAPI.markerMaterialRegistry;
         if (previousMarkers == null) GregTechAPI.markerMaterialRegistry = MarkerMaterialRegistry.getInstance();
-        for (String name : new String[]{"BandedIron", "Calcium", "Fluorine", "Niobium", "Oxygen", "Pyrolusite"}) {
+        for (String name : new String[]{"Carbon", "Coal"}) {
             Field field = Materials.class.getField(name);
             previousFields.put(field, field.get(null));
         }
-        for (String name : new String[]{"HEMATITE", "FLUORITE", "NIOBIUM_PENTOXIDE", "COLUMBITE",
-                "ADAMANTIUM", "ADAMANTINE", "DOLAMIDE"}) {
-            Field field = GT6MachineMaterials.class.getField(name);
-            previousFields.put(field, field.get(null));
-        }
+        Field anthracite = GT6MachineMaterials.class.getField("ANTHRACITE");
+        previousFields.put(anthracite, anthracite.get(null));
+        registry = newRegistry(true);
+        Material carbon = new Material.Builder(1, new ResourceLocation("gregtech", "carbon")).dust().build();
+        Materials.Carbon = carbon;
+        Materials.Coal = new Material.Builder(2, new ResourceLocation("gregtech", "coal")).gem().build();
+    }
+
+    private MaterialRegistryManager newRegistry(boolean core) throws Exception {
         Constructor<MaterialRegistryManager> constructor = MaterialRegistryManager.class.getDeclaredConstructor();
         constructor.setAccessible(true);
-        registry = constructor.newInstance();
-        GregTechAPI.materialManager = registry;
-        registry.createRegistry("gt6addition");
-        registry.createRegistry("gtqtcore");
-        registry.unfreezeRegistries();
-        int id = 1;
-        for (String name : new String[]{"BandedIron", "Calcium", "Fluorine", "Niobium", "Oxygen", "Pyrolusite"}) {
-            Materials.class.getField(name).set(null, new Material.Builder(id++,
-                    new ResourceLocation("gregtech", "fixture_" + name.toLowerCase(java.util.Locale.ROOT))).dust().build());
-        }
+        MaterialRegistryManager manager = constructor.newInstance();
+        GregTechAPI.materialManager = manager;
+        manager.createRegistry("gt6addition");
+        if (core) manager.createRegistry("gtqtcore");
+        manager.createRegistry("thirdparty");
+        manager.createRegistry("anothermod");
+        manager.unfreezeRegistries();
+        return manager;
     }
 
     @AfterEach void restore() throws Exception {
@@ -61,57 +64,71 @@ class CrucibleTargetRegistrationTest {
         GregTechAPI.markerMaterialRegistry = previousMarkers;
     }
 
-    @Test void missingTargetsAreRegisteredWithValidHostProperties() {
-        GT6MachineMaterials.registerCrucibleTargets();
-        assertSame(Materials.BandedIron, GT6MachineMaterials.HEMATITE);
-        assertEquals("gt6addition:fluorite", GT6MachineMaterials.FLUORITE.getRegistryName());
-        assertTrue(GT6MachineMaterials.FLUORITE.hasProperty(PropertyKey.GEM));
-        assertFalse(GT6MachineMaterials.FLUORITE.hasProperty(PropertyKey.INGOT));
-        assertTrue(GT6MachineMaterials.FLUORITE.hasProperty(PropertyKey.FLUID));
-        assertTrue(GT6MachineMaterials.ADAMANTIUM.hasProperty(PropertyKey.FLUID));
-        assertFalse(GT6MachineMaterials.ADAMANTINE.hasProperty(PropertyKey.FLUID));
-        assertFalse(GT6MachineMaterials.DOLAMIDE.hasProperty(PropertyKey.FLUID));
-        assertSame(GT6MachineMaterials.ADAMANTIUM,
-                GT6MachineMaterials.ADAMANTINE.getMaterialComponents().get(0).material);
-        assertEquals(3, GT6MachineMaterials.ADAMANTINE.getMaterialComponents().get(0).amount);
-        assertColumbiteComponents();
+    @Test void onlyAnthraciteIsActuallyRegistered() {
+        GT6MachineMaterials.register();
+        registry.closeRegistries();
+        int owned = 0;
+        for (Material material : registry.getRegisteredMaterials()) {
+            if (material.getRegistryName().startsWith("gt6addition:")) {
+                assertSame(GT6MachineMaterials.ANTHRACITE, material);
+                owned++;
+            }
+        }
+        assertEquals(1, owned);
+        assertEquals("gt6addition:anthracite", GT6MachineMaterials.ANTHRACITE.getRegistryName());
+        assertEquals(3200, GT6MachineMaterials.ANTHRACITE.getProperty(PropertyKey.DUST).getBurnTime());
+        assertTrue(GT6MachineMaterials.ANTHRACITE.hasProperty(PropertyKey.GEM));
+        assertTrue(GT6MachineMaterials.ANTHRACITE.hasProperty(PropertyKey.ORE));
+        assertEquals(Materials.Coal, GT6MachineMaterials.ANTHRACITE.getProperty(PropertyKey.ORE).getOreByProducts().get(0));
     }
 
-    @Test void verifiedCoreTargetsAreReusedRatherThanDuplicated() {
-        Material coreFluorite = new Material.Builder(1, new ResourceLocation("gtqtcore", "fluorite")).gem().ore().build();
-        Material coreOxide = new Material.Builder(2, new ResourceLocation("gtqtcore", "niobium_pentoxide")).dust().build();
-        GT6MachineMaterials.registerCrucibleTargets();
-        assertSame(coreFluorite, GT6MachineMaterials.FLUORITE);
-        assertSame(coreOxide, GT6MachineMaterials.NIOBIUM_PENTOXIDE);
+    @Test void missingTargetsStayAbsent() {
+        registry.closeRegistries();
+        int before = registry.getRegisteredMaterials().size();
+        for (String path : new String[]{"fluorite", "columbite", "adamantium", "adamantine", "dolamide", "meat_raw"}) {
+            assertNull(GT6MaterialCompatibility.findExternal(path));
+            assertNull(MetaTileEntityCrucible.resolveMaterial("gt6addition:" + path));
+        }
+        assertEquals(before, registry.getRegisteredMaterials().size());
+    }
+
+    @Test void verifiedExternalTargetsAreReusedWithoutPropertyMutation() {
+        Material core = new Material.Builder(1, new ResourceLocation("gtqtcore", "fluorite")).gem().ore().build();
+        new Material.Builder(3, new ResourceLocation("gregtech", "fluorite")).gem().build();
+        assertSame(core, GT6MaterialCompatibility.findExternal("fluorite"));
+        assertSame(core, MetaTileEntityCrucible.resolveMaterial("gt6addition:fluorite"));
+        assertTrue(core.hasProperty(PropertyKey.GEM));
+        assertFalse(core.hasProperty(PropertyKey.INGOT));
+        assertFalse(core.hasProperty(PropertyKey.FLUID));
         assertNull(registry.getMaterial("gt6addition:fluorite"));
-        assertNull(registry.getMaterial("gt6addition:niobium_pentoxide"));
-        assertColumbiteComponents();
     }
 
-    @Test void absentCoreNamespaceCannotMisidentifyHostFallbackAsCoreMaterial() throws Exception {
-        // A fresh manager without the optional namespace reproduces CEu's
-        // getRegistry fallback. The actual identity must still be gregtech.
-        Constructor<MaterialRegistryManager> constructor = MaterialRegistryManager.class.getDeclaredConstructor();
-        constructor.setAccessible(true);
-        registry = constructor.newInstance();
-        GregTechAPI.materialManager = registry;
-        registry.createRegistry("gt6addition");
-        registry.unfreezeRegistries();
-        Material hostFluorite = new Material.Builder(1, new ResourceLocation("gregtech", "fluorite")).gem().ore().build();
-        Material hostOxide = new Material.Builder(2, new ResourceLocation("gregtech", "niobium_pentoxide")).dust().build();
-        GT6MachineMaterials.registerCrucibleTargets();
-        assertSame(hostFluorite, GT6MachineMaterials.FLUORITE);
-        assertSame(hostOxide, GT6MachineMaterials.NIOBIUM_PENTOXIDE);
-        assertNull(registry.getMaterial("gt6addition:fluorite"));
-        assertColumbiteComponents();
+    @Test void absentNamespaceCannotMisidentifyHostMaterial() throws Exception {
+        registry = newRegistry(false);
+        Material host = new Material.Builder(1, new ResourceLocation("gregtech", "fluorite")).gem().build();
+        registry.closeRegistries();
+        assertSame(host, GT6MaterialCompatibility.findExternal("fluorite"));
+        assertSame(host, MetaTileEntityCrucible.resolveMaterial("gt6addition:fluorite"));
+        assertNull(GT6MaterialCompatibility.findExternal("gtqtcore:fluorite"));
+        assertNull(MetaTileEntityCrucible.resolveMaterial("absent:fluorite"));
     }
 
-    private static void assertColumbiteComponents() {
-        assertEquals(2, GT6MachineMaterials.COLUMBITE.getMaterialComponents().size());
-        assertSame(GT6MachineMaterials.NIOBIUM_PENTOXIDE,
-                GT6MachineMaterials.COLUMBITE.getMaterialComponents().get(0).material);
-        assertEquals(7, GT6MachineMaterials.COLUMBITE.getMaterialComponents().get(0).amount);
-        assertSame(Materials.Pyrolusite, GT6MachineMaterials.COLUMBITE.getMaterialComponents().get(1).material);
-        assertEquals(1, GT6MachineMaterials.COLUMBITE.getMaterialComponents().get(1).amount);
+    @Test void otherModTargetsWorkButAmbiguousNamesAreRejected() {
+        Material external = new Material.Builder(1, new ResourceLocation("thirdparty", "arsenic_copper")).ingot().build();
+        assertSame(external, GT6MaterialCompatibility.findExternal("arsenic_copper"));
+        assertSame(external, MetaTileEntityCrucible.resolveMaterial("gt6addition:arsenic_copper"));
+        new Material.Builder(1, new ResourceLocation("anothermod", "arsenic_copper")).ingot().build();
+        assertNull(GT6MaterialCompatibility.findExternal("arsenic_copper"));
+        assertNull(MetaTileEntityCrucible.resolveMaterial("gt6addition:arsenic_copper"));
+        assertSame(external, GT6MaterialCompatibility.findExternal("thirdparty:arsenic_copper"));
+    }
+
+    @Test void migrationIsRestrictedToKnownRetiredIdentities() {
+        assertEquals("netherite", GT6MaterialCompatibility.retiredPath("gt6addition:netherite"));
+        assertNull(GT6MaterialCompatibility.retiredPath("gt6addition:anthracite"));
+        assertNull(GT6MaterialCompatibility.retiredPath("gt6addition:unknown_material"));
+        assertNull(GT6MaterialCompatibility.retiredPath("anothermod:netherite"));
+        assertNull(GT6MaterialCompatibility.retiredPath("netherite"));
+        assertNull(GT6MaterialCompatibility.retiredPath(null));
     }
 }

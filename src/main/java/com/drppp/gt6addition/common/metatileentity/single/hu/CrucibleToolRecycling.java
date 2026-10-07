@@ -268,6 +268,7 @@ public final class CrucibleToolRecycling {
             if (!"GT.Tool".equals(tag) && !"GT.Behaviours".equals(tag) && !"display".equals(tag) &&
                     !"ench".equals(tag) && !"RepairCost".equals(tag) && !"Unbreakable".equals(tag) &&
                     !"HideFlags".equals(tag) && !"DisallowContainerItem".equals(tag) &&
+                    !CrucibleToolProvenance.TAG.equals(tag) &&
                     !CrucibleRecyclingOverride.TAG.equals(tag)) return false;
         }
         NBTTagCompound tool = root.getCompoundTag("GT.Tool");

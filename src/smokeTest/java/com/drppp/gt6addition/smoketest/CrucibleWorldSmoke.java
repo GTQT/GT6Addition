@@ -60,23 +60,40 @@ public final class CrucibleWorldSmoke {
             check(world != null && !world.isRemote, "Missing real server world");
             // Full host material registration must produce a usable Wheat dust.
             check(!OreDictUnifier.get(OrePrefix.dust, Materials.Wheat).isEmpty(), "Host Wheat dust is missing");
+            materialPolicy();
             removed(world, server, false, 1299);
             removed(world, server, false, 1300);
             removed(world, server, true, 1300);
             cancelledCreativeRemoval(world, server);
             unprocessedDrops(world, server);
             creativeToolCancellation(world, server);
-            CrucibleHeatWorldSmoke.run(world);
+            int heatCases = CrucibleHeatWorldSmoke.run(world);
             int inputCases = CrucibleInputWorldSmoke.run(world, server);
             int moldCases = CrucibleMoldWorldSmoke.run(world, server);
             int storageCases = CrucibleStorageWorldSmoke.run(world, server);
             int hazardCases = CrucibleHazardWorldSmoke.run(world, server);
-            LOG.info("CRUCIBLE_WORLD_PASS {}", 10 + inputCases + moldCases + storageCases + hazardCases);
+            int toolCases = CrucibleToolWorldSmoke.run(world);
+            LOG.info("CRUCIBLE_WORLD_PASS {}", 7 + heatCases + inputCases + moldCases + storageCases + hazardCases + toolCases);
         } catch (Throwable failure) {
             // A server can exit zero after a startup event failure. The Gradle
             // verifier requires the success marker and rejects this marker.
             LOG.error("CRUCIBLE_WORLD_FAIL", failure);
         }
+    }
+
+    private void materialPolicy() {
+        int owned = 0;
+        for (gregtech.api.unification.material.Material material : gregtech.api.GregTechAPI.materialManager.getRegisteredMaterials()) {
+            if (material.getRegistryName().startsWith("gt6addition:")) {
+                check(material == com.drppp.gt6addition.common.material.GT6MachineMaterials.ANTHRACITE &&
+                        material.getRegistryName().equals("gt6addition:anthracite"), "Forbidden addon material: " + material);
+                owned++;
+            }
+        }
+        check(owned == 1, "Anthracite is not the sole addon material");
+        check(MetaTileEntityHandler.CRUCIBLE_HU.length == 23, "Crucible variants were removed");
+        for (MetaTileEntityCrucible crucible : MetaTileEntityHandler.CRUCIBLE_HU) check(crucible != null, "Missing crucible variant");
+        LOG.info("CRUCIBLE_WORLD_MATERIAL_POLICY passed owned=1 crucibles=23");
     }
 
     private void removed(WorldServer world, MinecraftServer server, boolean creative, long temperature) {

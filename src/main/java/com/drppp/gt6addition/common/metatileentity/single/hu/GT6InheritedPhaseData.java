@@ -42,6 +42,7 @@ final class GT6InheritedPhaseData {
         put("pigiron", "wroughtiron");
         put("ironcompressed", "iron");
         put("ironcast", "iron");
+        put("castiron", "iron"); // MT.java:1726 literal saved name "Cast Iron".
         put("ironmagnetic", "iron");
         put("steelmagnetic", "steel");
         put("neodymiummagnetic", "neodymium");
@@ -60,7 +61,7 @@ final class GT6InheritedPhaseData {
 
     private GT6InheritedPhaseData() {}
 
-    private static void put(String material, String source) { SOURCES.put(material, source); }
+    private static void put(String material, String source) { SOURCES.put(normalize(material), source); }
 
     static int meltingPoint(String name) {
         long point = inherited(name, false);
@@ -93,6 +94,7 @@ final class GT6InheritedPhaseData {
     }
 
     private static String normalize(String name) {
-        return name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+        return GT6MaterialIdentity.canonicalOreName(name.toLowerCase(Locale.ROOT)
+                .replace("_", "").replace("-", "").replace(" ", ""));
     }
 }

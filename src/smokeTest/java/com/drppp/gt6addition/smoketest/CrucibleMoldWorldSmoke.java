@@ -1,7 +1,7 @@
 package com.drppp.gt6addition.smoketest;
 
 import com.drppp.gt6addition.common.item.GT6CastingIngotItem;
-import com.drppp.gt6addition.common.material.GT6MachineMaterials;
+import com.drppp.gt6addition.common.material.GT6MaterialCompatibility;
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityMold;
@@ -36,7 +36,15 @@ import java.util.UUID;
 /** Complete registered Fluorite casting/recovery path in an isolated real world. */
 final class CrucibleMoldWorldSmoke {
     static int run(WorldServer world, MinecraftServer server) {
-        Material fluorite = GT6MachineMaterials.FLUORITE;
+        Material fluorite = GT6MaterialCompatibility.findExternal("fluorite");
+        if (fluorite == null) {
+            check(net.minecraftforge.fml.common.registry.ForgeRegistries.ITEMS.getValue(
+                    new net.minecraft.util.ResourceLocation("gt6addition", "fluorite_ingot")) == null,
+                    "Absent external Fluorite generated an addon casting form");
+            LogManager.getLogger("CrucibleParitySmoke")
+                    .info("CRUCIBLE_WORLD_OPTIONAL_FLUORITE unavailable; casting checks not executed");
+            return 0;
+        }
         ItemStack ingot = OreDictUnifier.get(OrePrefix.ingot, fluorite);
         check(!ingot.isEmpty() && !OreDictUnifier.get(OrePrefix.gem, fluorite).isEmpty(), "Missing Fluorite form");
         check(!fluorite.hasProperty(PropertyKey.INGOT), "Gem material acquired conflicting IngotProperty");

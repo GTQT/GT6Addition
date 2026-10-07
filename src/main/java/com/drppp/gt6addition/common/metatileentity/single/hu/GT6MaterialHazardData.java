@@ -41,6 +41,13 @@ final class GT6MaterialHazardData {
         putCombustion(0, "fishraw", "fishcooked", "fishrotten", "tofu", "bone");
         putCombustion(0, "potato"); // setBurning(Ash, U9) does not grant FLAMMABLE.
         putCombustion(0, "anythaumiccrystal", "anyhexorium");
+        // MT.java:3734-3742,3779-3790,3813-3814: neither combustion
+        // tag is inherited from the ore/stone factories or configurations.
+        putCombustion(0, "wollastonite", "zeolite", "pollucite", "vanadiummagnetite", "ferrovanadium",
+                "diduraniumtrioxide", "duraniumhexafluoride", "duraniumhexachloride", "duraniumhexabromide",
+                "duraniumhexaiodide", "duraniumhexaastatide", "tritaniumdioxide", "tritaniumhexafluoride",
+                "tritaniumhexachloride", "tritaniumhexabromide", "tritaniumhexaiodide", "tritaniumhexaastatide",
+                "shale", "redrock", "abyssalnite", "coralium", "dreadium", "ethaxium", "macguffium", "gravitonium");
         // MT.java:180,198-214,1389-1437,1498,1508,1596-1611. These
         // disabled-smelting gems have neither FLAMMABLE nor EXPLOSIVE. Component
         // configuration/generification does not copy those tags. Keep explicit
@@ -58,16 +65,22 @@ final class GT6MaterialHazardData {
                 "opal", "onyxred", "onyxblack", "onyx", "sugilite", "peridot", "olivine",
                 "amethyst", "dioptase", "amethystender", "enderamethyst", "dilithium",
                 "hexoriumblack", "hexoriumred", "hexoriumgreen", "hexoriumblue", "hexoriumwhite");
-        putCombustion(FLAMMABLE, "anygrains");
+        // ANY.java:111-113,136-141 explicitly grants these tags. Copying
+        // processing targets grants MELTING separately, not combustion tags.
+        putCombustion(FLAMMABLE, "anygrains", "anyflour", "anyflourorgrains",
+                "anywood", "anydefaultwood", "anynormalwood", "anymagicalwood",
+                "anytreatedwood", "anyuntreatedwood");
         // MT.java:1037-1198 explicit tags and lqudflam; :1210-1220 oil factories.
         putCombustion(FLAMMABLE, "methane", "sugar", "glycerol", "hydrosulfuricacid", "hydrogensulfide",
                 "sodiumnitrate", "potassiumnitrate", "methaneice", "biomass", "biofuel", "ethanol", "oil",
                 "creosote", "creosoteoil", "fishoil", "whaleoil", "seedoil", "hempoil", "linoil",
                 "sunfloweroil", "nutoil", "oliveoil", "fryingoilhot", "glue");
-        // MT.java:312 wood factory and :1243-1259; trace/copy calls do not copy flags.
+        // MT.java:1243-1259 explicitly grants FLAMMABLE. wood() itself
+        // grants neither combustion tags nor a smelting target; Marshmallow
+        // uses that factory without FLAMMABLE and must retain zero tags.
         putCombustion(FLAMMABLE, "bark", "wood", "woodtreated", "treatedwood", "woodpolished", "woodrubber",
                 "bamboo", "skyroot", "weedwood", "livingwood", "dreamwood", "shimmerwood", "greatwood",
-                "silverwood", "peanutwood", "marshmallow", "petrifiedwood");
+                "silverwood", "peanutwood", "petrifiedwood");
         // MT.java:1293-1314 and explicit ore/material aliases.
         putCombustion(FLAMMABLE, "niter", "nitre", "apatite", "phosphorite", "rubber", "plastic", "teflon",
                 "polymer", "ptfe", "polytetrafluoroethylene", "pvc", "polyvinylchloride", "bakelite",
@@ -85,19 +98,29 @@ final class GT6MaterialHazardData {
         for (String name : names) COMBUSTION.put(name, flags);
     }
 
-    private static Integer combustionFlags(String name) {
-        return name == null ? null : COMBUSTION.get(GT6MaterialIdentity.canonicalCompoundName(
-                name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "")));
+    /** Zero is a verified absence of tags; null is an unknown host material. */
+    static Integer knownCombustionFlags(String name) {
+        if (name == null) return null;
+        // woodnormal grants FLAMMABLE even to its UNBURNABLE variants;
+        // positive setSmelting also grants MELTING, so burning is exempt.
+        if (GT6WoodMaterialData.contains(name)) return FLAMMABLE;
+        Integer flags = COMBUSTION.get(GT6MaterialIdentity.canonicalOreName(GT6MaterialIdentity.canonicalCompoundName(
+                name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", ""))));
+        // The MT factories only grant these tags explicitly or via the
+        // verified flame/explosive liquid, grain, coal and woodnormal factories.
+        // A known native material without such a declaration must not inherit
+        // unrelated CEu tags, even if no individual zero record was needed.
+        return flags != null ? flags : isKnownSnapshotMaterial(name) ? Integer.valueOf(0) : null;
     }
 
     static boolean isExplosive(String name) {
-        Integer flags = combustionFlags(name);
+        Integer flags = knownCombustionFlags(name);
         return flags != null && (flags & EXPLOSIVE) != 0;
     }
 
     static boolean isExplosiveMaterial(Material material) {
         if (material == null) return false;
-        Integer flags = combustionFlags(material.getName());
+        Integer flags = knownCombustionFlags(material.getName());
         return flags == null ? material.hasFlags(MaterialFlags.EXPLOSIVE) : (flags & EXPLOSIVE) != 0;
     }
 
@@ -108,7 +131,7 @@ final class GT6MaterialHazardData {
 
     /** Unknown host materials keep their explicit host flag; known GT6 tags take priority. */
     static boolean shouldBurn(String name, long temperature, boolean hostFlammable) {
-        Integer flags = combustionFlags(name);
+        Integer flags = knownCombustionFlags(name);
         boolean flammable = flags == null ? hostFlammable : (flags & FLAMMABLE) != 0;
         return temperature > 313 && flammable &&
                 !GT6ElementPhaseData.hasMeltingFlag(name) &&
@@ -119,16 +142,40 @@ final class GT6MaterialHazardData {
 
     static boolean isAcidMaterial(Material material) {
         if (material == null) return false;
-        if (isAcid(material.getName())) return true;
+        Boolean sourceFlag = knownAcidFlag(material.getName());
+        if (sourceFlag != null) return sourceFlag;
         if (!material.hasProperty(PropertyKey.FLUID)) return false;
         FluidProperty property = material.getProperty(PropertyKey.FLUID);
-        // Contents store material identity, not their historical input phase.
+        // Only unknown host materials use CEu metadata. Contents store material
+        // identity, not their historical input phase.
         // A primary-key change must not hide a registered acid attribute.
         return hasAcidAttribute(property.get(FluidStorageKeys.MOLTEN)) ||
                 hasAcidAttribute(property.get(FluidStorageKeys.LIQUID)) ||
                 hasAcidAttribute(property.get(FluidStorageKeys.GAS)) ||
                 hasAcidAttribute(property.get(FluidStorageKeys.PLASMA)) ||
                 hasAcidAttribute(primaryFluid(property));
+    }
+
+    /** Null means unknown, not source-verified non-acidic. The MT/ANY factories
+     * only grant ACID through explicit tags, gasacid/lqudacid and fluorite.
+     * setMcfg, steal, re-registration and output copying do not copy that tag.
+     */
+    static Boolean knownAcidFlag(String name) {
+        if (name == null) return null;
+        if (isAcid(name)) return Boolean.TRUE;
+        return isKnownSnapshotMaterial(name) ? Boolean.FALSE : null;
+    }
+
+    /** Identity membership is independent of acid/combustion or phase targets. */
+    private static boolean isKnownSnapshotMaterial(String name) {
+        String normalized = name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "");
+        // Explicit MT ore aliases (e.g. AluminumBrass) share the literal
+        // material's tags. Do not strip arbitrary registry namespaces.
+        if (CrucibleSolidifyingRule.isSnapshotMaterial(
+                GT6MaterialIdentity.canonicalAlloyName(normalized))) return true;
+        // Snapshot membership already includes the centralized ANY table;
+        // do not maintain a second technical-family identity switch here.
+        return false;
     }
 
     private static boolean hasAcidAttribute(Fluid fluid) {
@@ -172,11 +219,12 @@ final class GT6MaterialHazardData {
 
     /** MT.java gasacid/lqudacid factories, fluorite(), and explicit ACID declarations.
      * This is GT6 gameplay data: notably ammonia is tagged ACID, not a claim
-     * that ammonia is chemically acidic. Host fluid attributes remain a separate source.
+     * that ammonia is chemically acidic. Unknown host fluid attributes are a fallback.
      */
     static boolean isAcid(String name) {
         if (name == null) return false;
-        String normalized = name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "");
+        String normalized = GT6MaterialIdentity.canonicalOreName(name.toLowerCase(Locale.ROOT)
+                .replace("_", "").replace("-", "").replace(" ", ""));
         switch (normalized) {
             // MT.java:1020-1054.
             case "hydrochloricacid":
@@ -197,6 +245,7 @@ final class GT6MaterialHazardData {
             case "aluminiumfluoride":
             case "aluminumfluoride":
             case "titaniumtetrachloride":
+            case "cryolite": // MT.java:1142, explicitly ACID even as a solid.
             // MT.java:1163-1188, including explicit ore aliases.
             case "chloroauricacid":
             case "chloroplatinicacid":
@@ -227,7 +276,8 @@ final class GT6MaterialHazardData {
             case "whitefluorite":
             case "yellowfluorite":
             case "orangefluorite":
-            case "magentafluorite": return true;
+            case "magentafluorite":
+            case "anyfluorite": return true; // ANY.java:106, not tag inheritance.
             default: return false;
         }
     }

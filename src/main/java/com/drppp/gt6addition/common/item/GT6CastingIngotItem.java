@@ -1,7 +1,7 @@
 package com.drppp.gt6addition.common.item;
 
 import com.drppp.gt6addition.Tags;
-import com.drppp.gt6addition.common.material.GT6MachineMaterials;
+import com.drppp.gt6addition.common.material.GT6MaterialCompatibility;
 import gregtech.api.items.materialitem.MetaPrefixItem;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.properties.PropertyKey;
@@ -11,7 +11,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
-import java.util.Objects;
 
 /** Extra GT6 casting form without adding an incompatible IngotProperty to a gem. */
 public final class GT6CastingIngotItem extends MetaPrefixItem {
@@ -26,8 +25,8 @@ public final class GT6CastingIngotItem extends MetaPrefixItem {
 
     /** PostMaterialEvent is before CEu registers MetaItems and their OreDict entries. */
     public static void registerFluorite() {
-        Material material = Objects.requireNonNull(GT6MachineMaterials.FLUORITE, "Fluorite is not registered");
-        if (fluoriteIngot == null && !material.hasProperty(PropertyKey.INGOT)) {
+        Material material = GT6MaterialCompatibility.findExternal("fluorite");
+        if (material != null && fluoriteIngot == null && !material.hasProperty(PropertyKey.INGOT)) {
             // MetaItem's constructor adds this to CEu's item/model/colour
             // lifecycle. Keep the ordinary ingot prefix and its exact one-M
             // amount, localized name and CEu ingot icon, without editing the

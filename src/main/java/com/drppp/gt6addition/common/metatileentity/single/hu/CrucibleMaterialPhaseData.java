@@ -44,6 +44,8 @@ public final class CrucibleMaterialPhaseData {
 
     static int knownMeltingPoint(String materialName) {
         if (materialName == null) return -1;
+        GT6TechnicalMaterialData.Profile family = GT6TechnicalMaterialData.find(materialName);
+        if (family != null) return GT6TechnicalMaterialData.meltingPoint(family);
         CrucibleSmeltingRule rule = CrucibleSmeltingRule.find(materialName);
         if (rule != null && rule.meltingPoint >= 0) return rule.meltingPoint;
         int point = GT6ElementPhaseData.meltingPoint(materialName);
@@ -60,6 +62,8 @@ public final class CrucibleMaterialPhaseData {
 
     static long boilingPoint(String materialName) {
         if (materialName == null) return Long.MAX_VALUE;
+        GT6TechnicalMaterialData.Profile family = GT6TechnicalMaterialData.find(materialName);
+        if (family != null) return GT6TechnicalMaterialData.boilingPoint(family);
         CrucibleSmeltingRule rule = CrucibleSmeltingRule.find(materialName);
         if (rule != null && rule.boilingPoint != Long.MAX_VALUE) return rule.boilingPoint;
         long inherited = GT6InheritedPhaseData.boilingPoint(materialName);

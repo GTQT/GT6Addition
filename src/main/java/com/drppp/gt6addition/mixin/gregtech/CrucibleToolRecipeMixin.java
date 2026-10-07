@@ -1,8 +1,10 @@
 package com.drppp.gt6addition.mixin.gregtech;
 
 import com.drppp.gt6addition.common.metatileentity.single.hu.CrucibleToolRecycling;
+import com.drppp.gt6addition.common.metatileentity.single.hu.CrucibleToolProvenance;
 import gregtech.api.recipes.ModHandler;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.registries.GameData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,6 +17,7 @@ public abstract class CrucibleToolRecipeMixin {
     private static void gt6addition$captureToolMaterials(String name, ItemStack output,
                                                         boolean clearNbt, boolean mirrored,
                                                         Object[] recipe, CallbackInfo ci) {
+        CrucibleToolProvenance.rememberRecipe(GameData.checkPrefix(name, false), clearNbt);
         CrucibleToolRecycling.capture(output, clearNbt, recipe);
     }
 
@@ -25,6 +28,7 @@ public abstract class CrucibleToolRecipeMixin {
     private static void gt6addition$captureShapelessToolMaterials(String name, ItemStack output,
                                                                  boolean clearNbt, Object[] recipe,
                                                                  CallbackInfo ci) {
+        CrucibleToolProvenance.rememberRecipe(GameData.checkPrefix(name, false), clearNbt);
         CrucibleToolRecycling.captureShapeless(output, clearNbt, recipe);
     }
 }
