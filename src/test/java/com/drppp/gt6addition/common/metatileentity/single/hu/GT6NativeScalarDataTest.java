@@ -41,8 +41,8 @@ class GT6NativeScalarDataTest {
                 if (melting == 1000 && boiling == 3000) defaults++; else overrides++;
             }
         }
-        assertEquals(157, ids.size());
-        assertEquals(131, defaults);
+        assertEquals(168, ids.size());
+        assertEquals(142, defaults);
         assertEquals(26, overrides);
     }
 

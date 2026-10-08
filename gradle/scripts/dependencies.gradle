@@ -56,6 +56,19 @@ dependencies {
     // AE2 Fluid Crafting Rework 2.6.6
     implementation rfg.deobf("curse.maven:ae2fluidcraft-rework-unofficial-1404390:7336029")
     implementation rfg.deobf(files("libs/theoneprobe-1.12-1.4.28.jar"))
+    // Optional real Core integration profile for the isolated crucible world smoke.
+    // This remains a runtime-only external mod and is never embedded in our artifact.
+    def gtqtcoreParityRuntimeJarPath = providers.gradleProperty('gtqtcoreParityRuntimeJar').orNull
+    if (gtqtcoreParityRuntimeJarPath != null) {
+        def gtqtcoreParityRuntimeJar = file(gtqtcoreParityRuntimeJarPath)
+        if (!gtqtcoreParityRuntimeJar.isFile()) {
+            throw new GradleException("GTQTCore parity runtime JAR does not exist: ${gtqtcoreParityRuntimeJar}")
+        }
+        // GTQTCore's own gradle.properties pins MixinBooter 10.2 (Mixin 0.8.7).
+        // Keep this upgrade scoped to the explicitly enabled Core runtime profile.
+        runtimeOnly 'zone.rong:mixinbooter:10.2'
+        runtimeOnly files(gtqtcoreParityRuntimeJar)
+    }
     // With Mixin support enabled, build.gradle supplies this same 8.9 version
     // plus annotation processing/refmap generation; do not load a second copy.
     if (!propertyBool('use_mixins')) {

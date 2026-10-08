@@ -8,7 +8,7 @@ import java.util.Map;
 /** Explicit native identities whose verified factories retain constructor
  * density, with their declaration's final heat override (if any). This is
  * source data, NOT a fallback for arbitrary snapshot or host materials.
- * MT.java:51-57,99-101,159-201,216,219-226,319-326; OreDictMaterial:240,248.
+ * MT.java:51-57,99-101,159-201,216,219-226,260-286,319-326; OreDictMaterial:240,248.
  * setGenerifying/stealLooks do not copy these statistics. No processing or
  * hazard flags are granted here. Source statement inventory lives in tests.
  */
@@ -43,7 +43,11 @@ final class GT6NativeScalarData {
                 9173, 9178, 9179, 9181, 9186, 9187, 9222, 9248, 9191, 9249,
                 9250, 9251, 9252, 9253, 9254, 9255, 9256, 9257, 9258, 9259,
                 9260, 9261, 9262, 9263, 9264, 9265, 9266, 9267, 9268, 9269,
-                9270
+                9270,
+                // MT.java:1778,1798-1801,1816-1817,1824,1843-1844,1868.
+                // Metal/alloy factories grant MELTING but do not override
+                // constructor heat or density. No later statistics mutation.
+                8683, 8715, 8716, 8717, 8723, 8812, 8813, 8736, 8754, 8755, 8805
         };
         for (int id : defaults) put(data, id, 1000, 3000, 1000D);
         // Heat-only overrides leave the constructor density unchanged.
@@ -76,6 +80,13 @@ final class GT6NativeScalarData {
         // :1623-1625 stealStatsElement copies density, not temperatures.
         // Their density comes from the separate verified component/copy table.
         for (int id : new int[]{8102, 8103, 9100}) put(data, id, 1000, 3000, Double.NaN);
+        // AM.java uses a separate reserved positive-ID range. Its elemental
+        // factories declare temperature and density directly; create() particle
+        // rows explicitly retain heat(0,0,0) and constructor density 1 g/cm^3.
+        for (GT6AntimatterIdentityData.Profile profile : GT6AntimatterIdentityData.profiles()) {
+            put(data, profile.name, profile.melting, profile.boiling,
+                    profile.densityGramsPerCubicCentimeter * 1000D);
+        }
         DATA = Collections.unmodifiableMap(data);
     }
 
@@ -84,6 +95,10 @@ final class GT6NativeScalarData {
     private static void put(Map<String, Profile> data, int id, int melting, int boiling, double density) {
         String nativeName = GT6MaterialIdentity.name(id);
         if (nativeName == null) throw new IllegalStateException("Missing GT6 scalar identity: " + id);
+        put(data, nativeName, melting, boiling, density);
+    }
+
+    private static void put(Map<String, Profile> data, String nativeName, int melting, int boiling, double density) {
         String key = normalize(nativeName);
         Profile previous = data.put(key, new Profile(melting, boiling, density));
         // Moonstone (gem) and Moon Stone (stone) normalize to the same host

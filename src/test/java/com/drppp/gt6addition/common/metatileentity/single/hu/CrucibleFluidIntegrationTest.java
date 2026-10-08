@@ -99,6 +99,7 @@ class CrucibleFluidIntegrationTest {
     private static Material enderAmethyst, amethyst, unknownCombustibleGem;
     private static Material nativeOak, lateZeolite, ash;
     private static Material cryolite, anyFluorite, neutralCalcite;
+    private static Material externalObsidian, externalWater, externalLava;
     private static Material liveRoot, marshmallow, silverwood, peanutwood, nativeWood;
     private static Material[] woodFamilies, grainFamilies;
     private static final Map<String, Material> technicalFixtures = new LinkedHashMap<>();
@@ -316,6 +317,28 @@ class CrucibleFluidIntegrationTest {
             material.getProperty(PropertyKey.INGOT).setSmeltingInto(ash);
             registrationAliasFixtures.put(registrationNames[i], material);
         }
+        Material copper = Material.builder(2000, new ResourceLocation("gregtech", "copper")).ingot().build();
+        // A conflicting host 1:1 recipe must not replace GT6's 3:1 Bronze.
+        // No fluid is needed for the explicit GT6 alloy path.
+        Material.builder(2001, new ResourceLocation("gregtech", "bronze")).ingot()
+                .components(new gregtech.api.unification.stack.MaterialStack(copper, 1),
+                        new gregtech.api.unification.stack.MaterialStack(tin, 1)).build();
+        String[] configuredNames = {"topaz", "gypsum", "quartz_black", "ammonia", "hydrofluoric_acid",
+                "stainless_steel", "damascus_steel", "gilded_iron", "basalt", "granite", "pumice",
+                "duranium_alloy", "tritanium_alloy"};
+        for (int i = 0; i < configuredNames.length; i++) {
+            Material material = Material.builder(2002 + i, new ResourceLocation("gregtech", configuredNames[i]))
+                    .ingot().flags(MaterialFlags.FLAMMABLE, MaterialFlags.EXPLOSIVE)
+                    .components(new gregtech.api.unification.stack.MaterialStack(iron, 1)).build();
+            material.getProperty(PropertyKey.INGOT).setSmeltingInto(ash);
+            mineralFixtures.put(configuredNames[i], material);
+        }
+        // Same-name external identities, deliberately distinct from CEu's
+        // singletons. No production registration or host-property changes.
+        externalObsidian = Material.builder(2, new ResourceLocation("gtqtcore", "obsidian")).ingot().build();
+        externalObsidian.getProperty(PropertyKey.INGOT).setSmeltingInto(ash);
+        externalWater = Material.builder(3, new ResourceLocation("gtqtcore", "water")).dust().build();
+        externalLava = Material.builder(4, new ResourceLocation("gtqtcore", "lava")).dust().build();
         registry.closeRegistries();
         // Material.Builder stores a binding, but does not register supplied
         // Forge Fluid instances. FluidStack needs a real registry delegate.
@@ -1497,6 +1520,95 @@ class CrucibleFluidIntegrationTest {
         assertEquals(vessel.getCurrentTemperature(), loaded.getCurrentTemperature());
         assertEquals(1234, volume(content(loaded.save(), "gregtech:water"), 1000));
         assertEquals(145, volume(content(loaded.save(), "gregtech:lava"), GTValues.L));
+    }
+
+    @Test
+    void externalObsidianUsesSourceHotTargetAndProjectBucketQuantity() {
+        assertSame(Materials.Lava, MetaTileEntityCrucible.getSmeltingTarget(externalObsidian));
+        assertSame(ash, externalObsidian.getProperty(PropertyKey.INGOT).getSmeltingInto());
+        assertEquals(CrucibleFluidUnits.materialAmount(1000, GTValues.L),
+                MetaTileEntityCrucible.getSmeltingOutputAmount(externalObsidian, GTValues.M));
+        for (int temperature : new int[]{1299, 1300}) {
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = state(temperature, externalObsidian.getRegistryName(), GTValues.L, GTValues.L);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            NBTTagCompound entry = onlyContent(vessel.save());
+            if (temperature == 1299) {
+                assertEquals(externalObsidian.getRegistryName(), entry.getString("Material"));
+                assertEquals(GTValues.M, entry.getLong("Amount"));
+                assertFalse(entry.getBoolean("Molten"));
+            } else {
+                assertEquals(Materials.Lava.getRegistryName(), entry.getString("Material"));
+                assertEquals(1000, volume(entry, GTValues.L));
+                assertEquals(1000, vessel.fluids().drain(2000, false).amount);
+                Vessel loaded = new Vessel();
+                loaded.readFromNBT(vessel.save());
+                loaded.update();
+                assertEquals(1000, volume(onlyContent(loaded.save()), GTValues.L));
+            }
+        }
+    }
+
+    @Test
+    void externalLavaColdTargetUsesWholeBucketsAndPreservesRemainderAcrossReheat() {
+        assertSame(Materials.Obsidian, MetaTileEntityCrucible.getSolidifyingTarget(externalLava));
+        for (int temperature : new int[]{1299, 1300}) {
+            Vessel vessel = new Vessel();
+            vessel.readFromNBT(state(temperature, externalLava.getRegistryName(), 1145, GTValues.L));
+            vessel.update();
+            if (temperature == 1300) {
+                assertEquals(externalLava.getRegistryName(), onlyContent(vessel.save()).getString("Material"));
+                assertEquals(1145, volume(onlyContent(vessel.save()), GTValues.L));
+                continue;
+            }
+            NBTTagCompound cold = vessel.save();
+            assertEquals(GTValues.M, content(cold, Materials.Obsidian.getRegistryName()).getLong("Amount"));
+            assertEquals(145, volume(content(cold, externalLava.getRegistryName()), GTValues.L));
+            Vessel loaded = new Vessel();
+            loaded.readFromNBT(cold);
+            assertEquals(145, volume(content(loaded.save(), externalLava.getRegistryName()), GTValues.L));
+            NBTTagCompound warmer = loaded.save();
+            warmer.setLong("Temperature", 1300);
+            warmer.setLong("OldTemperature", 1299);
+            loaded.readFromNBT(warmer);
+            loaded.update();
+            assertEquals(145, volume(content(loaded.save(), externalLava.getRegistryName()), GTValues.L));
+            assertEquals(1000, volume(content(loaded.save(), Materials.Lava.getRegistryName()), GTValues.L));
+        }
+        assertFalse(externalLava.hasProperty(PropertyKey.FLUID), "Compatibility must not synthesize a host fluid");
+    }
+
+    @Test
+    void externalWaterFreezesAtSourceBoundaryAndBoilsWithoutChangingHostProperties() {
+        assertSame(Materials.Ice, MetaTileEntityCrucible.getSolidifyingTarget(externalWater));
+        for (int temperature : new int[]{272, 273, 372, 373}) {
+            Vessel vessel = new Vessel();
+            vessel.readFromNBT(state(temperature, externalWater.getRegistryName(), 1000, 1000));
+            vessel.update();
+            NBTTagCompound saved = vessel.save();
+            if (temperature == 373) {
+                assertEquals(0, saved.getTagList("Contents", 10).tagCount());
+            } else {
+                NBTTagCompound entry = onlyContent(saved);
+                assertEquals(temperature == 272 ? Materials.Ice.getRegistryName() : externalWater.getRegistryName(),
+                        entry.getString("Material"));
+                assertEquals(GTValues.M, entry.getLong("Amount"));
+                assertEquals(0, entry.getInteger("FluidRemainder"));
+                assertEquals(temperature != 272, entry.getBoolean("Molten"));
+                Vessel loaded = new Vessel();
+                loaded.readFromNBT(saved);
+                NBTTagCompound restored = onlyContent(loaded.save());
+                // SolidifyTarget is rebuilt metadata on loading a solid;
+                // compare the identity, phase and exact inventory quantity.
+                assertEquals(entry.getString("Material"), restored.getString("Material"));
+                assertEquals(entry.getLong("Amount"), restored.getLong("Amount"));
+                assertEquals(entry.getInteger("FluidRemainder"), restored.getInteger("FluidRemainder"));
+                assertEquals(entry.getBoolean("Molten"), restored.getBoolean("Molten"));
+            }
+        }
+        assertFalse(externalWater.hasProperty(PropertyKey.FLUID), "Compatibility must not add external properties");
     }
 
     @Test
@@ -3055,6 +3167,38 @@ class CrucibleFluidIntegrationTest {
         return contents.getCompoundTagAt(0);
     }
 
+    @Test
+    void shortCircuitedAlloyLookupKeepsSourceYieldAndRefusesIncompleteIngredients() throws Exception {
+        java.lang.reflect.Method alloy = MetaTileEntityCrucible.class.getDeclaredMethod("processAlloys");
+        alloy.setAccessible(true);
+        for (int temperature : new int[]{1356, 1357}) {
+            Vessel vessel = new Vessel();
+            NBTTagCompound initial = state(temperature, "gregtech:copper", 3 * GTValues.L, GTValues.L);
+            NBTTagCompound tin = new NBTTagCompound();
+            tin.setString("Material", "gregtech:tin");
+            tin.setLong("Amount", GTValues.M);
+            tin.setBoolean("Molten", true);
+            initial.getTagList("Contents", 10).appendTag(tin);
+            vessel.readFromNBT(initial);
+            NBTTagCompound before = vessel.save();
+            alloy.invoke(vessel);
+            if (temperature == 1356) {
+                assertEquals(before, vessel.save()); // Output is still below its source melting point.
+            } else {
+                NBTTagCompound result = onlyContent(vessel.save());
+                assertEquals("gregtech:bronze", result.getString("Material"));
+                assertEquals(4 * GTValues.M, result.getLong("Amount"));
+            }
+        }
+        // Copper alone cannot match Bronze or missing AnnealedCopper output;
+        // an early rejection must leave every unit and the input state intact.
+        Vessel incomplete = new Vessel();
+        incomplete.readFromNBT(state(2900, "gregtech:copper", 3 * GTValues.L, GTValues.L));
+        NBTTagCompound before = incomplete.save();
+        alloy.invoke(incomplete);
+        assertEquals(before, incomplete.save());
+    }
+
     private static NBTTagCompound content(NBTTagCompound data, String name) {
         NBTTagList contents = data.getTagList("Contents", 10);
         for (int i = 0; i < contents.tagCount(); i++) {
@@ -3094,6 +3238,115 @@ class CrucibleFluidIntegrationTest {
         @Override public BlockPos getPos() { return BlockPos.ORIGIN; }
         @Override public void markDirty() {}
         @Override public void scheduleRenderUpdate() {}
+    }
+
+    @Test
+    void configuredGemAndHydratedMineralDensitiesOverrideHostIronDuringActualHeatingAndReload() {
+        double silica = (2329.6 + 2 * 1.429) / 3;
+        double alumina = (2 * 2698 + 3 * 1.429) / 5;
+        // 13 does not divide U: independent source integer quantities.
+        double topaz = (alumina * (5 * 648648000L / 13) + silica * (3 * 648648000L / 13) +
+                1.696 * (2 * 648648000L / 13) + 1000 * (3 * 648648000L / 13)) / 648648000D;
+        String[] names = {"topaz", "gypsum", "quartz_black"};
+        double[] densities = {topaz, (1540 + 2067 + 4 * 1.429) / 6 + 1000, silica + 2267};
+        for (int i = 0; i < names.length; i++) {
+            Material material = mineralFixtures.get(names[i]);
+            Vessel vessel = new Vessel(osmium);
+            NBTTagCompound initial = state(300, material.getRegistryName(), 16 * GTValues.L, GTValues.L);
+            initial.setLong("StoredHeat", 2560);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            long cost = 1 + (long) (((7 * 22610 + 16 * densities[i]) / 9) / 100);
+            assertEquals(300 + 2560 / cost, vessel.getCurrentTemperature(), names[i]);
+            assertEquals(2560 % cost, vessel.save().getLong("StoredHeat"), names[i]);
+            assertEquals(16 * GTValues.M, onlyContent(vessel.save()).getLong("Amount"), names[i]);
+            assertEquals(material.getRegistryName(), onlyContent(vessel.save()).getString("Material"), names[i]);
+            assertEquals(0, vessel.world.blockChanges, names[i]);
+            Vessel loaded = new Vessel(osmium);
+            loaded.readFromNBT(vessel.save());
+            assertEquals(vessel.save(), loaded.save(), names[i]);
+        }
+    }
+
+    @Test
+    void nativeAlloyAndRockDensitiesControlActualHeatingDespiteConflictingHostData() {
+        double silica = (2329.6 + 2 * 1.429) / 3;
+        double alumina = (2 * 2698 + 3 * 1.429) / 5;
+        double invar = (2 * 7874 + 8912D) / 3;
+        double peridot = (2 * silica + 7874 + 2 * 1738) / 5;
+        double calcite = (1540 + 2267 + 3 * 1.429) / 5;
+        double feldspar = (2 * 862 + 5 * alumina + 18 * silica + 1.429) / 26;
+        double biotite = (2 * 862 + 6 * 1738 + 15 * alumina + 4 * 1.696 + 18 * silica) / 45;
+        double pumice = (peridot * (3 * 648648000L / 11) + ((1738 + 2267 + 3 * 1.429) / 5) *
+                (2 * 648648000L / 11) + silica * (4 * 648648000L / 11) +
+                1000 * (2 * 648648000L / 11)) / 648648000D;
+        String[] names = {"stainless_steel", "damascus_steel", "gilded_iron", "basalt", "granite", "pumice"};
+        double[] densities = {(4 * 7874 + 3 * invar + 7150 + 7440) / 9,
+                7874 + (6110 + 19250D) / 50, 7874 + 19282D / 9,
+                (peridot + 3 * calcite + 8 * silica + 4000) / 16, (biotite + feldspar + silica) / 3, pumice};
+        for (int i = 0; i < names.length; i++) {
+            Material material = mineralFixtures.get(names[i]);
+            Vessel vessel = new Vessel(osmium);
+            NBTTagCompound initial = state(300, material.getRegistryName(), 16 * GTValues.L, GTValues.L);
+            initial.setLong("StoredHeat", 2560);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            long cost = 1 + (long) (((7 * 22610 + 16 * densities[i]) / 9) / 100);
+            assertEquals(300 + 2560 / cost, vessel.getCurrentTemperature(), names[i]);
+            assertEquals(2560 % cost, vessel.save().getLong("StoredHeat"), names[i]);
+            assertEquals(16 * GTValues.M, onlyContent(vessel.save()).getLong("Amount"), names[i]);
+            assertEquals(material.getRegistryName(), onlyContent(vessel.save()).getString("Material"), names[i]);
+            assertEquals(0, vessel.world.blockChanges, names[i]);
+            Vessel loaded = new Vessel(osmium);
+            loaded.readFromNBT(vessel.save());
+            assertEquals(vessel.save(), loaded.save(), names[i]);
+        }
+    }
+
+    @Test
+    void nativeFictionalAlloyDensitiesDriveActualHeatCostAndSurviveReload() {
+        String[] names = {"duranium_alloy", "tritanium_alloy"};
+        double[] densities = {(7 * 20000 + 1738D) / 8, (3 * 25000 + 20000D) / 4};
+        for (int i = 0; i < names.length; i++) {
+            Material material = mineralFixtures.get(names[i]);
+            Vessel vessel = new Vessel(osmium);
+            NBTTagCompound initial = state(300, material.getRegistryName(), 16 * GTValues.L, GTValues.L);
+            initial.setLong("StoredHeat", 2560);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            vessel.update();
+            long cost = 1 + (long) (((7 * 22610 + 16 * densities[i]) / 9) / 100);
+            assertEquals(300 + 2560 / cost, vessel.getCurrentTemperature(), names[i]);
+            assertEquals(2560 % cost, vessel.save().getLong("StoredHeat"), names[i]);
+            assertEquals(16 * GTValues.M, onlyContent(vessel.save()).getLong("Amount"), names[i]);
+            assertEquals(material.getRegistryName(), onlyContent(vessel.save()).getString("Material"), names[i]);
+            assertEquals(0, vessel.world.blockChanges, names[i]);
+            Vessel loaded = new Vessel(osmium);
+            loaded.readFromNBT(vessel.save());
+            assertEquals(vessel.save(), loaded.save(), names[i]);
+        }
+    }
+
+    @Test
+    void nativeLowDensityChemicalsAreRemovedOnlyOnTickBeforeAcidCorrosion() {
+        for (String name : new String[]{"ammonia", "hydrofluoric_acid"}) {
+            Material material = mineralFixtures.get(name);
+            Vessel vessel = new Vessel(); // Not acid-proof: density must run first.
+            NBTTagCompound initial = state(190, material.getRegistryName(), GTValues.L, GTValues.L);
+            onlyContent(initial).setBoolean("Molten", false);
+            vessel.readFromNBT(initial);
+            assertEquals(GTValues.M, onlyContent(vessel.save()).getLong("Amount"), name);
+            vessel.update();
+            assertEquals(0, vessel.save().getTagList("Contents", 10).tagCount(), name);
+            assertEquals(0, vessel.world.blockChanges, name);
+            Vessel loaded = new Vessel();
+            loaded.readFromNBT(vessel.save());
+            loaded.update();
+            assertEquals(0, loaded.save().getTagList("Contents", 10).tagCount(), name);
+            assertEquals(0, loaded.world.blockChanges, name);
+        }
     }
 
     private static final class Vessel extends MetaTileEntityCrucible {

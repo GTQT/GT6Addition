@@ -98,10 +98,12 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 
@@ -859,11 +861,11 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
         long mixedTemperature = CrucibleTransferLogic.smelteryIntakeTemperature(temperature, getThermalMassKg(),
                 incomingTemperature, getMaterialWeightKg(material, exact.amount, exact.remainder));
         StoredMaterial received;
-        if (material == Materials.Water || material == Materials.Lava) {
+        if (isWaterMaterial(material) || isLavaMaterial(material)) {
             received = new StoredMaterial(material, exact.amount, false,
                     getSolidifyingTarget(material));
             received.fluidRemainder = exact.remainder;
-            if (material == Materials.Water) {
+            if (isWaterMaterial(material)) {
                 if (CrucibleTransferLogic.shouldFreezeWater(mixedTemperature)) {
                     solidify(received);
                 } else {
@@ -896,7 +898,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
         Iterator<StoredMaterial> iterator = contents.iterator();
         while (iterator.hasNext()) {
             StoredMaterial material = iterator.next();
-            if (material.material == Materials.Water && CrucibleTransferLogic.shouldBoilWater(temperature)) {
+            if (isWaterMaterial(material.material) && CrucibleTransferLogic.shouldBoilWater(temperature)) {
                 long evaporatedAmount = material.amount;
                 iterator.remove();
                 playHazardFizz();
@@ -905,7 +907,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
                 changed = true;
                 continue;
             }
-            if (material.material == Materials.Water) {
+            if (isWaterMaterial(material.material)) {
                 if (CrucibleTransferLogic.shouldFreezeWater(temperature)) {
                     solidify(material);
                     changed = true;
@@ -915,11 +917,11 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
                 }
                 continue;
             }
-            if (material.material != Materials.Lava) {
+            if (!isLavaMaterial(material.material)) {
                 continue;
             }
 
-            boolean molten = temperature >= getMeltingTemperature(Materials.Lava);
+            boolean molten = temperature >= getMeltingTemperature(material.material);
             if (material.molten != molten) {
                 material.molten = molten;
                 changed = true;
@@ -928,6 +930,10 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
                 continue;
             }
 
+            Material obsidianTarget = getSolidifyingTarget(material.material);
+            if (obsidianTarget == null || obsidianTarget == Materials.NULL || obsidianTarget == material.material) {
+                continue; // Never consume a bucket when the required target is absent.
+            }
             CrucibleFluidUnits.LavaCondensation condensed = CrucibleFluidUnits.condenseLava(
                     material.amount, material.fluidRemainder,
                     // This is an internal material conversion, not a projection
@@ -940,7 +946,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
             material.amount = condensed.remaining.amount;
             material.fluidRemainder = condensed.remaining.remainder;
             long obsidianAmount = condensed.obsidianCount * (long) GTValues.M;
-            condensedObsidian.add(new StoredMaterial(Materials.Obsidian, obsidianAmount, false, Materials.Obsidian));
+            condensedObsidian.add(new StoredMaterial(obsidianTarget, obsidianAmount, false, obsidianTarget));
             changed = true;
             if (material.amount == 0L && material.fluidRemainder == 0) {
                 iterator.remove();
@@ -1041,7 +1047,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
         for (StoredMaterial material : contents) {
             // Lava's sub-1300 K conversion is quantized to full 1000 mB units in
             // processSpecialFluids(); generic solidification would lose the remainder.
-            if (material.material == Materials.Lava || material.material == Materials.Water) {
+            if (isLavaMaterial(material.material) || isWaterMaterial(material.material)) {
                 continue;
             }
             if (CrucibleTransferLogic.shouldApplyHotTarget(temperature, oldTemperature,
@@ -1261,7 +1267,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
         CrucibleSmeltingRule rule = CrucibleSmeltingRule.find(source.getName());
         CrucibleFluidUnits.Quantity converted = rule == null ?
                 CrucibleFluidUnits.scaleStored(amount, remainder, 1, 1) : rule.convertStored(amount, remainder);
-        if (converted != null && target == Materials.Lava && (source == Materials.Obsidian ||
+        if (converted != null && isLavaMaterial(target) && (source == Materials.Obsidian ||
                 (rule != null && "lava".equals(rule.target)))) {
             return CrucibleFluidUnits.scaleStored(converted.amount, converted.remainder,
                     LAVA_OBSIDIAN_MILLIBUCKETS, GTValues.L);
@@ -1273,7 +1279,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
         // Lava is handled in complete bucket portions by processSpecialFluids.
         // Never restore a historical input material (e.g. magnetic iron) just
         // because an older save recorded it as the solidification target.
-        if (material.material == Materials.Lava) {
+        if (isLavaMaterial(material.material)) {
             return;
         }
         Material target = getSolidifyingTarget(material.material);
@@ -1288,16 +1294,6 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
         if (moltenMaterial == null || moltenMaterial == Materials.NULL) {
             return moltenMaterial;
         }
-        if (moltenMaterial == Materials.Obsidian) {
-            return Materials.Obsidian;
-        }
-        if (moltenMaterial == Materials.Lava) {
-            return Materials.Obsidian;
-        }
-        if (moltenMaterial == Materials.Water) {
-            return Materials.Ice;
-        }
-
         String gt6Target = CrucibleSolidifyingRule.target(moltenMaterial.getName());
         if (gt6Target != null) {
             Material target = resolveMaterial(gt6Target);
@@ -1375,6 +1371,12 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
     }
 
     private void processAlloys() {
+        // No explicit GT6 or CEu alloy recipe can react without any stored
+        // material. Avoid walking both the complete GT6 recipe table and the
+        // host material registry for empty crucibles on every server tick.
+        if (contents.isEmpty()) {
+            return;
+        }
         // GT6 commits one preferred alloy per tick, not a same-tick reaction chain.
         AlloyMatch match = findBestAlloyMatch();
         if (match != null) {
@@ -1449,9 +1451,12 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
     @Nullable
     private AlloyMatch findBestGt6RecipeMatch(Set<Material> matchedOutputs) {
         AlloyMatch best = null;
+        // Many optional GT6 materials are deliberately absent. Repeated
+        // same-name queries must not rescan the entire registry per recipe.
+        // Lifetime is this invocation only: no stale missing bindings survive
+        // a registry change, world restart or a different test registry.
+        Map<String, Material> bindings = new HashMap<>();
         for (GT6AlloyRecipes recipe : GT6AlloyRecipes.ALL) {
-            Material output = resolveMaterial(recipe.output);
-            if (output == null || temperature < getMeltingTemperature(output)) continue;
             // GT6 matches integer coefficients against its internal material
             // units, not whole-ingot batches. Keeping both sides unscaled
             // allows dust/nugget portions and recipes larger than the vessel
@@ -1461,19 +1466,28 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
             long conversions = Long.MAX_VALUE / outputAmount;
             int nonMolten = 0;
             for (int i = 0; i < recipe.inputs.length; i++) {
-                Material input = resolveMaterial(recipe.inputs[i]);
+                Material input = resolveRecipeMaterial(recipe.inputs[i], bindings);
                 if (input == null) {
                     conversions = 0;
                     break;
                 }
-                if (temperature < getMeltingTemperature(input)) nonMolten++;
                 long required = recipe.inputUnits[i];
-                conversions = Math.min(conversions, getStoredAmount(input) / required);
+                long available = getStoredAmount(input);
+                if (available < required) {
+                    conversions = 0;
+                    break;
+                }
+                if (temperature < getMeltingTemperature(input)) nonMolten++;
+                conversions = Math.min(conversions, available / required);
                 components.add(new MaterialStack(input, required));
             }
             // GT6 reaches alloy references only from a molten component.
             // A single-input recipe therefore cannot start with a solid input.
             if (conversions <= 0 || nonMolten > 1 || nonMolten == components.size()) continue;
+            // Resolve an optional output only after its ingredients actually
+            // match. No input is removed until applyAlloy commits a candidate.
+            Material output = resolveRecipeMaterial(recipe.output, bindings);
+            if (output == null || temperature < getMeltingTemperature(output)) continue;
             matchedOutputs.add(output);
             // GT6 chooses the candidate with the largest conversions × commonDivider.
             if (best == null || conversions * outputAmount > best.conversions * best.outputUnits) {
@@ -1481,6 +1495,12 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
             }
         }
         return best;
+    }
+
+    @Nullable
+    private static Material resolveRecipeMaterial(String name, Map<String, Material> bindings) {
+        if (!bindings.containsKey(name)) bindings.put(name, resolveMaterial(name));
+        return bindings.get(name);
     }
 
     private void applyAlloy(AlloyMatch match) {
@@ -1647,7 +1667,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
         CrucibleSmeltingRule rule = CrucibleSmeltingRule.find(source.getName());
         long converted = rule == null ? amount : rule.convert(amount);
         if (converted <= 0) return converted;
-        if (target == Materials.Lava && (source == Materials.Obsidian ||
+        if (isLavaMaterial(target) && (source == Materials.Obsidian ||
                 (rule != null && "lava".equals(rule.target)))) {
             long lavaPerUnit = CrucibleFluidUnits.materialAmount(LAVA_OBSIDIAN_MILLIBUCKETS, GTValues.L);
             long whole = converted / GTValues.M;
@@ -1777,8 +1797,8 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
             displayMolten = false;
         } else {
             displayMaterialName = getMaterialRegistryName(displayMaterial.material);
-            boolean retainedLavaFluid = displayMaterial.material == Materials.Lava &&
-                    temperature < getMeltingTemperature(Materials.Lava) &&
+            boolean retainedLavaFluid = isLavaMaterial(displayMaterial.material) &&
+                    temperature < getMeltingTemperature(displayMaterial.material) &&
                     CrucibleTransferLogic.obsidianUnitsForLava(CrucibleFluidUnits.storedFluidVolume(
                             displayMaterial.amount, displayMaterial.fluidRemainder, GTValues.L)) == 0;
             displayMolten = retainedLavaFluid ||
@@ -1883,6 +1903,19 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
         return GT6MaterialIdentity.canonicalOreName(GT6MaterialIdentity.canonicalAlloyName(
                 GT6MaterialIdentity.canonicalElementName(GT6MaterialIdentity.canonicalCompoundName(
                         normalized.replace("aluminum", "aluminium")))));
+    }
+
+    // The read-only GT6 rules already operate on these exact source names.
+    // Keep an external registered identity; singleton-only tests would bypass
+    // water boiling and the project's bucket-quantized lava conversion.
+    private static boolean isWaterMaterial(Material material) {
+        return material != null && (material == Materials.Water ||
+                "water".equals(normalizeMaterialName(material.getName())));
+    }
+
+    private static boolean isLavaMaterial(Material material) {
+        return material != null && (material == Materials.Lava ||
+                "lava".equals(normalizeMaterialName(material.getName())));
     }
 
     public long getCurrentTemperature() {
@@ -2101,7 +2134,8 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
 
     @Nullable
     private ScrapeResult createScrapeResult(StoredMaterial material, boolean shovel) {
-        if (material.material == Materials.Obsidian) {
+        if (material.material == Materials.Obsidian ||
+                "obsidian".equals(normalizeMaterialName(material.material.getName()))) {
             int blocks = CrucibleSolidRecovery.outputCount(material.amount, GTValues.M, 64, shovel);
             return blocks <= 0 ? null : new ScrapeResult(new ItemStack(Blocks.OBSIDIAN, blocks),
                     blocks * (long) GTValues.M);
@@ -2414,7 +2448,7 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
                 int unit = data.getInteger(NBT_FLUID_QUANTITY_VERSION) >= 1 ?
                         CrucibleFluidUnits.STORAGE_UNIT : CrucibleFluidUnits.legacyFluidUnit(material.getName());
                 if (remainder < 0 || remainder >= unit) remainder = 0;
-                if (material == Materials.Water && data.getInteger(NBT_WATER_UNIT_VERSION) < 1) {
+                if (isWaterMaterial(material) && data.getInteger(NBT_WATER_UNIT_VERSION) < 1) {
                     CrucibleFluidUnits.Quantity migrated = CrucibleFluidUnits.exactLegacyWaterAmount(amount);
                     amount = migrated.amount;
                     remainder = migrated.remainder;
@@ -2458,13 +2492,13 @@ public class MetaTileEntityCrucible extends TieredMutiEnergyMetaTileEntity
         StoredMaterial migrated = new StoredMaterial(material, exact.amount, false,
                 getSolidifyingTarget(material));
         migrated.fluidRemainder = exact.remainder;
-        if (material == Materials.Water) {
+        if (isWaterMaterial(material)) {
             if (CrucibleTransferLogic.shouldFreezeWater(temperature)) {
                 solidify(migrated);
             } else {
                 migrated.molten = true;
             }
-        } else if (material == Materials.Lava) {
+        } else if (isLavaMaterial(material)) {
             migrated.molten = temperature >= getMeltingTemperature(material);
         } else if (temperature >= getMeltingTemperature(material)) {
             melt(migrated);

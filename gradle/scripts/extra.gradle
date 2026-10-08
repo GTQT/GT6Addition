@@ -126,6 +126,14 @@ tasks.named('check') { dependsOn tasks.named('verifyMaterialRegistrationPolicy')
 // Reuse an existing EULA decision; this task must never accept it for the user.
 if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
     def worldChecks = providers.gradleProperty('gt6ParityWorld').isPresent()
+    def restartPhase = providers.gradleProperty('gt6ParityRestartPhase').orNull
+    def restartWorld = providers.gradleProperty('gt6ParityRestartWorld').orNull
+    if (restartPhase != null || restartWorld != null) {
+        if (!worldChecks || !(restartPhase in ['write', 'verify']) || restartWorld == null ||
+                !(restartWorld ==~ /parity-smoke-restart-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/)) {
+            throw new GradleException('Restart checks require a generated isolated world name and write/verify phase')
+        }
+    }
     if (worldChecks) {
         sourceSets.create('crucibleSmoke') {
             java.srcDir 'src/smokeTest/java'
@@ -137,12 +145,53 @@ if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
         if (worldChecks) {
             dependsOn tasks.named('crucibleSmokeClasses')
             classpath += sourceSets.crucibleSmoke.output
-            extraArgs.addAll(['nogui', '--world', 'parity-smoke-world-' + UUID.randomUUID().toString()])
+            extraArgs.addAll(['nogui', '--world', restartWorld ?: 'parity-smoke-world-' + UUID.randomUUID().toString()])
+            if (restartPhase != null) systemProperty 'gt6addition.parity.restartPhase', restartPhase
         }
         workingDir layout.buildDirectory.dir('crucible-parity-smoke').get().asFile
         standardInput = new ByteArrayInputStream('stop\n'.getBytes('UTF-8'))
         maxHeapSize = '3G'
         doFirst {
+            if (restartPhase != null) {
+                def isolatedWorld = new File(workingDir, restartWorld)
+                if (restartPhase == 'write' && isolatedWorld.exists()) {
+                    throw new GradleException('Restart write phase refuses to overwrite an existing world')
+                }
+                if (restartPhase == 'verify' && !new File(isolatedWorld, 'crucible-restart-checkpoint.dat').isFile()) {
+                    throw new GradleException('Restart verification requires a completed write-phase checkpoint')
+                }
+                // This scenario does not exercise every recipe/heat-net path.
+                // Load the audited external classes explicitly, retaining the
+                // same transformed-bytecode/caller checks below, not skipping them.
+                def auditedTargets = []
+                for (configName in propertyStringList('mixin_configs')) {
+                    def config = new groovy.json.JsonSlurper().parse(file("src/main/resources/mixins.${configName}.json"), 'UTF-8')
+                    for (mixinName in (config.mixins ?: []) + (config.server ?: [])) {
+                        def mixinPath = (config.package + '.' + mixinName).replace('.', '/') + '.class'
+                        def bytes = new File(layout.buildDirectory.dir('classes/java/main').get().asFile, mixinPath).bytes
+                        new ClassReader(bytes).accept(new ClassVisitor(Opcodes.ASM9) {
+                            @Override
+                            AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+                                if (descriptor != 'Lorg/spongepowered/asm/mixin/Mixin;') return null
+                                return new AnnotationVisitor(Opcodes.ASM9) {
+                                    @Override
+                                    AnnotationVisitor visitArray(String field) {
+                                        if (field != 'value' && field != 'targets') return null
+                                        return new AnnotationVisitor(Opcodes.ASM9) {
+                                            @Override
+                                            void visit(String ignored, Object value) {
+                                                auditedTargets.add(value instanceof Type ? value.className : value)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }, ClassReader.SKIP_CODE)
+                    }
+                }
+                if (auditedTargets.isEmpty()) throw new GradleException('Missing audited restart Mixin targets')
+                systemProperty 'gt6addition.parity.mixinTargets', auditedTargets.join(',')
+            }
             def acceptedEula = file('run/eula.txt')
             def decision = new Properties()
             if (acceptedEula.isFile()) acceptedEula.withInputStream { decision.load(it) }
@@ -169,10 +218,30 @@ if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
                 throw new GradleException('Forge did not complete startup and normal shutdown')
             }
             def worldPass = latest =~ /CRUCIBLE_WORLD_PASS (\d+)/
-            if (worldChecks && (!worldPass.find() || Integer.parseInt(worldPass.group(1)) < 72 ||
+            if (worldChecks && restartPhase == null && (!worldPass.find() || Integer.parseInt(worldPass.group(1)) < 137 ||
                     !latest.contains('CRUCIBLE_WORLD_MATERIAL_POLICY passed owned=1 crucibles=23') ||
+                    !latest.contains('CRUCIBLE_WORLD_TOOL ULV_WORKBENCH_PER_OUTPUT_RECOVERED passed') ||
+                    !latest.contains('CRUCIBLE_WORLD_TOOL ULV_ASSEMBLER_PER_OUTPUT_RECOVERED passed') ||
+                    !latest.contains('CRUCIBLE_WORLD_TOOL SHAPELESS_NONCLEARING_REMAINDER_EXCLUDED_RECOVERED passed') ||
+                    (!latest.contains('CRUCIBLE_WORLD_TOOL SHAPELESS_CLEARING_UNKNOWN_INPUT_REJECTED passed') &&
+                            !latest.contains('CRUCIBLE_WORLD_TOOL SHAPELESS_CLEARING_CONSUMED_ITEMS_COUNTED passed')) ||
                     latest.contains('CRUCIBLE_WORLD_FAIL'))) {
                 throw new GradleException('Actual Forge world crucible checks did not all pass')
+            }
+            if (worldChecks && restartPhase == null && providers.gradleProperty('gtqtcoreParityRuntimeJar').isPresent()) {
+                for (marker in ['CRUCIBLE_WORLD_GTQTCORE_ADAMANTIUM passed',
+                                'CRUCIBLE_WORLD_GTQTCORE_FLUORITE passed',
+                                'CRUCIBLE_WORLD_FLUORITE_CAST_RECOVER passed']) {
+                    if (!latest.contains(marker)) {
+                        throw new GradleException('Real GTQTCore integration smoke did not pass: ' + marker)
+                    }
+                }
+            }
+            if (restartPhase != null && (!latest.contains('CRUCIBLE_WORLD_MATERIAL_POLICY passed owned=1 crucibles=23') ||
+                    latest.contains('CRUCIBLE_WORLD_FAIL') || latest.contains('CRUCIBLE_RESTART_FAIL') ||
+                    !latest.contains(restartPhase == 'write' ? 'CRUCIBLE_RESTART_SAVED fixtures=3' :
+                            'CRUCIBLE_RESTART_PASS checks=6'))) {
+                throw new GradleException('Cross-process crucible persistence checks did not pass: ' + restartPhase)
             }
             if (latest.contains('Invalid Recipe Found: Recipe output cannot be an empty ItemStack. Recipe: wheat_to_dust')) {
                 throw new GradleException('Wheat OreDict registration still produces an empty host recipe')

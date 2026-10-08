@@ -26,6 +26,16 @@ final class CrucibleSolidifyingRule {
             int separator = hostName.indexOf(':');
             names.add(normalize(separator < 0 ? hostName : hostName.substring(separator + 1)));
         }
+        // Keep source names recognized even if their numeric recycling ID is
+        // ambiguous (AM.Unpentoctium collides with MT.Upo at 1580).
+        for (GT6AntimatterIdentityData.Profile profile : GT6AntimatterIdentityData.profiles()) {
+            names.add(normalize(profile.name));
+            names.add(normalize(GT6MaterialIdentity.canonicalAlloyName(normalize(profile.name))));
+            names.add(normalize(GT6MaterialIdentity.canonicalElementName(normalize(profile.name))));
+            String hostName = GT6MaterialIdentity.hostRecyclingName(profile.name);
+            int separator = hostName.indexOf(':');
+            names.add(normalize(separator < 0 ? hostName : hostName.substring(separator + 1)));
+        }
         return names;
     }
 
@@ -40,7 +50,8 @@ final class CrucibleSolidifyingRule {
 
     /** Shared identity membership, not a statement about hot or cold targets. */
     static boolean isSnapshotMaterial(String name) {
-        return name != null && (GT6TechnicalMaterialData.contains(name) || SNAPSHOT_MATERIALS.contains(normalize(name)));
+        return name != null && (GT6TechnicalMaterialData.contains(name) ||
+                GT6NonpositiveMaterialData.contains(name) || SNAPSHOT_MATERIALS.contains(normalize(name)));
     }
 
     static String target(String name) {
@@ -53,6 +64,10 @@ final class CrucibleSolidifyingRule {
         }
         switch (GT6MaterialIdentity.canonicalOreName(name.toLowerCase(Locale.ROOT)
                 .replace("_", "").replace("-", "").replace(" ", ""))) {
+            // MT.java:1880-1881. The dedicated water/lava vessel process
+            // still owns their thresholds and whole-bucket conversion.
+            case "water": return "ice";
+            case "lava": return "obsidian";
             case "ironiiioxide": return "hematite";
             // gem_aa copies targetSolidifying independently of targetSmelting.
             case "redstonia": return "redstone";

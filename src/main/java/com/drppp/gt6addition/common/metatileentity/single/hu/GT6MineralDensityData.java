@@ -2,7 +2,7 @@ package com.drppp.gt6addition.common.metatileentity.single.hu;
 
 import java.util.Map;
 
-/** MT.java's native mineral configurations. Density uses the explicit common
+/** MT.java's native mineral and alloy configurations. Density uses the explicit common
  * divider and nested material units, NOT a flattened CEu molecular average.
  * OreDictConfigurationComponent divides each amount with integer truncation
  * before OreDictMaterial.setMoleculeConfiguration sums the densities.
@@ -172,10 +172,32 @@ final class GT6MineralDensityData {
         densities.put("sluicesand", densities.get("silicondioxide"));
         densities.put("platinumgroupsludge", densities.get("platinum"));
         densities.put("castiron", densities.get("iron")); // :1726 steal(Fe), not field spelling.
+        // :1499-1500,1635,1753,1802,1805,1812-1815. Preserve nested
+        // configs and statistics copying; alloy density is not an atom average.
+        densities.put("endstone", densities.get("silicondioxide")); // stealStatsElement(SiO2)
+        put(densities, "enderpearl", 10, new long[]{1, 4, 5, 6}, "beryllium", "potassium", "nitrogen", "magic");
+        put(densities, "endereye", 9, new long[]{9, 1}, "enderpearl", "blaze");
+        densities.put("energeticsilver", densities.get("silver")); // stealStatsElement(Ag), not heat.
+        put(densities, "yellorite", 1, new long[]{1, 2}, "yellorium", "oxygen");
+        put(densities, "obsidiansteel", 1, new long[]{1, 9}, "steel", "obsidian");
+        put(densities, "endsteel", 1, new long[]{1, 1, 9}, "endstone", "obsidiansteel", "obsidian");
+        put(densities, "melodicalloy", 1, new long[]{1, 1}, "endsteel", "endereye");
+        put(densities, "stellaralloy", 2, new long[]{1, 1, 4}, "melodicalloy", "netherstar", "clay");
+        put(densities, "vividalloy", 1, new long[]{1, 1}, "energeticsilver", "enderpearl");
+        // :1822,1826-1828. Elementium copies Steel statistics; Elvorium
+        // adds Dragonstone at divider1. Its power variants copy that config.
+        densities.put("elvenelementium", densities.get("steel"));
+        put(densities, "elvorium", 1, new long[]{1, 1}, "elvenelementium", "elvendragonstone");
+        put(densities, "niflheimpower", 1, new long[]{1}, "elvorium");
+        put(densities, "muspelheimpower", 1, new long[]{1}, "elvorium");
+        // :1838-1839. WorkersAlloy is the native name of field DeshAlloy.
+        put(densities, "desh", 0, new long[]{2, 2, 1, 1, 1, 1, 1},
+                "boron", "lanthanum", "neodymium", "niobium", "cobalt", "cerium", "lithium");
+        put(densities, "workersalloy", 4, new long[]{4, 1}, "desh", "mercury");
     }
 
-    private static void put(Map<String, Double> densities, String name, long divider,
-                            long[] weights, String... components) {
+    static void put(Map<String, Double> densities, String name, long divider,
+                    long[] weights, String... components) {
         if (divider == 0) for (long weight : weights) divider += weight;
         double density = 0;
         for (int i = 0; i < components.length; i++) {

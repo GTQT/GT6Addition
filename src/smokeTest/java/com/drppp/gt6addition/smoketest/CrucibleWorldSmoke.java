@@ -4,6 +4,7 @@ import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import com.mojang.authlib.GameProfile;
 import gregtech.api.GTValues;
+import gregtech.api.recipes.ModHandler;
 import gregtech.api.block.machines.MachineItemBlock;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.unification.OreDictUnifier;
@@ -11,6 +12,7 @@ import gregtech.api.unification.material.Materials;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.GTUtility;
 import gregtech.common.items.ToolItems;
+import gregtech.common.items.MetaItems;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
@@ -31,14 +33,17 @@ import net.minecraft.world.GameType;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraft.init.Items;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -53,6 +58,17 @@ public final class CrucibleWorldSmoke {
     private int nextPosition;
 
     @Mod.EventHandler
+    public void postInit(FMLPostInitializationEvent event) {
+        ItemStack hull = MetaItems.BATTERY_HULL_MV.getStackForm();
+        ItemStack ironPlate = OreDictUnifier.get(OrePrefix.plate, Materials.Iron);
+        check(!hull.isEmpty() && !ironPlate.isEmpty(), "Missing CEu shapeless provenance fixture items");
+        ModHandler.addShapelessRecipe("gt6addition_parity_smoke:parity_shapeless_preserving", hull,
+                new ItemStack(Items.MILK_BUCKET), ironPlate);
+        ModHandler.addShapelessNBTClearingRecipe("gt6addition_parity_smoke:parity_shapeless_clearing", hull,
+                new ItemStack(Items.MILK_BUCKET), ironPlate);
+    }
+
+    @Mod.EventHandler
     public void started(FMLServerStartedEvent event) {
         try {
             MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
@@ -61,6 +77,8 @@ public final class CrucibleWorldSmoke {
             // Full host material registration must produce a usable Wheat dust.
             check(!OreDictUnifier.get(OrePrefix.dust, Materials.Wheat).isEmpty(), "Host Wheat dust is missing");
             materialPolicy();
+            int gtqtcoreCases = CrucibleGTQTCoreWorldSmoke.run();
+            if (CrucibleRestartWorldSmoke.started(world, server)) return;
             removed(world, server, false, 1299);
             removed(world, server, false, 1300);
             removed(world, server, true, 1300);
@@ -73,11 +91,21 @@ public final class CrucibleWorldSmoke {
             int storageCases = CrucibleStorageWorldSmoke.run(world, server);
             int hazardCases = CrucibleHazardWorldSmoke.run(world, server);
             int toolCases = CrucibleToolWorldSmoke.run(world);
-            LOG.info("CRUCIBLE_WORLD_PASS {}", 7 + heatCases + inputCases + moldCases + storageCases + hazardCases + toolCases);
+            LOG.info("CRUCIBLE_WORLD_PASS {}", 7 + gtqtcoreCases + heatCases + inputCases + moldCases + storageCases + hazardCases + toolCases);
         } catch (Throwable failure) {
             // A server can exit zero after a startup event failure. The Gradle
             // verifier requires the success marker and rejects this marker.
             LOG.error("CRUCIBLE_WORLD_FAIL", failure);
+        }
+    }
+
+    @Mod.EventHandler
+    public void stopping(FMLServerStoppingEvent event) {
+        try {
+            MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+            CrucibleRestartWorldSmoke.stopping(server.getWorld(0));
+        } catch (Throwable failure) {
+            LOG.error("CRUCIBLE_RESTART_FAIL", failure);
         }
     }
 

@@ -10,7 +10,9 @@ import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.GTUtility;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.init.Items;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
@@ -20,6 +22,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.oredict.OreDictionary;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.UUID;
@@ -57,7 +60,22 @@ final class CrucibleInputWorldSmoke {
         hematiteReduction(world);
         refinement(world, 18, Materials.Iron, Materials.WroughtIron, 2011);
         refinement(world, 19, Materials.Copper, Materials.AnnealedCopper, 2800);
-        return 17 + optional;
+        // GT6 OP.blockRaw/crateGtRaw/crateGt64Raw and oreDense aliases do not
+        // exist as CEu OrePrefix values. Exercise their actual OreDictionary
+        // intake path with isolated vanilla stacks, including over-capacity
+        // forms that must remain as dropped items.
+        oreForm(world, 20, "blockRawCopper", new ItemStack(Items.STICK), Materials.Copper, 9 * GTValues.M);
+        oreForm(world, 21, "blockOreCopper", new ItemStack(Items.PAPER), Materials.Copper, 9 * GTValues.M);
+        oreForm(world, 22, "crateGtRawCopper", new ItemStack(Items.BOOK), Materials.Copper, 16 * GTValues.M);
+        oreForm(world, 23, "crateGtOreCopper", new ItemStack(Items.SNOWBALL), Materials.Copper, 16 * GTValues.M);
+        oreForm(world, 24, "oreDenseCopper", new ItemStack(Items.FEATHER), Materials.Copper, 2 * GTValues.M);
+        oreForm(world, 25, "denseoreCopper", new ItemStack(Items.MAGMA_CREAM), Materials.Copper, 2 * GTValues.M);
+        oreForm(world, 26, "crateGt64RawCopper", new ItemStack(Items.BLAZE_ROD), Materials.Copper, -1);
+        oreForm(world, 27, "crateGt64OreCopper", new ItemStack(Items.LEATHER), Materials.Copper, -1);
+        // Iron's explicit GT6 crushing target is hematite at 3 U per ore;
+        // a 9-ore raw block exceeds this crucible's 16-U capacity and is refused.
+        oreForm(world, 28, "blockRawIron", new ItemStack(Items.GUNPOWDER), Materials.BandedIron, -1);
+        return 26 + optional;
     }
 
     private static int optionalInput(WorldServer world, int index, OrePrefix prefix, String sourceName,
@@ -190,6 +208,40 @@ final class CrucibleInputWorldSmoke {
                         ", expected " + expectedAmount);
         LogManager.getLogger("CrucibleParitySmoke").info("CRUCIBLE_WORLD_INPUT prefix={} source={} amount={}",
                 prefix, source, content.getLong("Amount"));
+    }
+
+    private static void oreForm(WorldServer world, int index, String oreName, ItemStack fixture,
+                                Material expectedMaterial, long expectedAmount) {
+        OreDictionary.registerOre(oreName, fixture.copy());
+        BlockPos pos = new BlockPos(800 + 16 * index, 70, 400);
+        MetaTileEntityCrucible vessel = place(world, index,
+                new FakePlayer(world, new GameProfile(UUID.randomUUID(), "[OreFormSmoke]")));
+        EntityItem dropped = new EntityItem(world, pos.getX() + 0.5D, pos.getY() + 0.5D,
+                pos.getZ() + 0.5D, fixture.copy());
+        check(world.spawnEntity(dropped), "Could not spawn OreDictionary fixture " + oreName);
+        vessel.update();
+
+        NBTTagList contents = vessel.writeToNBT(new NBTTagCompound()).getTagList("Contents", 10);
+        if (expectedAmount < 0) {
+            check(!dropped.isDead && dropped.getItem().getCount() == 1,
+                    "Over-capacity GT6 ore form was consumed: " + oreName);
+            check(contents.tagCount() == 0, "Over-capacity GT6 ore form added partial contents: " + oreName);
+            LogManager.getLogger("CrucibleParitySmoke").info(
+                    "CRUCIBLE_WORLD_ORE_FORM oreName={} accepted=false retained=1 passed", oreName);
+            dropped.setDead();
+            return;
+        }
+
+        check(dropped.isDead || dropped.getItem().isEmpty(), "Accepted GT6 ore form was not consumed: " + oreName);
+        check(contents.tagCount() == 1, "GT6 ore form produced wrong component count: " + oreName + " " + contents);
+        NBTTagCompound content = contents.getCompoundTagAt(0);
+        check(expectedMaterial.getRegistryName().toString().equals(content.getString("Material")),
+                "Wrong GT6 ore-form target for " + oreName + ": " + content);
+        check(content.getLong("Amount") == expectedAmount,
+                "Wrong GT6 ore-form amount for " + oreName + ": " + content.getLong("Amount") +
+                        ", expected " + expectedAmount);
+        LogManager.getLogger("CrucibleParitySmoke").info(
+                "CRUCIBLE_WORLD_ORE_FORM oreName={} accepted=true amount={} passed", oreName, expectedAmount);
     }
 
     private static MetaTileEntityCrucible place(WorldServer world, int index, FakePlayer player) {

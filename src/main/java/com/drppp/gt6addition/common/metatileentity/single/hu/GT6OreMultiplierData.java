@@ -63,6 +63,9 @@ final class GT6OreMultiplierData {
             String name = GT6MaterialIdentity.name(id);
             if (name != null) result.add(normalize(name));
         }
+        for (GT6AntimatterIdentityData.Profile profile : GT6AntimatterIdentityData.profiles()) {
+            result.add(normalize(profile.name));
+        }
         return result;
     }
 

@@ -103,6 +103,23 @@ class CrucibleTargetRegistrationTest {
         assertNull(registry.getMaterial("gt6addition:fluorite"));
     }
 
+    @Test void coreAdamantiumIsReusedButNeverSubstitutedForGt6Adamantine() {
+        // GTQTCore ElementMaterials registers Adamantium as element Ad. GT6's
+        // separate Adamantine target is Ad3O4, so a missing oxide must stay missing.
+        Material coreAdamantium = new Material.Builder(1, new ResourceLocation("gtqtcore", "adamantium"))
+                .ingot(6).fluid().plasma().build();
+
+        assertSame(coreAdamantium, GT6MaterialCompatibility.findExternal("adamantium"));
+        assertSame(coreAdamantium, MetaTileEntityCrucible.resolveMaterial("gt6addition:adamantium"));
+        assertTrue(coreAdamantium.hasProperty(PropertyKey.INGOT));
+        assertTrue(coreAdamantium.hasProperty(PropertyKey.FLUID));
+        assertNull(registry.getMaterial("gt6addition:adamantium"));
+
+        assertNull(GT6MaterialCompatibility.findExternal("adamantine"));
+        assertNull(MetaTileEntityCrucible.resolveMaterial("gt6addition:adamantine"));
+        assertNull(registry.getMaterial("gt6addition:adamantine"));
+    }
+
     @Test void absentNamespaceCannotMisidentifyHostMaterial() throws Exception {
         registry = newRegistry(false);
         Material host = new Material.Builder(1, new ResourceLocation("gregtech", "fluorite")).gem().build();
@@ -130,5 +147,13 @@ class CrucibleTargetRegistrationTest {
         assertNull(GT6MaterialCompatibility.retiredPath("anothermod:netherite"));
         assertNull(GT6MaterialCompatibility.retiredPath("netherite"));
         assertNull(GT6MaterialCompatibility.retiredPath(null));
+    }
+
+    @Test void normalizedCoreSpellingKeepsPriorityOverExactHostSpelling() {
+        Material core = new Material.Builder(1, new ResourceLocation("gtqtcore", "arseniccopper")).ingot().build();
+        new Material.Builder(3, new ResourceLocation("gregtech", "arsenic_copper")).ingot().build();
+        assertSame(core, GT6MaterialCompatibility.findExternal("arsenic_copper"));
+        assertSame(core, MetaTileEntityCrucible.resolveMaterial("gt6addition:arsenic_copper"));
+        assertNull(GT6MaterialCompatibility.findExternal("gtqtcore:arsenic_copper"));
     }
 }

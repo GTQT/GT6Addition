@@ -36,7 +36,7 @@ final class GT6MaterialIdentity {
         // Existing host polymer bindings, not new GT6 literal aliases.
         if ("polytetrafluoroethylene".equals(normalizedName)) return "teflon";
         if ("polyvinylchloride".equals(normalizedName)) return "pvc";
-        return GT6RegistrationAliasData.canonicalName(normalizedName);
+        return GT6AntimatterIdentityData.canonicalName(GT6RegistrationAliasData.canonicalName(normalizedName));
     }
 
     /** One known retired addon identity; do not strip arbitrary namespaces. */
@@ -62,7 +62,8 @@ final class GT6MaterialIdentity {
         if (gt6Name == null) return null;
         if (gt6Name.indexOf(':') >= 0) return gt6Name;
         String originalName = gt6Name.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]", "");
-        String normalized = GT6RegistrationAliasData.canonicalName(originalName);
+        String normalized = GT6AntimatterIdentityData.canonicalName(
+                GT6RegistrationAliasData.canonicalName(originalName));
         switch (normalized) {
             case "glyceryl": return "gregtech:glyceryl_trinitrate";
             case "teflon": return "gregtech:polytetrafluoroethylene";
@@ -209,6 +210,27 @@ final class GT6MaterialIdentity {
             case "osmiumelemental": return "osmium";
             default: return normalizedName;
         }
+    }
+
+    /** Statistics lookup for a native numeric identity, not a host Material
+     * name or registration request. Preserve the original names for recycling
+     * and disambiguate only the three verified host/native collisions.
+     */
+    static String mechanicsName(int id) {
+        switch (id) {
+            case 8208: return "tricalciumphosphate"; // MT.Phosphorus, not elemental P.
+            case 8751: return "duraniumalloy"; // MT.DuraniumAlloy, not Dn.
+            case 8752: return "tritaniumalloy"; // MT.TritaniumAlloy, not Tn.
+            default:
+                String materialName = name(id);
+                return materialName == null ? GT6AntimatterIdentityData.name(id) : materialName;
+        }
+    }
+
+    /** Native source spelling used by GT6 recycling NBT before host-name mapping. */
+    static String recyclingName(int id) {
+        String mtName = name(id);
+        return mtName == null ? GT6AntimatterIdentityData.name(id) : mtName;
     }
 
     static String name(int id) {

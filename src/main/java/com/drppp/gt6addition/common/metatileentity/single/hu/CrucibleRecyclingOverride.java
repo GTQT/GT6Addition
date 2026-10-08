@@ -49,7 +49,7 @@ final class CrucibleRecyclingOverride {
                 if (!entry.hasKey("i", 99)) return Collections.emptyList();
                 long id = entry.getLong("i");
                 if (id <= 0 || id > Short.MAX_VALUE) return Collections.emptyList();
-                name = GT6MaterialIdentity.name((int) id);
+                name = GT6MaterialIdentity.recyclingName((int) id);
             } else {
                 if (!entry.hasKey("m", 8)) return Collections.emptyList();
                 name = entry.getString("m");

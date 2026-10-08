@@ -48,22 +48,31 @@ public final class GT6MaterialCompatibility {
             // CEu may fall back to gregtech when the requested registry is absent.
             return exact != null && name.equals(exact.getRegistryName()) ? exact : null;
         }
+        String normalized = normalize(name);
         for (String namespace : new String[]{"gtqtcore", "gregtech"}) {
             Material preferred = findExternal(namespace + ":" + name);
             if (preferred != null) return preferred;
+            MaterialRegistry registry = GregTechAPI.materialManager.getRegistry(namespace);
+            if (!namespace.equals(registry.getModid())) continue;
+            Material normalizedMatch = null;
+            for (Material material : registry.getAllMaterials()) {
+                if (!normalized.equals(normalize(material.getName()))) continue;
+                if (normalizedMatch != null && normalizedMatch != material) return null;
+                normalizedMatch = material;
+            }
+            if (normalizedMatch != null) return normalizedMatch;
         }
-        String normalized = normalize(name);
         Material candidate = null;
         if (GregTechAPI.materialManager.getPhase() == IMaterialRegistryManager.Phase.PRE) return null;
         // MaterialEvent still has OPEN registries; getRegisteredMaterials is only valid after close.
         for (MaterialRegistry registry : GregTechAPI.materialManager.getRegistries()) {
-          for (Material material : registry.getAllMaterials()) {
-            if (material == null || material.getRegistryName().startsWith(Tags.MOD_ID + ":")) continue;
-            String registered = material.getRegistryName();
-            if (!normalized.equals(normalize(registered.substring(registered.indexOf(':') + 1)))) continue;
-            if (candidate != null && candidate != material) return null;
-            candidate = material;
-          }
+            for (Material material : registry.getAllMaterials()) {
+                if (material == null || material.getRegistryName().startsWith(Tags.MOD_ID + ":")) continue;
+                String registered = material.getRegistryName();
+                if (!normalized.equals(normalize(registered.substring(registered.indexOf(':') + 1)))) continue;
+                if (candidate != null && candidate != material) return null;
+                candidate = material;
+            }
         }
         return candidate;
     }

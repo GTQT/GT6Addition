@@ -632,6 +632,8 @@ public final class CrucibleTransferLogic {
         densities.put("petcoke", densities.get("petroleumcoke"));
         GT6NativeScalarData.addDensities(densities);
         GT6MineralDensityData.addTo(densities);
+        GT6ConfiguredDensityData.addTo(densities);
+        GT6RemainingDensityData.addTo(densities);
         for (String name : GT6TechnicalMaterialData.names()) {
             GT6TechnicalMaterialData.Profile family = GT6TechnicalMaterialData.find(name);
             // Every native stats source above is explicit. The three

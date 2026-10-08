@@ -85,6 +85,10 @@ final class CrucibleSmeltingRule {
             case "annealedcopper": return new CrucibleSmeltingRule(null, 1, 1, 2800, 2835);
             case "water": return new CrucibleSmeltingRule(null, 1, 1, 273, 373);
             case "ice": return new CrucibleSmeltingRule("water", 1, 1, 273, 373);
+            // MT.java:1636. Keep the native relation in the shared rule table,
+            // not only in an identity comparison with CEu Materials.Obsidian.
+            // The vessel separately applies the confirmed 1000 mB/item rule.
+            case "obsidian": return ratio("lava", 1, 1);
             case "pyrolusite": return new CrucibleSmeltingRule("manganese", 3, 4, 808, 2334);
             case "aluminiumhydroxide": return new CrucibleSmeltingRule("alumina", 5, 14, 573, 1146);
             case "tungsticacid": return new CrucibleSmeltingRule("tungsten_trioxide", 4, 7, 373, 1746);

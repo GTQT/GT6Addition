@@ -25,6 +25,11 @@ final class GT6DeclaredPhaseData {
         DATA.put("siliconcarbide", DATA.get("carborundum"));
         // MT.java:1007; also the explicit H2O component of hydrated minerals.
         put("water", 273, 373, true);
+        // Explicit component heat, not inferred from a processing target.
+        // Keep these here before configurations: the public phase resolver
+        // also reads this table and cannot be called during initialization.
+        put("ice", 273, 373, true); // MT.java:1013
+        put("coal", 1700, 4300, true); // MT.java:1522, C boiling point.
         put("semiheavywater", 275, 374, true); // MT.java:1008
         put("heavywater", 277, 375, true); // MT.java:1009
         put("tritiatedwater", 280, 377, true); // MT.java:1010
@@ -63,6 +68,8 @@ final class GT6DeclaredPhaseData {
         put("gaiaspirit", 3945, 6328, true); // W heat +250/+500; MT.java:1823
         put("mauftrium", 1811, 3134, true); // Fe heat; MT.java:1825
         put("elvorium", 2811, 5134, true); // Fe heat +1000/+2000; MT.java:1826
+        putComposition("niflheimpower", 1, new String[]{"elvorium"}, new long[]{1}); // MT.java:1827
+        putComposition("muspelheimpower", 1, new String[]{"elvorium"}, new long[]{1}); // MT.java:1828
         put("octine", 2934, 3634, true); // Steel boiling -200/+500; MT.java:1850
         // Explicit expressions in MT.java:1094,3703-3705; Fe melting point is 1811 K.
         put("hematite", 2 * 1811 / 3, 2 * (2 * 1811 / 3), true);
@@ -427,6 +434,7 @@ final class GT6DeclaredPhaseData {
         putComposition("electrumflux", 1, new String[]{"electrum", "redstone"}, new long[]{1, 2});
         putComposition("conductiveiron", 1, new String[]{"wroughtiron", "redstone"}, new long[]{1, 1});
         putComposition("energeticsilver", 1, new String[]{"silver", "redstone", "glowstone"}, new long[]{1, 1, 1});
+        putComposition("vividalloy", 1, new String[]{"energeticsilver", "enderpearl"}, new long[]{1, 1}); // MT.java:1815
         putComposition("signalum", 8, new String[]{"copper", "silver", "redalloy"}, new long[]{1, 2, 5});
         putComposition("lumium", 4, new String[]{"tin", "silver", "glowstone"}, new long[]{3, 1, 4});
         putComposition("enderiumbase", 4, new String[]{"tin", "silver", "platinum"}, new long[]{2, 1, 1});
@@ -437,6 +445,7 @@ final class GT6DeclaredPhaseData {
         DATA.put("glowstonerefined", DATA.get("refinedglowstone"));
         putComposition("refinedobsidian", 1, new String[]{"obsidian", "diamond"}, new long[]{1, 1});
         DATA.put("obsidianrefined", DATA.get("refinedobsidian"));
+        putComposition("yellorite", 1, new String[]{"yellorium", "oxygen"}, new long[]{1, 2}); // MT.java:1802
         putComposition("obsidiansteel", 1, new String[]{"steel", "obsidian"}, new long[]{1, 9});
         DATA.put("darksteel", DATA.get("obsidiansteel")); // Explicit MT.java:1805 alias.
         putComposition("pulsatingiron", 1, new String[]{"wroughtiron", "enderpearl"}, new long[]{1, 1});
@@ -465,6 +474,8 @@ final class GT6DeclaredPhaseData {
         putComposition("claycompound", 1, new String[]{"stone", "ceramic"}, new long[]{2, 1}); // MT.java:1811
         DATA.put("crudesteel", DATA.get("claycompound")); // Explicit ore name.
         putComposition("endsteel", 1, new String[]{"endstone", "obsidiansteel", "obsidian"}, new long[]{1, 1, 9}); // MT.java:1812
+        putComposition("melodicalloy", 1, new String[]{"endsteel", "endereye"}, new long[]{1, 1}); // MT.java:1813
+        putComposition("stellaralloy", 2, new String[]{"melodicalloy", "netherstar", "clay"}, new long[]{1, 1, 4}); // MT.java:1814
         // Extra recipes at 3364-3365 use Endstone/Lava or Al/WroughtIron/Lava;
         // their boiling points exceed the product melt, so no later clamp.
 
@@ -487,6 +498,7 @@ final class GT6DeclaredPhaseData {
         putComposition("desh", 0,
                 new String[]{"boron", "lanthanum", "neodymium", "niobium", "cobalt", "cerium", "lithium"},
                 new long[]{2, 2, 1, 1, 1, 1, 1});
+        putComposition("workersalloy", 4, new String[]{"desh", "mercury"}, new long[]{4, 1}); // MT.java:1839
         putComposition("hssg", 0, new String[]{"tungstensteel", "chromium", "molybdenum", "vanadium"},
                 new long[]{5, 1, 2, 1});
         putComposition("hsse", 0, new String[]{"hssg", "cobalt", "manganese", "silicon"}, new long[]{6, 1, 1, 1});
@@ -760,6 +772,15 @@ final class GT6DeclaredPhaseData {
         DATA.put("galvanizedsteel", DATA.get("steelgalvanized"));
     }
 
+    static {
+        // AM.java's direct element(...) heat values. Only the explicit
+        // Anti-Adamantium MELTING tag grants a burning exemption; ordinary
+        // temperature declarations and default self-targets do not.
+        for (GT6AntimatterIdentityData.Profile profile : GT6AntimatterIdentityData.profiles()) {
+            put(profile.name, profile.melting, profile.boiling, profile.meltingFlag);
+        }
+    }
+
     private GT6DeclaredPhaseData() {}
 
     private static void put(String name, int melt, int boil, boolean exempt) {
@@ -846,6 +867,7 @@ final class GT6DeclaredPhaseData {
     }
 
     static boolean hasBurningExemption(String name) {
+        if (GT6AntimatterIdentityData.hasMeltingFlag(name)) return true;
         if (GT6TechnicalMaterialData.contains(name)) {
             // Positive copied setSmelting adds MELTING to the family. The
             // only independently declared UNBURNABLE family is ANY.W.
