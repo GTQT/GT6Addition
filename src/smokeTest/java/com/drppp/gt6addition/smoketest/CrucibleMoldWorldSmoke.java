@@ -11,6 +11,7 @@ import gregtech.api.block.machines.MachineItemBlock;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
+import gregtech.api.unification.material.Materials;
 import gregtech.api.unification.material.properties.PropertyKey;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.GTUtility;
@@ -36,6 +37,13 @@ import java.util.UUID;
 /** Complete registered Fluorite casting/recovery path in an isolated real world. */
 final class CrucibleMoldWorldSmoke {
     static int run(WorldServer world, MinecraftServer server) {
+        FakePlayer player = new FakePlayer(world, new GameProfile(UUID.randomUUID(), "[MoldSmoke]"));
+        new NetHandlerPlayServer(server, new NetworkManager(EnumPacketDirection.SERVERBOUND), player) {
+            @Override public void sendPacket(Packet<?> packet) {}
+        };
+        verifyAmbientCooling(world, player);
+        verifyBoilingMoldMeltdown(world, player);
+
         Material fluorite = GT6MaterialCompatibility.findExternal("fluorite");
         if (fluorite == null) {
             check(net.minecraftforge.fml.common.registry.ForgeRegistries.ITEMS.getValue(
@@ -43,7 +51,7 @@ final class CrucibleMoldWorldSmoke {
                     "Absent external Fluorite generated an addon casting form");
             LogManager.getLogger("CrucibleParitySmoke")
                     .info("CRUCIBLE_WORLD_OPTIONAL_FLUORITE unavailable; casting checks not executed");
-            return 0;
+            return 2;
         }
         ItemStack ingot = OreDictUnifier.get(OrePrefix.ingot, fluorite);
         check(!ingot.isEmpty() && !OreDictUnifier.get(OrePrefix.gem, fluorite).isEmpty(), "Missing Fluorite form");
@@ -55,10 +63,6 @@ final class CrucibleMoldWorldSmoke {
         check(((GT6CastingIngotItem) ingot.getItem()).getMaterial(new ItemStack(ingot.getItem(), 1, 1)) == null,
                 "Unregistered item metadata acquired a material");
 
-        FakePlayer player = new FakePlayer(world, new GameProfile(UUID.randomUUID(), "[MoldSmoke]"));
-        new NetHandlerPlayServer(server, new NetworkManager(EnumPacketDirection.SERVERBOUND), player) {
-            @Override public void sendPacket(Packet<?> packet) {}
-        };
         // Chrome is acid-proof in the actual registered GT6 machine family.
         MetaTileEntityCrucible vessel = (MetaTileEntityCrucible) place(world, 0, player,
                 MetaTileEntityHandler.CRUCIBLE_HU[11]);
@@ -122,7 +126,57 @@ final class CrucibleMoldWorldSmoke {
                 emptyMold.fillMold(fluorite, GTValues.M - 1, 1633, EnumFacing.UP, false) == 0 &&
                 coldBefore.equals(emptyMold.writeToNBT(new NBTTagCompound())), "Cold/short casting consumed material");
         LogManager.getLogger("CrucibleParitySmoke").info("CRUCIBLE_WORLD_FLUORITE_CAST_REFUSAL passed");
-        return 3;
+        return 5;
+    }
+
+    private static void verifyAmbientCooling(WorldServer world, FakePlayer player) {
+        ItemStack ingot = OreDictUnifier.get(OrePrefix.ingot, Materials.Iron);
+        check(!ingot.isEmpty(), "Missing native iron ingot for mold cooling check");
+
+        MetaTileEntityMold withOutput = mold(world, 4, player, 11);
+        NBTTagCompound coolingState = withOutput.writeToNBT(new NBTTagCompound());
+        coolingState.setLong("gt.mold.temperature", 400L);
+        coolingState.setLong("gt.mold.cooling_start_temperature", 400L);
+        coolingState.setTag("gt.mold.output", ingot.writeToNBT(new NBTTagCompound()));
+        withOutput.readFromNBT(coolingState);
+        long ambient = environmentTemperature(world, withOutput.getPos());
+        check(ambient < 400L, "Flat-world ambient temperature must be below mold test temperature");
+        withOutput.update();
+        check(withOutput.getTemperatureValue(null) == Math.max(ambient, 395L),
+                "Mold with finished casting did not cool 5 K toward biome ambient");
+        check(ItemStack.areItemStacksEqual(ingot, withOutput.getOutputStack()),
+                "Passive cooling changed the finished casting");
+
+        MetaTileEntityMold empty = mold(world, 5, player, 11);
+        NBTTagCompound emptyState = empty.writeToNBT(new NBTTagCompound());
+        emptyState.setLong("gt.mold.temperature", 400L);
+        empty.readFromNBT(emptyState);
+        empty.update();
+        check(empty.getTemperatureValue(null) == ambient,
+                "Empty mold failed to settle to the biome environment temperature");
+        LogManager.getLogger("CrucibleParitySmoke").info("CRUCIBLE_WORLD_MOLD_AMBIENT_COOLING passed");
+    }
+
+    private static void verifyBoilingMoldMeltdown(WorldServer world, FakePlayer player) {
+        MetaTileEntityMold mold = mold(world, 6, player, 22);
+        NBTTagCompound state = mold.writeToNBT(new NBTTagCompound());
+        state.setLong("gt.mold.temperature", 1186L);
+        state.setLong("gt.mold.cooling_start_temperature", 1186L);
+        state.setString("gt.mold.material", Materials.Zinc.getRegistryName());
+        state.setLong("gt.mold.amount", 1L);
+        mold.readFromNBT(state);
+        check(mold.getTemperatureMax(null) > 1181L,
+                "Ceramic mold max temperature must isolate the Zinc boiling-point hazard");
+        mold.update(); // 1186 K cools by 5 K, remaining above GT6 Zinc boiling point (1180 K).
+        check(world.getBlockState(mold.getPos()).getBlock() == net.minecraft.init.Blocks.FLOWING_LAVA,
+                "Mold contents above the GT6 Zinc boiling point did not melt down");
+        LogManager.getLogger("CrucibleParitySmoke").info("CRUCIBLE_WORLD_MOLD_BOILING_MELTDOWN passed");
+    }
+
+    private static long environmentTemperature(WorldServer world, BlockPos pos) {
+        net.minecraft.world.biome.Biome biome = world.getBiome(pos);
+        return biome == null ? 293L : Math.max(1L, 270L +
+                (long) (biome.getTemperature(pos) * 20.0F));
     }
 
     private static MetaTileEntityMold mold(WorldServer world, int index, FakePlayer player, int materialIndex) {

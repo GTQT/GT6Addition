@@ -14,6 +14,8 @@ import gregtech.api.unification.material.Materials;
 import gregtech.api.unification.material.properties.PropertyKey;
 import gregtech.api.unification.stack.MaterialStack;
 import gregtech.api.unification.stack.RecyclingData;
+import gregtech.common.blocks.BlockBatteryPart.BatteryPartType;
+import gregtech.common.blocks.MetaBlocks;
 import gregtech.common.items.MetaItems;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -27,7 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/** Actual battery manufacturing inputs, not an arbitrary static recipe or EU capacity. */
+/** Actual battery-product manufacturing inputs, not an arbitrary static recipe or EU capacity. */
 public final class CrucibleComponentProvenance {
     static final String TAG = "gt6addition.componentMaterials";
 
@@ -48,13 +50,49 @@ public final class CrucibleComponentProvenance {
                 MetaItems.BATTERY_HULL_LARGE_NAQUADRIA);
     }
 
-    static boolean isBattery(ItemStack stack) {
+    private static boolean isElectricBattery(ItemStack stack) {
         return isOneOf(stack, MetaItems.BATTERY_ULV_TANTALUM,
                 MetaItems.BATTERY_LV_LITHIUM, MetaItems.BATTERY_LV_CADMIUM, MetaItems.BATTERY_LV_SODIUM,
                 MetaItems.BATTERY_MV_LITHIUM, MetaItems.BATTERY_MV_CADMIUM, MetaItems.BATTERY_MV_SODIUM,
                 MetaItems.BATTERY_HV_LITHIUM, MetaItems.BATTERY_HV_CADMIUM, MetaItems.BATTERY_HV_SODIUM,
                 MetaItems.BATTERY_EV_VANADIUM, MetaItems.BATTERY_IV_VANADIUM, MetaItems.BATTERY_LUV_VANADIUM,
-                MetaItems.BATTERY_ZPM_NAQUADRIA, MetaItems.BATTERY_UV_NAQUADRIA);
+                MetaItems.BATTERY_ZPM_NAQUADRIA, MetaItems.BATTERY_UV_NAQUADRIA,
+                MetaItems.ENERGIUM_CRYSTAL, MetaItems.LAPOTRON_CRYSTAL,
+                MetaItems.ENERGY_LAPOTRONIC_ORB, MetaItems.ENERGY_LAPOTRONIC_ORB_CLUSTER,
+                MetaItems.ENERGY_MODULE, MetaItems.ENERGY_CLUSTER, MetaItems.ZERO_POINT_MODULE,
+                MetaItems.QUANTUM_CORE, MetaItems.SINGULARITY_CELL, MetaItems.CHRONO_MATRIX,
+                MetaItems.TACHYON_REACTOR, MetaItems.COSMIC_STRING, MetaItems.ULTIMATE_BATTERY);
+    }
+
+    /** Battery block variants are recipe products too, but are not electric-item capabilities. */
+    private static boolean isBatteryPart(ItemStack stack) {
+        return batteryPartType(stack) != null;
+    }
+
+    private static BatteryPartType batteryPartType(ItemStack stack) {
+        if (stack.isEmpty() || MetaBlocks.BATTERY_BLOCK == null) return null;
+        for (BatteryPartType type : BatteryPartType.values()) {
+            if (ItemStack.areItemsEqual(stack, MetaBlocks.BATTERY_BLOCK.getItemVariant(type))) return type;
+        }
+        return null;
+    }
+
+    private static boolean isEmptyBatteryPart(ItemStack stack) {
+        BatteryPartType type = batteryPartType(stack);
+        return type != null && type.getCapacity() == 0L;
+    }
+
+    static boolean isUntrackedFilledBatteryPart(ItemStack stack) {
+        if (!isBatteryPart(stack) || isEmptyBatteryPart(stack)) return false;
+        return !stack.hasTagCompound() || !stack.getTagCompound().hasKey(TAG, 10);
+    }
+
+    static boolean isBattery(ItemStack stack) {
+        return isElectricBattery(stack) || isBatteryPart(stack);
+    }
+
+    private static String provenanceKey(ItemStack stack) {
+        return isHull(stack) || isBatteryPart(stack) ? TAG : CrucibleElectricProvenance.TAG;
     }
 
     public static boolean tracks(Recipe recipe) {
@@ -64,7 +102,7 @@ public final class CrucibleComponentProvenance {
     /** Own bookkeeping is invisible to ordinary recipe matching, not to explicit NBT matchers. */
     public static ItemStack matchingCopy(ItemStack stack) {
         if (stack == null || stack.isEmpty() || !stack.hasTagCompound()) return stack;
-        String key = isHull(stack) ? TAG : isBattery(stack) ? CrucibleElectricProvenance.TAG : null;
+        String key = isHull(stack) || isBattery(stack) ? provenanceKey(stack) : null;
         if (key == null || !stack.getTagCompound().hasKey(key)) return stack;
         ItemStack copy = stack.copy();
         copy.getTagCompound().removeTag(key);
@@ -99,7 +137,12 @@ public final class CrucibleComponentProvenance {
         if (unit.hasCapability(GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM, null)) {
             return CrucibleElectricRecycling.resolve(unit, MetaTileEntityCrucible::resolveMaterial);
         }
-        if (unit.hasTagCompound() && unit.getTagCompound().hasKey(TAG)) return resolve(unit);
+        if (unit.hasTagCompound() && (unit.getTagCompound().hasKey(TAG) ||
+                unit.getTagCompound().hasKey(CrucibleElectricProvenance.TAG))) return resolve(unit);
+        // Filled battery blocks contain a core which is not represented by the
+        // static recycling entry for the empty shell. Never recover the shell
+        // recipe alone as if it were the complete filled block.
+        if (isBatteryPart(unit) && !isEmptyBatteryPart(unit)) return Collections.emptyList();
         // Hull routes differ. An untracked old hull does not acquire a made-up history.
         if (isHull(unit) || unit.hasTagCompound()) return Collections.emptyList();
         RecyclingData data = RecyclingHandler.getRecyclingIngredients(1,
@@ -109,7 +152,9 @@ public final class CrucibleComponentProvenance {
     }
 
     static List<MaterialStack> resolve(ItemStack stack) {
-        if (!isHull(stack) || stack.isItemDamaged() || !stack.hasTagCompound()) return Collections.emptyList();
+        if ((!isHull(stack) && !isBatteryPart(stack)) || stack.isItemDamaged() || !stack.hasTagCompound()) {
+            return Collections.emptyList();
+        }
         ItemStack copy = stack.copy();
         if (copy.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null) ||
                 copy.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null) ||
@@ -121,8 +166,11 @@ public final class CrucibleComponentProvenance {
                 return Collections.emptyList();
             }
         }
-        if (!root.hasKey(TAG, 10) || !bound(root.getCompoundTag(TAG), copy)) return Collections.emptyList();
-        return CrucibleElectricProvenance.parseList(root.getCompoundTag(TAG), "materials",
+        String accountKey = provenanceKey(copy);
+        if (!root.hasKey(accountKey, 10) || !bound(root.getCompoundTag(accountKey), copy)) {
+            return Collections.emptyList();
+        }
+        return CrucibleElectricProvenance.parseList(root.getCompoundTag(accountKey), "materials",
                 MetaTileEntityCrucible::resolveMaterial);
     }
 
@@ -149,7 +197,7 @@ public final class CrucibleComponentProvenance {
         ItemStack hull = ItemStack.EMPTY;
         int hullCount = 0;
         for (ItemStack input : items) {
-            if (isHull(output) && isBattery(input)) {
+            if (isHull(output) && isElectricBattery(input)) {
                 // The extractor discards filler, not the original manufactured hull.
                 if (items.size() != 1 || !fluids.isEmpty() || !input.hasTagCompound()) return invalid;
                 NBTTagCompound battery = input.getTagCompound().getCompoundTag(CrucibleElectricProvenance.TAG);
@@ -192,7 +240,7 @@ public final class CrucibleComponentProvenance {
         }
         NBTTagCompound result = encoded(output, totals, output.getCount());
         if (result.isEmpty()) return invalid;
-        if (isBattery(output) && !hull.isEmpty()) {
+        if (isElectricBattery(output) && !hull.isEmpty()) {
             if (hullCount != output.getCount()) return invalid;
             net.minecraft.nbt.NBTTagList entries = CrucibleElectricProvenance.encode(hullTotals, output.getCount());
             if (entries == null) return invalid;
@@ -225,7 +273,7 @@ public final class CrucibleComponentProvenance {
     private static void write(ItemStack output, NBTTagCompound account) {
         NBTTagCompound root = output.getTagCompound();
         if (root == null) { root = new NBTTagCompound(); output.setTagCompound(root); }
-        root.setTag(isBattery(output) ? CrucibleElectricProvenance.TAG : TAG, account.copy());
+        root.setTag(provenanceKey(output), account.copy());
     }
 
     /** Host matching on copies selects actual slots, alternatives and non-consumables. */
@@ -241,7 +289,7 @@ public final class CrucibleComponentProvenance {
             beforeFluids.add(fluid == null ? null : fluid.copy());
             afterFluids.add(fluid == null ? null : fluid.copy());
         }
-        NBTTagCompound account = new NBTTagCompound();
+        List<OutputAccount> outputAccounts = new ArrayList<>();
         List<ItemStack> consumed = new ArrayList<>();
         List<FluidStack> consumedFluids = new ArrayList<>();
         if (recipe.matches(true, after, afterFluids)) {
@@ -257,19 +305,88 @@ public final class CrucibleComponentProvenance {
             if (recipe.getOutputs().size() == 1 && recipe.getFluidOutputs().isEmpty() &&
                     recipe.getChancedOutputs().getChancedEntries().isEmpty() &&
                     recipe.getChancedFluidOutputs().getChancedEntries().isEmpty()) {
-                account = account(recipe.getOutputs().get(0), consumed, consumedFluids);
+                ItemStack output = recipe.getOutputs().get(0);
+                outputAccounts.add(new OutputAccount(output, account(output, consumed, consumedFluids)));
+            } else {
+                outputAccounts.addAll(disassemblyAccounts(recipe, consumed, consumedFluids));
             }
         }
-        return new Preparation(account, after, afterFluids);
+        return new Preparation(outputAccounts, after, afterFluids);
+    }
+
+    /** Split a tracked filled battery block back into its empty shell and exact core. */
+    private static List<OutputAccount> disassemblyAccounts(Recipe recipe, List<ItemStack> consumed,
+                                                            List<FluidStack> consumedFluids) {
+        List<ItemStack> outputs = recipe.getOutputs();
+        if (outputs.size() != 2 || !recipe.getFluidOutputs().isEmpty() || !consumedFluids.isEmpty() ||
+                !recipe.getChancedOutputs().getChancedEntries().isEmpty() ||
+                !recipe.getChancedFluidOutputs().getChancedEntries().isEmpty() || consumed.size() != 1) {
+            return Collections.emptyList();
+        }
+        ItemStack emptyPart = null;
+        ItemStack electricCore = null;
+        for (ItemStack output : outputs) {
+            if (isEmptyBatteryPart(output)) emptyPart = output;
+            else if (isElectricBattery(output)) electricCore = output;
+            else return Collections.emptyList();
+        }
+        ItemStack filledPart = consumed.get(0);
+        if (emptyPart == null || electricCore == null || !isBatteryPart(filledPart) ||
+                isEmptyBatteryPart(filledPart) || filledPart.getCount() != emptyPart.getCount() ||
+                filledPart.getCount() != electricCore.getCount()) return Collections.emptyList();
+
+        List<MaterialStack> source = multiply(componentMaterials(filledPart), filledPart.getCount());
+        List<MaterialStack> core = multiply(componentMaterials(electricCore), electricCore.getCount());
+        List<MaterialStack> shell = subtract(source, core);
+        if (source.isEmpty() || core.isEmpty() || shell.isEmpty()) return Collections.emptyList();
+        NBTTagCompound shellAccount = encoded(emptyPart, shell, emptyPart.getCount());
+        NBTTagCompound coreAccount = encoded(electricCore, core, electricCore.getCount());
+        if (!bound(shellAccount, emptyPart) || !bound(coreAccount, electricCore)) return Collections.emptyList();
+        List<OutputAccount> accounts = new ArrayList<>(2);
+        accounts.add(new OutputAccount(emptyPart, shellAccount));
+        accounts.add(new OutputAccount(electricCore, coreAccount));
+        return accounts;
+    }
+
+    private static List<MaterialStack> subtract(List<MaterialStack> source, List<MaterialStack> removed) {
+        if (source.isEmpty() || removed.isEmpty()) return Collections.emptyList();
+        java.util.Map<Material, Long> amounts = new java.util.LinkedHashMap<>();
+        for (MaterialStack component : source) {
+            if (component == null || component.material == null || component.amount <= 0) return Collections.emptyList();
+            long previous = amounts.getOrDefault(component.material, 0L);
+            if (!CrucibleTransferLogic.canMergeMaterialAmounts(previous, component.amount)) return Collections.emptyList();
+            amounts.put(component.material, previous + component.amount);
+        }
+        for (MaterialStack component : removed) {
+            if (component == null || component.material == null || component.amount <= 0) return Collections.emptyList();
+            long previous = amounts.getOrDefault(component.material, 0L);
+            if (component.amount > previous) return Collections.emptyList();
+            amounts.put(component.material, previous - component.amount);
+        }
+        List<MaterialStack> result = new ArrayList<>();
+        for (java.util.Map.Entry<Material, Long> entry : amounts.entrySet()) {
+            if (entry.getValue() > 0L) result.add(new MaterialStack(entry.getKey(), entry.getValue()));
+        }
+        return CrucibleRecyclingOverride.combine(Collections.emptyList(), result);
+    }
+
+    private static final class OutputAccount {
+        private final ItemStack output;
+        private final NBTTagCompound account;
+
+        private OutputAccount(ItemStack output, NBTTagCompound account) {
+            this.output = output.copy();
+            this.account = account.copy();
+        }
     }
 
     public static final class Preparation {
-        private NBTTagCompound account;
+        private final List<OutputAccount> outputAccounts;
         private final List<ItemStack> expectedItems;
         private final List<FluidStack> expectedFluids;
 
-        private Preparation(NBTTagCompound account, List<ItemStack> expectedItems, List<FluidStack> expectedFluids) {
-            this.account = account;
+        private Preparation(List<OutputAccount> outputAccounts, List<ItemStack> expectedItems, List<FluidStack> expectedFluids) {
+            this.outputAccounts = outputAccounts;
             this.expectedItems = expectedItems;
             this.expectedFluids = expectedFluids;
         }
@@ -278,14 +395,14 @@ public final class CrucibleComponentProvenance {
         public void verifyConsumed(IItemHandlerModifiable inputs, IMultipleTankHandler tanks) {
             for (int i = 0; i < expectedItems.size(); i++) {
                 if (!ItemStack.areItemStacksEqual(expectedItems.get(i), inputs.getStackInSlot(i))) {
-                    account = new NBTTagCompound(); return;
+                    outputAccounts.clear(); return;
                 }
             }
             for (int i = 0; i < expectedFluids.size(); i++) {
                 FluidStack actual = tanks.getTankAt(i).getFluid(), expected = expectedFluids.get(i);
                 if (expected == null ? actual != null && actual.amount > 0 :
                         actual == null || !expected.isFluidStackIdentical(actual)) {
-                    account = new NBTTagCompound(); return;
+                    outputAccounts.clear(); return;
                 }
             }
         }
@@ -294,10 +411,21 @@ public final class CrucibleComponentProvenance {
             List<ItemStack> result = new ArrayList<>();
             for (ItemStack output : outputs) {
                 ItemStack copy = output.copy();
-                if (isHull(copy) || isBattery(copy)) write(copy, bound(account, copy) ? account : new NBTTagCompound());
+                if (isHull(copy) || isBattery(copy)) {
+                    NBTTagCompound account = findAccount(copy);
+                    write(copy, account != null && bound(account, copy) ? account : new NBTTagCompound());
+                }
                 result.add(copy);
             }
             return result;
+        }
+
+        @Nullable
+        private NBTTagCompound findAccount(ItemStack output) {
+            for (OutputAccount candidate : outputAccounts) {
+                if (ItemStack.areItemsEqual(candidate.output, output)) return candidate.account;
+            }
+            return null;
         }
     }
 }

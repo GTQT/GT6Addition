@@ -542,7 +542,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound data) {
         super.writeToNBT(data);
-        data.setInteger(NBT_FLUID_QUANTITY_VERSION, 1);
+        data.setInteger(NBT_FLUID_QUANTITY_VERSION, 2);
         if (hasContents() && material != Materials.NULL) {
             data.setString(NBT_MATERIAL, material.getRegistryName());
             data.setLong(NBT_AMOUNT, materialAmount);
@@ -566,8 +566,10 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
         }
         materialAmount = data.getLong(NBT_AMOUNT);
         fluidRemainder = data.getInteger(NBT_FLUID_REMAINDER);
-        int savedUnit = data.getInteger(NBT_FLUID_QUANTITY_VERSION) >= 1 ? CrucibleFluidUnits.STORAGE_UNIT :
-                material == null ? GTValues.L : CrucibleFluidUnits.legacyFluidUnit(material.getName());
+        int quantityVersion = data.getInteger(NBT_FLUID_QUANTITY_VERSION);
+        int savedUnit = quantityVersion >= 2 ? CrucibleFluidUnits.STORAGE_UNIT :
+                quantityVersion >= 1 ? CrucibleFluidUnits.LEGACY_STORAGE_UNIT :
+                        material == null ? GTValues.L : CrucibleFluidUnits.legacyFluidUnit(material.getName());
         if (fluidRemainder < 0 || fluidRemainder >= savedUnit) fluidRemainder = 0;
         if (savedUnit != CrucibleFluidUnits.STORAGE_UNIT && materialAmount >= 0) {
             CrucibleFluidUnits.Quantity migrated = CrucibleFluidUnits.migrateStoredQuantity(

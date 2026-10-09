@@ -48,6 +48,26 @@ class CrucibleMoldTransferTest {
     }
 
     @Test
+    void moldMeltsDownAboveContentsBoilingPointOrMoldLimitLikeGt6() {
+        assertFalse(MetaTileEntityMold.shouldMeltDown(2022, 3000, 2022));
+        assertTrue(MetaTileEntityMold.shouldMeltDown(2023, 3000, 2022));
+        assertFalse(MetaTileEntityMold.shouldMeltDown(5000, 6000, Long.MAX_VALUE));
+        assertTrue(MetaTileEntityMold.shouldMeltDown(6001, 6000, Long.MAX_VALUE));
+        assertTrue(MetaTileEntityMold.shouldMeltDown(3001, 3000, 4000));
+    }
+
+    @Test
+    void moldAmbientAndPassiveCoolingMatchGt6PerTickContract() {
+        assertEquals(286, MetaTileEntityMold.environmentTemperature(0.8F));
+        assertEquals(310, MetaTileEntityMold.environmentTemperature(2.0F));
+        assertEquals(1, MetaTileEntityMold.environmentTemperature(-20.0F));
+        assertEquals(595, MetaTileEntityMold.moveTemperatureTowardAmbient(600, 286));
+        assertEquals(286, MetaTileEntityMold.moveTemperatureTowardAmbient(288, 286));
+        assertEquals(285, MetaTileEntityMold.moveTemperatureTowardAmbient(280, 286));
+        assertEquals(300, MetaTileEntityMold.moveTemperatureTowardAmbient(300, 300));
+    }
+
+    @Test
     void receiverSeesWholeAvailableAmountAndChoosesItsActualDemand() {
         long[] received = {0, 0};
         long filled = CrucibleTransferLogic.transferToMold(1000, amount -> {

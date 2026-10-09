@@ -1,0 +1,1088 @@
+# MT_SHA256=CF5BD26C6D6E0D4F4078950C7E74DB3182DFF613A46F720DDE72BA535515DE1A
+# OreDictMaterial_SHA256=768707D5EEEB6B60F0C5D0A24B39AB50F6F173A29A40F0FA3365308CF0688371
+# OreDictConfigurationComponent_SHA256=4107C41DF6B00726D4D2B2751175408B59B883E538301065991B38F7D793E1D1
+# CS_SHA256=407EDCE9F541BCF34B6573D59E4AE14E477FB9C145439DEDDB831E2A2E2887A5
+10|Hydrogen|380|0
+11|Deuterium|381|0
+12|Tritium|382|0
+20|Helium|383|0
+21|Helium-3|384|0
+30|Lithium|385|8
+31|Lithium-6|386|8
+40|Beryllium|387|8
+41|Beryllium-7|388|8
+42|Beryllium-8|389|8
+50|Boron|390|8
+51|Boron-11|391|8
+60|Carbon|392|9
+61|Carbon-13|393|9
+62|Carbon-14|394|9
+70|Nitrogen|395|0
+80|Oxygen|396|0
+90|Fluorine|397|0
+100|Neon|398|0
+110|Sodium|399|8
+120|Magnesium|400|9
+130|Aluminium|401|8
+140|Silicon|402|8
+150|Phosphor|403|3
+160|Sulfur|404|9
+170|Chlorine|405|0
+180|Argon|406|0
+190|Potassium|407|8
+200|Calcium|408|8
+210|Scandium|409|8
+220|Titanium|410|8
+230|Vanadium|411|8
+240|Chromium|412|8
+250|Manganese|413|8
+260|Iron|414|8
+270|Cobalt|415|8
+278|Cobalt-60|416|8
+280|Nickel|417|8
+290|Copper|418|8
+300|Zinc|419|8
+310|Gallium|420|8
+320|Germanium|421|8
+330|Arsenic|422|8
+340|Selenium|423|0
+350|Bromine|424|8
+360|Krypton|425|0
+370|Rubidium|426|8
+380|Strontium|427|8
+390|Yttrium|428|8
+400|Zirconium|429|8
+410|Niobium|430|8
+420|Molybdenum|431|8
+430|Technetium|432|8
+440|Ruthenium|433|8
+450|Rhodium|434|8
+460|Palladium|435|8
+470|Silver|436|8
+480|Cadmium|437|8
+490|Indium|438|8
+500|Tin|439|8
+510|Antimony|440|8
+520|Tellurium|441|8
+530|Iodine|442|0
+540|Xenon|443|0
+550|Caesium|444|8
+560|Barium|445|8
+570|Lanthanium|446|8
+580|Cerium|447|8
+590|Praseodymium|448|8
+600|Neodymium|449|8
+610|Promethium|450|8
+620|Samarium|451|8
+630|Europium|452|8
+640|Gadolinium|453|8
+650|Terbium|454|8
+660|Dysprosium|455|8
+670|Holmium|456|8
+680|Erbium|457|8
+690|Thulium|458|8
+700|Ytterbium|459|8
+710|Lutetium|460|8
+720|Hafnium|461|11
+730|Tantalum|462|8
+740|Tungsten|463|12
+750|Rhenium|464|8
+760|OsmiumElemental|465|8
+770|Iridium|466|8
+780|Platinum|467|8
+790|Gold|468|8
+791|Gold-198|469|8
+800|Mercury|470|8
+810|Thallium|471|8
+820|Lead|472|8
+830|Bismuth|473|8
+840|Polonium|474|8
+850|Astatine|475|8
+860|Radon|476|0
+870|Francium|477|8
+880|Radium|478|8
+890|Actinium|479|8
+900|Thorium|480|8
+910|Protactinium|481|8
+920|Uranium|482|8
+921|Uranium-235|483|8
+922|Uranium-233|484|8
+930|Neptunium|485|8
+940|Plutonium|486|8
+942|Plutonium-240|487|8
+943|Plutonium-241|488|8
+945|Plutonium-243|489|8
+946|Plutonium-238|490|8
+947|Plutonium-239|491|8
+950|Americium|492|8
+951|Americium-241|493|8
+952|Americium-242|494|8
+960|Curium|495|8
+970|Berkelium|496|8
+980|Californium|497|8
+990|Einsteinium|498|8
+1000|Fermium|499|8
+1010|Mendelevium|500|8
+1020|Nobelium|501|8
+1030|Lawrencium|502|8
+1040|Rutherfordium|503|8
+1050|Dubnium|504|8
+1060|Seaborgium|505|8
+1070|Bohrium|506|8
+1080|Hassium|507|8
+1090|Meitnerium|508|0
+1100|Darmstadtium|509|0
+1110|Roentgenium|510|0
+1120|Copernicium|511|8
+1130|Nihonium|512|0
+1140|Flerovium|513|8
+1148|Flerovium-298|514|8
+1150|Moscovium|515|0
+1160|Livermorium|516|0
+1170|Farnsium|517|0
+1180|Oganesson|518|0
+1190|Ununennium|519|0
+1200|Unbinilium|520|0
+1|Photon|531|0
+2|Neutrino|532|0
+3|Neutron|533|0
+4|Proton|534|0
+5|Electron|535|0
+4000|Magic|539|4
+1250|TritaniumElemental|695|8
+1260|Trinium|696|8
+1450|DuraniumElemental|715|8
+1520|Vibranium|722|4
+1740|Naquadah|744|8
+1741|Naquadah-Enriched|745|10
+1742|Naquadria|746|10
+1850|Abyssalnite|757|8
+1860|Coralium|758|8
+1870|Dreadium|759|8
+1880|Ethaxium|760|8
+2210|Atlarus|793|8
+2220|Adamantium|794|12
+2390|Mac-Guffium|811|0
+3720|Gravitonium|944|0
+8250|Black|989|0
+8251|Red|990|0
+8252|Green|991|0
+8253|Brown|992|0
+8254|Blue|993|0
+8255|Purple|994|0
+8256|Cyan|995|0
+8257|Light Gray|996|0
+8258|Gray|997|0
+8259|Pink|998|0
+8260|Lime|999|0
+8261|Yellow|1000|0
+8262|Light Blue|1001|0
+8263|Magenta|1002|0
+8264|Orange|1003|0
+8265|White|1004|0
+9800|Water|1007|8
+9811|Semiheavy Water|1008|8
+9812|Heavy Water|1009|8
+9813|Tritiated Water|1010|8
+9814|Steam|1011|0
+9801|Snow|1012|8
+9802|Ice|1013|8
+9803|Fresh Water|1014|0
+9805|Holy Water|1015|0
+9806|Sea Water|1016|0
+9807|WaterDirty|1017|0
+9808|WaterDistilled|1018|8
+9809|Hydrogen Peroxide|1019|0
+9826|Hydrochloric Acid|1020|16
+9829|Hydrogen Fluoride|1021|16
+9839|Helium-Neon|1024|0
+9830|Air|1027|0
+9837|Nitrogen Monoxide|1028|0
+9831|Nitrogen Dioxide|1029|0
+8025|Ammonia|1030|16
+9825|Nitric Acid|1031|16
+9838|Carbon Monoxide|1034|0
+9836|Carbon Dioxide|1035|0
+9843|Carbon Trioxide|1036|16
+9832|Methane|1037|1
+9703|Sugar|1038|9
+9787|Vanilla|1039|0
+9828|Glycerol|1040|1
+9821|Glyceryl|1041|3
+9834|Sulfur Dioxide|1044|0
+9835|Sulfur Trioxide|1045|0
+8024|Hydrosulfuric Acid|1046|17
+9824|Sulfuric Acid|1047|16
+9844|Disulfuric Acid|1048|16
+8243|Silver Iodide|1051|0
+8011|Hexafluorosilicic Acid|1054|16
+8003|Carborundum|1055|8
+8000|Silicon Dioxide|1056|0
+8001|Glass|1057|8
+8002|Flint|1058|8
+8007|Hydrogen Borate|1061|0
+8006|Datolite|1062|0
+8234|Vanadium Pentoxide|1065|8
+8461|Niobium Pentoxide|1068|0
+8462|Tantalum Pentoxide|1071|0
+8207|Phosphate|1074|3
+8026|Tungsten Trioxide|1077|8
+8027|Tungstic Acid|1078|24
+8008|Alumina|1081|8
+8010|Aluminium Fluoride|1082|24
+8014|Aluminium Hydroxide|1083|8
+9192|Rutile|1086|8
+8413|Titanium Tetrachloride|1087|16
+9126|Pyrolusite|1090|8
+8031|Manganese Chloride|1091|8
+9104|Hematite|1094|8
+8030|Ferrous Chloride|1095|8
+8017|Ferric Chloride|1096|8
+8035|Ferric Oxyhydroxide|1097|8
+8018|Magnesium Chloride|1100|8
+8016|Magnesium Carbonate|1101|8
+8028|Calcium Chloride|1104|8
+8274|Calcium Sulfate|1105|0
+9161|Gypsum|1106|0
+9271|Quicklime|1107|0
+9107|Calcite|1108|8
+9215|Fluorite|1109|24
+8436|Red Fluorite|1110|24
+8437|Pink Fluorite|1111|24
+8438|Blue Fluorite|1112|24
+8439|Green Fluorite|1113|24
+8440|Black Fluorite|1114|24
+8441|White Fluorite|1115|24
+8442|Yellow Fluorite|1116|24
+8443|Orange Fluorite|1117|24
+8444|Magenta Fluorite|1118|24
+8029|Lithium Chloride|1121|8
+8033|Lithium Chlorate|1122|8
+8034|Lithium Perchlorate|1123|8
+8004|Lithium Oxide|1124|0
+8005|Ferrite|1125|8
+8032|Lithium Hydroxide|1126|0
+8204|Salt|1129|0
+8019|Sodium Nitrate|1130|1
+8268|Sodium Hydroxide|1131|0
+8039|Sodium Hydrogencarbonate|1132|0
+8230|Sodium Bisulfate|1133|0
+9822|Sodium Persulfate|1134|0
+9823|Sodium Sulfide|1135|0
+8269|Sodium Sulfite|1136|0
+8270|Sodium Sulfate|1137|0
+8231|Sodium Pyrosulfate|1138|0
+8013|Sodium Carbonate|1139|8
+8012|Sodium Aluminate|1140|0
+8037|Sodium Fluoride|1141|0
+8009|Cryolite|1142|24
+9804|Saltwater|1143|0
+8242|Iodine Salt|1146|0
+8203|Sylvite|1147|0
+8205|Potassium Nitrate|1148|1
+8015|Potassium Hydroxide|1149|0
+8232|Potassium Bisulfate|1150|0
+8022|Potassium Persulfate|1151|0
+8272|Potassium Sulfide|1152|0
+8021|Potassium Sulfite|1153|0
+8271|Potassium Sulfate|1154|0
+8233|Potassium Pyrosulfate|1155|0
+8020|Potassium Carbonate|1156|8
+8023|Potassium Aluminate|1157|0
+8036|Potassium Fluoride|1158|0
+8038|Potassium Heptafluorotantalate|1159|0
+9815|Salted Water|1160|0
+8400|Chloroauric Acid|1163|16
+8401|Chloroplatinic Acid|1164|16
+8402|Stannic Chloride|1165|16
+8403|Black Vitriol|1168|16
+8404|Blue Vitriol|1169|16
+8405|Green Vitriol|1170|16
+8406|Red Vitriol|1171|16
+8407|Pink Vitriol|1172|16
+8408|Cyan Vitriol|1173|16
+8409|White Vitriol|1174|16
+8410|Gray Vitriol|1175|16
+8411|Martian Vitriol|1176|16
+8412|Vitriol Of Clay|1177|16
+9007|Uranium Tetrafluoride|1180|8
+9008|Uranium Hexafluoride|1181|0
+9009|Uranium-238 Tetrafluoride|1182|8
+9010|Uranium-238 Hexafluoride|1183|0
+9011|Uranium-235 Tetrafluoride|1184|8
+9012|Uranium-235 Hexafluoride|1185|0
+9827|Aqua Regia|1188|16
+8229|Cobalt Hexahydrate|1189|0
+9833|Methane Ice|1190|1
+9820|Nitro Carbon|1191|3
+9810|Lava|1194|8
+9840|Biomass|1195|1
+9841|Bio Fuel|1196|1
+9842|Ethanol|1197|1
+9850|Oil|1198|1
+9851|Oil Sand|1199|0
+9852|Crude Oil|1200|0
+9860|Fuel|1201|3
+9861|Nitro-Fuel|1202|3
+9862|Kerosine|1203|3
+9863|Diesel|1204|3
+9864|Petrol|1205|3
+9865|Propane|1206|0
+9866|Butane|1207|0
+9867|Propylene|1208|0
+9868|Ethylene|1209|0
+9870|Creosote|1210|1
+9871|Fish Oil|1211|1
+9887|Whale Oil|1212|1
+9872|Seed Oil|1213|1
+9873|Hemp Oil|1214|1
+9874|Lin Oil|1215|1
+9875|Sunflower Oil|1216|1
+9876|Nut Oil|1217|1
+9877|Olive Oil|1218|1
+9880|FryingOilHot|1219|1
+9881|Glue|1220|1
+9882|Lubricant|1221|0
+9883|Construction Foam|1222|8
+9884|UU-Amplifier|1223|0
+9885|UU-Matter|1224|0
+9886|Latex|1225|0
+8200|Ashes|1228|0
+8201|Dark Ashes|1229|0
+8202|Volcanic Ashes|1230|0
+9112|Chalk|1233|8
+9163|Dolomite|1234|8
+9103|Asbestos|1235|8
+9169|Talc|1236|0
+9125|Pyrite|1237|0
+9140|Potassium Feldspar|1238|0
+9141|Biotite|1239|0
+9183|Emery|1240|0
+8275|Bark|1243|9
+8221|Wood|1244|9
+8222|WoodTreated|1245|1
+8267|WoodPolished|1246|1
+8224|WoodRubber|1247|9
+8418|Bamboo|1248|9
+8291|Skyroot|1249|9
+8286|Weedwood|1250|9
+8289|Livingwood|1251|9
+8290|Dreamwood|1252|9
+8414|Shimmerwood|1253|9
+8296|Greatwood|1254|9
+8297|Silverwood|1255|1
+8227|Peanut Wood|1256|1
+9715|Marshmallow|1257|0
+8223|LiveRoot|1258|0
+8277|Petrified Wood|1259|1
+8235|Wax|1262|8
+8236|WaxBee|1263|8
+8237|WaxRefractory|1264|12
+8238|WaxParaffin|1265|8
+8239|WaxPlant|1266|8
+8240|WaxMagic|1267|8
+8280|WaxAmnesic|1268|8
+8281|WaxSoulful|1269|8
+8247|Basalz|1272|0
+8248|Blitz|1273|0
+8210|Blizz|1274|0
+8211|Blaze|1275|12
+8471|Breeze|1276|0
+8225|Ceramic|1279|0
+9243|Clay Brick|1280|0
+8215|Clay|1281|8
+8276|ClayBrown|1282|8
+8455|ClayRed|1283|8
+9153|Bentonite|1284|8
+9154|Palygorskite|1285|8
+9167|Kaolinite|1286|8
+8273|Porcelain|1289|0
+9174|Graphite|1292|8
+8206|Niter|1293|1
+8208|Phosphorus|1294|3
+8458|Blue Phosphorus|1295|3
+8459|Red Phosphorus|1296|3
+8460|White Phosphorus|1297|3
+8209|Apatite|1298|1
+8226|Phosphorite|1299|1
+8216|Paper|1300|0
+8217|Rubber|1301|9
+8218|Plastic|1302|9
+8196|Teflon|1303|9
+8197|PVC|1304|9
+8198|Bakelite|1305|9
+8199|Hard Plastic|1306|9
+8219|Bone|1307|0
+8287|Slimy Bone|1308|0
+8220|Gunpowder|1309|3
+8249|Dynamite|1310|3
+8266|Asphalt|1311|8
+8244|Tallow|1312|8
+8241|Leather|1313|9
+8228|Indigo|1314|1
+9701|MeatCooked|1317|8
+9700|MeatRaw|1318|8
+9710|MeatRotten|1319|8
+9711|FishCooked|1320|8
+9712|FishRaw|1321|8
+9713|FishRotten|1322|8
+9702|Wheat|1323|1
+9704|Barley|1324|1
+9705|Rye|1325|1
+9706|Rice|1326|1
+9707|Oat|1327|1
+9719|Abyssal Oat|1328|1
+9708|Corn|1329|1
+9709|Potato|1330|0
+9778|Tofu|1331|8
+9779|Soylent Green|1332|8
+9780|Cheese|1333|8
+9781|Chili|1334|0
+9782|Cocoa|1335|0
+9783|Chocolate|1336|8
+9784|Coffee|1337|0
+9785|Cinnamon|1338|0
+9786|Nutmeg|1339|0
+9795|Peanut|1340|0
+9796|Hazelnut|1341|0
+9797|Pistachio|1342|0
+9714|Almond|1343|0
+9716|PEZ|1344|0
+9717|Licorice|1345|0
+9718|Nougat|1346|0
+9788|PepperBlack|1347|0
+9789|Curry|1348|0
+9790|Milk|1349|0
+9798|Butter|1350|8
+9799|Salted Butter|1351|8
+9791|Honey|1352|0
+9793|Honeydew|1353|0
+9792|Tea|1354|0
+9794|Mint|1355|0
+8300|Diamond|1358|8
+8464|Blue Diamond|1359|8
+8465|Green Diamond|1360|8
+8466|Purple Diamond|1361|8
+8467|Red Diamond|1362|8
+8468|Yellow Diamond|1363|8
+8424|Pink Diamond|1364|8
+8423|DiamondIndustrial|1365|8
+8278|Mana Diamond|1366|12
+8279|Elven Dragonstone|1367|12
+8294|Gravitite|1368|8
+8301|Emerald|1371|8
+8323|Aquamarine|1372|8
+8324|Morganite|1373|8
+8384|Heliodor|1374|8
+8385|Goshenite|1375|8
+8386|Bixbite|1376|8
+8387|Maxixe|1377|8
+8304|Sapphire|1380|8
+8302|Ruby|1381|8
+8328|Blue Sapphire|1382|8
+8305|Green Sapphire|1383|8
+8383|Purple Sapphire|1384|8
+8315|Yellow Sapphire|1385|8
+8314|Orange Sapphire|1386|8
+8326|Spinel|1389|0
+8303|Balas Ruby|1390|0
+9101|Almandine|1393|0
+9119|Grossular|1394|0
+9127|Pyrope|1395|0
+9129|Spessartine|1396|0
+9102|Andradite|1397|0
+9135|Uvarovite|1398|0
+8309|Red Jasper|1401|0
+8425|Ocean Jasper|1402|0
+8426|Rainforest Jasper|1403|0
+8427|Blue Jasper|1404|0
+8428|Green Jasper|1405|0
+8429|Yellow Jasper|1406|0
+8430|Tiger Eye|1409|0
+8431|Cat's Eye|1410|0
+8432|Dragon Eye|1411|0
+8433|Hawk's Eye|1412|0
+8434|Black Eye|1413|0
+8435|Tiger Iron|1414|0
+8448|Green Aventurine|1417|0
+8446|Brown Aventurine|1418|0
+8447|Yellow Aventurine|1419|0
+8449|Black Aventurine|1420|0
+8450|Blue Aventurine|1421|0
+8451|Red Aventurine|1422|0
+8306|Topaz|1425|0
+8307|Blue Topaz|1426|0
+8308|Tanzanite|1427|0
+8292|Zanite|1428|0
+8417|Amazonite|1429|0
+8388|Alexandrite|1430|0
+8312|Opal|1431|0
+8415|OnyxRed|1432|0
+8416|OnyxBlack|1433|0
+8463|Sugilite|1434|0
+8311|Peridot|1435|0
+8313|Amethyst|1436|0
+8325|Dioptase|1437|0
+8470|Carminite|1438|0
+8310|Amber|1439|0
+8469|Golden Amber|1440|0
+8422|Dominican Amber|1441|0
+8322|Craponite|1442|0
+8321|Jade|1443|0
+8316|Vinteum|1478|4
+8327|VinteumPurified|1479|4
+8367|Arcane Ashes|1480|0
+8366|Arcane Compound|1481|8
+8452|Moonstone|1482|0
+8453|Sunstone|1483|0
+8454|Chimerite|1484|0
+8282|Crimson Middle|1487|0
+8283|Green Middle|1488|0
+8284|Aqua Middle|1489|0
+8285|Valonite|1490|0
+8288|Scabyst|1491|0
+8293|Ambrosium|1494|0
+8295|Continuum|1495|0
+8329|AmethystEnder|1498|0
+8318|EnderPearl|1499|8
+8319|EnderEye|1500|8
+8320|Nether Star|1501|12
+8391|Frezarite|1504|0
+8392|Red Meteor|1505|4
+8317|Dilithium|1508|0
+8419|Zircon|1511|8
+8420|Azurite|1512|8
+8421|Eudialyte|1513|0
+8330|Lazurite|1516|0
+8331|Sodalite|1517|0
+8332|Lapis|1518|0
+8336|Charcoal|1521|9
+8334|Coal|1522|9
+8349|Coal Coke|1523|9
+8362|Anthracite|1524|9
+8363|Prismane|1525|1
+8364|Lonsdaleite|1526|1
+8337|Lignite|1527|1
+8365|Lignite Coke|1528|1
+8390|Petroleum Coke|1529|1
+8360|Peat|1530|1
+8361|PeatBituminous|1531|1
+8335|Hydrated Coal|1534|0
+9175|Graphene|1535|8
+8373|Ectoplasm|1536|0
+8342|Firestone|1537|4
+8333|Redstone|1540|8
+8340|Nikolite|1541|8
+8341|Glowstone|1544|8
+8368|GlowstoneCeres|1545|8
+8369|GlowstoneIo|1546|8
+8370|GlowstoneEnceladus|1547|8
+8371|GlowstoneProteus|1548|8
+8372|GlowstonePluto|1549|8
+8456|Gloomstone|1550|8
+8445|Milky Quartz|1553|8
+8346|Nether Quartz|1554|8
+8457|Void Quartz|1555|8
+8393|Sunny Quartz|1556|8
+8394|Lavender Quartz|1557|8
+8395|Red Quartz|1558|8
+8396|Blaze Quartz|1559|8
+8397|Smokey Quartz|1560|8
+8398|Mana Quartz|1561|8
+8399|Elven Quartz|1562|8
+8374|QuartzBlack|1563|8
+8347|Certus Quartz|1564|8
+8348|Charged Certus Quartz|1565|8
+8389|Fluix|1566|8
+8375|Redstonia|1569|0
+8376|Palis|1570|0
+8377|Diamantine|1571|0
+8378|VoidCrystal|1572|0
+8379|Emeradic|1573|0
+8380|Enori|1574|0
+8381|Dark Matter|1577|4
+8382|Red Matter|1578|4
+8298|EnergiumRed|1581|0
+8299|EnergiumCyan|1582|0
+8350|Infused Dull|1585|4
+8351|Infused Vis|1586|4
+8352|Infused Air|1587|4
+8353|Infused Fire|1588|4
+8354|Infused Earth|1589|4
+8355|Infused Water|1590|4
+8356|Infused Entropy|1591|4
+8357|Infused Order|1592|4
+8358|Infused Balance|1593|4
+8100|Sand|1618|8
+8104|Red Sand|1619|8
+8105|White End Sand|1620|8
+8106|Black End Sand|1621|8
+8101|Soulsand|1622|0
+8102|Sluice Sand|1623|0
+8103|Platinum Group Sludge|1624|0
+9100|Rare Earth|1625|0
+8338|Monazite|1626|0
+8343|Force|1627|4
+8344|Forcicium|1628|0
+8345|Forcillium|1629|0
+8500|Stone|1631|0
+8501|Concrete|1632|8
+8502|Netherrack|1633|9
+8503|Nether Brick|1634|4
+8504|Endstone|1635|0
+8214|Obsidian|1636|12
+8599|Bedrock|1637|12
+9219|Prismarine|1639|0
+9220|PrismarineDark|1640|0
+9172|Greenstone|1642|0
+9185|Bluestone|1643|0
+9182|Epidote|1644|0
+9853|Oil Shale|1646|1
+8245|Petrotheum|1649|8
+8246|Aerotheum|1650|8
+8212|Pyrotheum|1651|8
+8213|Cryotheum|1652|8
+8643|Wrought Iron|1655|8
+8640|Annealed Copper|1656|8
+8760|Alduorite|1659|8
+8761|Infuscolium|1660|8
+8762|Rubracium|1661|8
+8763|Meutoite|1662|8
+8764|Lemurite|1663|8
+8701|Aredrite|1664|8
+8765|Ceruclase|1665|8
+8767|Oureclase|1666|8
+8768|Kalendrite|1667|8
+8770|Carmot|1668|8
+8771|Sanguinite|1669|8
+8772|Vyroxeres|1670|8
+8773|Eximite|1671|8
+8775|Ignatius|1672|8
+8641|Deep Iron|1673|8
+8670|Shadow Iron|1674|8
+8784|Adamantine|1675|8
+8774|Prometheum|1676|8
+8776|Vulcanite|1677|8
+8769|Orichalcum|1678|8
+8676|Astral Silver|1679|8
+8677|Midasium|1680|8
+8678|Mithril|1681|8
+8779|Celenegil|1682|8
+8671|Shadow Steel|1683|8
+8777|Inolashite|1684|8
+8778|Haderoth|1685|8
+8781|Desichalkos|1686|8
+8782|Tartarite|1687|8
+8783|Amordrine|1688|8
+8600|Electrum|1691|8
+8601|Sterling Silver|1692|8
+8602|Rose Gold|1693|8
+8603|Angmallen|1694|8
+8604|GoldInductive|1695|8
+8605|Cd-In-Ag-Alloy|1696|8
+8606|Gilded Iron|1697|8
+8620|Brass|1700|8
+8621|Cobalt Brass|1701|8
+8622|Aluminium Alloy|1702|8
+8610|Bronze|1705|8
+8611|Black Bronze|1706|8
+8612|Bismuth Bronze|1707|8
+8613|Hepatizon|1708|8
+8614|Arsenic Copper|1709|8
+8615|Arsenic Bronze|1710|8
+8630|Steel|1713|8
+8631|Black Steel|1714|8
+8632|Blue Steel|1715|8
+8633|Red Steel|1716|8
+8634|Damascus Steel|1717|8
+8653|VanadiumSteel|1718|8
+8635|Tungstensteel|1719|12
+8638|Tungsten Carbide|1720|12
+8637|HSLA-Steel|1721|8
+8639|HSLA-Spring-Steel|1722|8
+8766|HSLA-Tungsten-Alloy|1723|8
+8642|Pig Iron|1724|8
+8644|IronCompressed|1725|8
+8803|Cast Iron|1726|8
+8645|IronMagnetic|1727|8
+8646|SteelMagnetic|1728|8
+8647|NeodymiumMagnetic|1729|8
+8648|Dark Iron|1730|8
+8651|SteelGalvanized|1731|8
+8652|TungstenSintered|1732|12
+8654|Titanium-Gold|1733|8
+8802|Tantalum Hafnium Carbide|1734|12
+8649|Meteoric Iron|1737|8
+8650|Meteoric Steel|1738|8
+8690|Meteoric Black Steel|1739|8
+8691|Meteoric Blue Steel|1740|8
+8692|Meteoric Red Steel|1741|8
+8660|Red Alloy|1744|8
+8659|Blue Alloy|1745|8
+8657|Purple Alloy|1746|8
+8804|Mingrade|1747|8
+8733|Redstone Alloy|1748|8
+8737|Nikoline Alloy|1749|8
+8658|Electrotine Alloy|1750|8
+8711|Electrum Flux|1751|8
+8727|Conductive Iron|1752|8
+8808|Energetic Silver|1753|8
+8661|Invar|1754|8
+8662|Constantan|1755|8
+8663|Nichrome|1756|8
+8664|Kanthal|1757|8
+8665|Magnalium|1758|8
+8636|Stainless Steel|1759|8
+8666|Ultimet|1760|8
+8667|Tin Alloy|1761|8
+8668|Battery Alloy|1762|8
+8669|Soldering Alloy|1763|8
+8672|Ironwood|1764|8
+8673|Steeleaf|1765|8
+8674|Knightmetal|1766|8
+8675|Fiery Steel|1767|12
+8698|Fireleaf|1768|12
+8693|Meteoflame Steel|1769|12
+8694|Meteoflame Black Steel|1770|12
+8695|Meteoflame Blue Steel|1771|12
+8696|Meteoflame Red Steel|1772|12
+8697|Flamascus Steel|1773|12
+8679|Thaumium|1774|8
+8680|Dark Thaumium|1775|8
+8681|Void Metal|1776|8
+8682|Osmiridium|1777|8
+8683|Sunnarium|1778|8
+8685|Chromium Dioxide|1779|8
+8686|Vanadium-Gallium|1780|8
+8687|Yttrium-Barium-Cuprate|1781|8
+8688|Niobium Nitride|1782|8
+8689|Niobium Titanium|1783|8
+8700|Aluminium Brass|1784|8
+8707|Ardite|1785|8
+8702|Alumite|1786|8
+8703|Manyullyn|1787|8
+8704|Vibranium Steel|1788|12
+8705|Vibranium Silver|1789|12
+8706|Vibramantium|1790|12
+8708|Signalum|1791|8
+8709|Lumium|1792|8
+8729|Enderium Base|1793|8
+8710|Enderium|1794|8
+8713|GlowstoneRefined|1796|8
+8714|ObsidianRefined|1797|8
+8715|Yellorium|1798|8
+8716|Blutonium|1799|8
+8717|Cyanite|1800|8
+8723|Ludicrite|1801|8
+8724|Yellorite|1802|8
+8718|Bedrock-HSLA-Alloy|1803|8
+8731|Obsidian Steel|1805|12
+8725|Pulsating Iron|1806|8
+8728|Energetic Alloy|1807|8
+8726|Vibrant Alloy|1808|8
+8730|Electrical Steel|1809|8
+8732|Soularium|1810|8
+8806|Clay Compound|1811|8
+8807|End Steel|1812|8
+8809|Melodic Alloy|1813|8
+8810|Stellar Alloy|1814|8
+8811|Vivid Alloy|1815|8
+8812|Crystalline Alloy|1816|8
+8813|Crystalline Pink Slime|1817|8
+8734|Spectre Iron|1819|8
+8720|Manasteel|1820|8
+8721|Terrasteel|1821|12
+8722|Elven Elementium|1822|12
+8735|Gaia Spirit|1823|12
+8736|Endium|1824|8
+8739|Mauftrium|1825|8
+8740|Elvorium|1826|8
+8741|Niflheim Power|1827|12
+8742|Muspelheim Power|1828|12
+8743|Iffesal|1829|0
+8744|Ancient Debris|1832|12
+8745|Netherite|1833|8
+8746|Netherized Diamond|1834|12
+8747|Efrine|1835|8
+8750|Desh|1838|8
+8780|Workers Alloy|1839|8
+8751|Duranium|1840|8
+8752|Tritanium|1841|8
+8753|Dolamide|1842|0
+8754|Oriharukon|1843|8
+8755|Adamantite|1844|8
+8756|Duralumin|1845|8
+8757|Meteorite|1846|8
+8758|Frozen Iron|1847|8
+8759|Kreknorite|1848|8
+8785|Syrmorite|1849|8
+8786|Octine|1850|12
+8796|HSS-G|1853|12
+8797|HSS-E|1854|12
+8798|HSS-S|1855|12
+8795|Bedrockium|1858|12
+8791|Draconium|1861|8
+8792|DraconiumAwakened|1862|8
+8799|Crystal Matrix|1865|12
+8800|Cosmic Neutronium|1866|12
+8801|Infinity|1867|12
+8805|Unstable|1868|8
+8684|Trinaquadalloy|1871|8
+8790|Trinitanium|1872|8
+8793|Titanium Iridium|1875|8
+8794|Titanium Aluminide|1876|8
+9108|Cassiterite|3700|8
+9118|Garnierite|3701|8
+9134|Uraninite|3702|8
+9122|Magnetite|3703|8
+9003|Basaltic Mineral Sand|3704|8
+9004|Granitic Mineral Sand|3705|8
+9109|Realgar|3707|8
+9114|Cinnabar|3708|8
+9123|Molybdenite|3709|8
+9130|Sphalerite|3710|8
+9131|Stibnite|3711|8
+9145|Pentlandite|3712|8
+9111|Chalcopyrite|3713|8
+9216|Arsenopyrite|3714|8
+9115|Cobaltite|3715|8
+9117|Galena|3716|8
+9116|Cooperite|3717|8
+9132|Tetrahedrite|3718|8
+9213|Kesterite|3719|8
+9214|Stannite|3720|8
+9160|Barite|3721|8
+9110|Celestine|3722|8
+9128|Scheelite|3724|0
+9217|Wolframite|3725|0
+9194|Ferberite|3726|0
+9195|Huebnerite|3727|0
+9133|Tungstate|3728|0
+9193|Stolzite|3730|8
+9196|Russellite|3731|8
+9197|Pinalite|3732|8
+9164|Wollastonite|3734|0
+9165|Zeolite|3736|0
+9147|Pollucite|3737|0
+9106|Brown Limonite|3739|8
+9137|Yellow Limonite|3740|8
+9143|Vanadium Magnetite|3742|8
+9148|Tantalite|3743|0
+9246|Columbite|3744|0
+9247|Coltan|3745|0
+9120|Ilmenite|3747|8
+9105|Bauxite|3748|0
+9113|Chromite|3749|8
+9124|Powellite|3750|8
+9136|Wulfenite|3751|8
+9144|Bastnasite|3752|8
+9155|Pitchblende|3753|8
+9156|Malachite|3754|8
+9210|Bromargyrite|3755|8
+9211|Smithsonite|3756|8
+9212|Sperrylite|3757|8
+9138|Perlite|3759|0
+9159|Trona|3760|0
+9157|Mirabilite|3761|0
+9221|Bischofite|3762|0
+9139|Borax|3764|0
+9001|Diatomite|3765|0
+9146|Spodumene|3767|0
+9149|Lepidolite|3768|0
+9150|Glauconite|3769|0
+9152|Vermiculite|3771|0
+9158|Mica|3772|0
+9166|Kyanite|3773|0
+9162|Alunite|3774|0
+9005|Garnet Sand|3776|0
+9006|Quartz Sand|3777|8
+9198|Diduranium Trioxide|3779|0
+9199|Duranium Hexafluoride|3780|0
+9200|Duranium Hexachloride|3781|0
+9201|Duranium Hexabromide|3782|0
+9202|Duranium Hexaiodide|3783|0
+9203|Duranium Hexaastatide|3784|0
+9204|Tritanium Dioxide|3785|0
+9205|Tritanium Hexafluoride|3786|0
+9206|Tritanium Hexachloride|3787|0
+9207|Tritanium Hexabromide|3788|0
+9208|Tritanium Hexaiodide|3789|0
+9209|Tritanium Hexaastatide|3790|0
+8512|Space Stone|3797|8
+8513|Moon Stone|3798|0
+8514|Moon Turf|3799|0
+8515|Mars Stone|3800|0
+8516|Mars Sand|3801|0
+8528|Sky Stone|3802|0
+8522|Holystone|3803|0
+8521|Livingrock|3804|0
+8523|Deadrock|3805|4
+8519|Betweenstone|3806|0
+8520|Pitstone|3807|0
+8524|Cragrock|3808|0
+8525|Templerock|3809|0
+8526|Mazestone|3810|0
+8527|Castlerock|3811|0
+8517|Umber|3812|0
+9190|Shale|3813|0
+8509|Redrock|3814|0
+9177|Komatiite|3815|4
+9000|Pumice|3816|4
+9176|Gabbro|3817|4
+8505|Basalt|3818|0
+8506|Marble|3819|8
+9189|Limestone|3820|8
+9171|Greenschist|3821|0
+9184|Blueschist|3822|0
+9244|Grayschist|3823|0
+9245|Pinkschist|3824|0
+9170|Gneiss|3825|0
+9218|Kimberlite|3826|0
+9180|Quartzite|3827|8
+8507|GraniteRed|3828|0
+8508|GraniteBlack|3829|0
+8518|Granite|3830|0
+9188|Andesite|3831|0
+8511|Diorite|3832|4
+9223|Blackstone|3833|0
+9173|Greywacke|3834|0
+9178|Siltstone|3835|0
+9179|Rhyolite|3836|0
+9181|Migmatite|3837|0
+9186|Chert|3838|0
+9187|Dacite|3839|0
+9222|Slate|3840|0
+9248|Deepslate|3841|0
+9191|Eclogite|3842|0
+9249|PhobosRock|3843|0
+9250|DeimosRock|3844|0
+9251|VenusRock|3845|0
+9252|MercuryRock|3846|0
+9253|CeresRock|3847|0
+9254|JupiterRock|3848|0
+9255|IoRock|3849|0
+9256|EuropaRock|3850|0
+9257|GanymedeRock|3851|0
+9258|CallistoRock|3852|0
+9259|SaturnRock|3853|0
+9260|RheaRock|3854|0
+9261|TitanRock|3855|0
+9262|OberonRock|3856|0
+9263|IapetusRock|3857|0
+9264|UranusRock|3858|0
+9265|TitaniaRock|3859|0
+9266|NeptuneRock|3860|0
+9267|TritonRock|3861|0
+9268|PlutoRock|3862|0
+9269|ErisRock|3863|0
+9270|Kepler22bRock|3864|0
+9300|Oak|3871|9
+9301|Birch|3872|9
+9302|Spruce|3873|9
+9303|Junglewood|3874|9
+9304|Acacia|3875|9
+9305|DarkOak|3876|9
+9306|Crimsonwood|3877|13
+9307|Warpedwood|3878|13
+9408|Foxfirewood|3879|13
+9308|WoodCompressed|3881|9
+9309|WoodDead|3882|9
+9310|WoodRotten|3883|9
+9311|WoodMossy|3884|9
+9312|WoodFrozen|3885|9
+9404|WoodScorched|3886|9
+9405|WoodVarnished|3887|9
+9407|WoodBleached|3888|9
+9406|WoodTainted|3889|9
+9313|Maple|3891|9
+9314|Willow|3892|9
+9315|BlueMahoe|3893|9
+9316|Hazel|3894|9
+9317|Cinnamonwood|3895|9
+9318|Coconutwood|3896|9
+9319|Rainbowood|3897|13
+9409|BlueSpruce|3898|9
+9320|Towerwood|3900|9
+9321|Witchwood|3901|9
+9322|Ogrewood|3902|9
+9323|Wyvernwood|3903|9
+9324|Aspen|3904|9
+9325|DouglasFir|3905|9
+9326|Sycamore|3906|9
+9327|WhiteCedar|3907|9
+9328|WhiteElm|3908|9
+9329|Thorntree|3909|9
+9330|SilverPine|3910|9
+9331|Alder|3911|9
+9332|Hawthorn|3912|9
+9333|Rowan|3913|9
+9356|Mahogany|3914|9
+9358|Palm|3915|9
+9334|Autumnwood|3917|9
+9336|Cypress|3918|9
+9337|Fir|3919|9
+9338|JapaneseMaple|3920|9
+9339|RainbowEucalyptus|3921|9
+9340|Redwood|3922|9
+9341|Sakura|3923|9
+9342|Balsa|3925|9
+9343|Baobab|3926|9
+9344|Cherrywood|3927|9
+9345|Chestnutwood|3928|9
+9346|Citruswood|3929|9
+9347|Cocobolowood|3930|9
+9348|Ebony|3931|9
+9349|Giganteumwood|3932|9
+9350|Greenheart|3933|9
+9351|Ipe|3934|9
+9352|Kapok|3935|9
+9353|Larch|3936|9
+9354|Limewood|3937|9
+9355|Mahoe|3938|9
+9357|Padauk|3939|9
+9359|Papayawood|3940|9
+9360|Plumwood|3941|9
+9361|Poplar|3942|9
+9362|Sequoia|3943|9
+9363|Teak|3944|9
+9364|Walnutwood|3945|9
+9365|Wenge|3946|9
+9366|Zebrawood|3947|9
+9335|Pine|3948|9
+9367|Darkwood|3950|9
+9368|Etherealwood|3951|9
+9369|Goldwood|3952|9
+9370|Hellbark|3953|9
+9371|Jacaranda|3954|9
+9372|Mangrove|3955|9
+9373|SacredOak|3956|9
+9374|Magicwood|3957|9
+9375|Applewood|3959|9
+9376|Ashwood|3960|9
+9377|Beech|3961|9
+9378|Boxwood|3962|9
+9379|Brazilwood|3963|9
+9380|Butternutwood|3964|9
+9381|Cedar|3965|9
+9382|Elderwood|3966|9
+9383|Elm|3967|9
+9384|Eucalyptus|3968|9
+9385|Figwood|3969|9
+9386|Gingko|3970|9
+9387|Hemlock|3971|9
+9388|Hickory|3972|9
+9389|Holly|3973|9
+9390|Hornbeam|3974|9
+9391|Iroko|3975|9
+9392|Locust|3976|9
+9393|Logwood|3977|9
+9394|Maclura|3978|9
+9395|Olivewood|3979|9
+9396|Pearwood|3980|9
+9397|PinkIvory|3981|9
+9398|Purpleheart|3982|9
+9399|Rosewood|3983|9
+9400|Sweetgum|3984|9
+9401|Syzgium|3985|9
+9402|Whitebeam|3986|9
+9403|Yew|3987|9

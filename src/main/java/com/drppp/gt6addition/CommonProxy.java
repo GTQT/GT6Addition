@@ -86,6 +86,7 @@ public class CommonProxy {
         GT6AdditionCovers.register();
         LiquidBurringInfo.init();
         GT6AdditionRecipeMaps.init();
+        com.drppp.gt6addition.common.recipes.AnthraciteProcessing.registerCokingRecipes();
         GT6AdditionMachineRecipes.init();
         GT6AdditionPotionRecipes.init();
     }

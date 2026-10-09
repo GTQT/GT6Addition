@@ -1,0 +1,23 @@
+# AM_SHA256=8F012B6BA27396BB799882B91EA4C46BB011F4FC1B6C150233F8078A4403BEEE
+AntiElectron|Positron
+Anti-Natrium|Anti-Sodium
+Anti-Aluminum|Anti-Aluminium
+Anti-Kalium|Anti-Potassium
+Anti-Titan|Anti-Titanium
+Anti-Chrome|Anti-Chromium
+Anti-Gregorium|Anti-Technetium
+Anti-Wolframium|Anti-Tungsten
+Anti-Wolfram|Anti-Tungsten
+Anti-Quicksilver|Anti-Mercury
+Anti-QuickSilver|Anti-Mercury
+Anti-Uranium238|Anti-Uranium
+Anti-Uran|Anti-Uranium
+Anti-Plutonium244|Anti-Plutonium
+Anti-Ununseptium|Anti-Farnsium
+Anti-Unpentbium|Anti-Vibranium
+Anti-Unseptquadium|Anti-Naquadah
+Anti-Adamantine|Anti-Adamantium
+Anti-Adamant|Anti-Adamantium
+Anti-Bibibium|Anti-Adamantium
+Anti-Bitriennium|Anti-Mac-Guffium
+Anti-Triseptbium|Anti-Gravitonium

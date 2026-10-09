@@ -1,6 +1,7 @@
 package com.drppp.gt6addition.smoketest;
 
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
+import com.drppp.gt6addition.common.metatileentity.single.hu.CrucibleComponentProvenance;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import com.mojang.authlib.GameProfile;
 import gregtech.api.GTValues;
@@ -90,6 +91,7 @@ final class CrucibleToolWorldSmoke {
         check(lithium != null, "No registered power unit recipe was exercised");
         test.electricToolLifecycle(lithium);
         test.higherBatteryManufacturing();
+        test.advancedBatteryManufacturing();
         test.ulvBatteryManufacturing();
         test.shapelessAndClearingRecipes();
         return test.cases;
@@ -203,6 +205,50 @@ final class CrucibleToolWorldSmoke {
                 }
             }
         }
+    }
+
+    private void advancedBatteryManufacturing() {
+        // Keep recognition tied to CEu's registered production routes. Some of
+        // these are multiblock recipes, so this smoke check verifies that every
+        // actual route enters provenance accounting without pretending to run
+        // an incomplete assembly-line structure.
+        assertTrackedBatteryRoutes(RecipeMaps.AUTOCLAVE_RECIPES, MetaItems.ENERGIUM_CRYSTAL.getStackForm());
+        assertTrackedBatteryRoutes(RecipeMaps.ASSEMBLER_RECIPES, MetaItems.LAPOTRON_CRYSTAL.getStackForm());
+        assertTrackedBatteryRoutes(RecipeMaps.CIRCUIT_ASSEMBLER_RECIPES, MetaItems.ENERGY_LAPOTRONIC_ORB.getStackForm());
+        assertTrackedBatteryRoutes(RecipeMaps.ASSEMBLY_LINE_RECIPES, MetaItems.ENERGY_LAPOTRONIC_ORB_CLUSTER.getStackForm());
+        assertTrackedBatteryRoutes(RecipeMaps.ASSEMBLY_LINE_RECIPES, MetaItems.ENERGY_MODULE.getStackForm());
+        assertTrackedBatteryRoutes(RecipeMaps.ASSEMBLY_LINE_RECIPES, MetaItems.ENERGY_CLUSTER.getStackForm());
+        assertTrackedBatteryRoutes(RecipeMaps.ASSEMBLY_LINE_RECIPES, MetaItems.QUANTUM_CORE.getStackForm());
+        assertTrackedBatteryRoutes(RecipeMaps.PACKER_RECIPES, MetaItems.SINGULARITY_CELL.getStackForm());
+        assertTrackedBatteryRoutes(RecipeMaps.PACKER_RECIPES, MetaItems.CHRONO_MATRIX.getStackForm());
+        assertTrackedBatteryRoutes(RecipeMaps.PACKER_RECIPES, MetaItems.TACHYON_REACTOR.getStackForm());
+        assertTrackedBatteryRoutes(RecipeMaps.PACKER_RECIPES, MetaItems.COSMIC_STRING.getStackForm());
+
+        // Exercise a complete, single-block native route end-to-end as well.
+        Recipe recipe = machineRecipe(RecipeMaps.ASSEMBLER_RECIPES, MetaItems.LAPOTRON_CRYSTAL.getStackForm());
+        check(CrucibleComponentProvenance.tracks(recipe), "Lapotron crystal assembler route was not tracked");
+        List<ItemStack> inputs = machineInputs(recipe);
+        List<FluidStack> fluids = machineFluids(recipe);
+        MetaTileEntity machine = nativeMachine(MetaTileEntities.ASSEMBLER[machineTier(recipe)]);
+        insertMachineInputs(machine, inputs, fluids);
+        AbstractRecipeLogic logic = recipeLogic(machine);
+        check(logic.prepareRecipe(recipe), "Native Lapotron crystal assembler recipe failed");
+        ItemStack output = finishMachine(machine, logic);
+        Map<String, Long> materials = machineMaterials(inputs, fluids, null);
+        checkAccount(output, materials);
+        recover(output, materials, "LAPOTRON_CRYSTAL_ASSEMBLER_PROVENANCE");
+    }
+
+    private void assertTrackedBatteryRoutes(RecipeMap<?> map, ItemStack battery) {
+        List<Recipe> routes = map.getRecipeList().stream()
+                .filter(recipe -> recipe.getOutputs().stream().anyMatch(output -> ItemStack.areItemsEqual(output, battery)))
+                .collect(java.util.stream.Collectors.toList());
+        check(!routes.isEmpty(), "No registered CEu manufacturing route for advanced battery " + battery);
+        for (Recipe recipe : routes) {
+            check(CrucibleComponentProvenance.tracks(recipe),
+                    "Registered advanced battery route bypasses component tracking: " + battery + " / " + recipe);
+        }
+        passed("ADVANCED_BATTERY_ROUTES_TRACKED_" + battery.getMetadata());
     }
 
     private void ulvBatteryManufacturing() {

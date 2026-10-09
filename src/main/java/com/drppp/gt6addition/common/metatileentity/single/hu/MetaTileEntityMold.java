@@ -44,6 +44,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.ArrayUtils;
@@ -79,7 +80,7 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
     private static final int SHAPE_CELL_COUNT = 25;
     private static final double INNER_START = 2.0D * PX;
     private static final double INNER_SIZE = 12.0D * PX;
-    private static final long ENVIRONMENT_TEMPERATURE = 300L;
+    private static final long ENVIRONMENT_TEMPERATURE = 293L;
     private static final long COOLING_STEP = 5L;
 
     /* GT6 passes 1-17 from MOLD_BOUNDS. Molten contents and the finished
@@ -146,22 +147,39 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
             return;
         }
 
-        if (contentMaterial == null && contentAmount <= 0L && output.isEmpty()) {
-            processAutoInput();
-        }
-        if (contentMaterial == null || contentAmount <= 0L) return;
-
         boolean changed = false;
         boolean solidified = false;
-        if (temperature > ENVIRONMENT_TEMPERATURE) {
-            temperature -= Math.min(COOLING_STEP, temperature - ENVIRONMENT_TEMPERATURE);
-            changed = true;
-        } else if (temperature < ENVIRONMENT_TEMPERATURE) {
-            temperature += Math.min(COOLING_STEP, ENVIRONMENT_TEMPERATURE - temperature);
+        long ambientTemperature = getAmbientTemperature();
+        long cooledTemperature = moveTemperatureTowardAmbient(temperature, ambientTemperature);
+        if (cooledTemperature != temperature) {
+            temperature = cooledTemperature;
             changed = true;
         }
 
-        if (temperature > maxTemperature) {
+        if ((contentMaterial == null || contentAmount <= 0L) && output.isEmpty()) {
+            if (temperature != ambientTemperature) {
+                temperature = ambientTemperature;
+                changed = true;
+            }
+            if (contentMaterial != null || contentAmount > 0L) {
+                contentMaterial = null;
+                contentAmount = 0L;
+                changed = true;
+            }
+            processAutoInput();
+        }
+        if (contentMaterial == null || contentAmount <= 0L) {
+            if (changed) {
+                markDirty();
+                if (getOffsetTimer() % 5 == 0) syncState();
+            }
+            return;
+        }
+
+        long boilingPoint = CrucibleMaterialPhaseData.boilingPoint(contentMaterial.getName());
+        if (shouldMeltDown(temperature, maxTemperature, boilingPoint)) {
+            getWorld().playSound(null, getPos(), SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS,
+                    1.0F, 1.0F);
             getWorld().setBlockState(getPos(), Blocks.FLOWING_LAVA.getDefaultState(), 3);
             return;
         } else if (temperature < getMaterialMeltingTemperature(contentMaterial)) {
@@ -183,6 +201,30 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
                 syncState();
             }
         }
+    }
+
+    private long getAmbientTemperature() {
+        Biome biome = getWorld().getBiome(getPos());
+        return biome == null ? ENVIRONMENT_TEMPERATURE : environmentTemperature(biome.getTemperature(getPos()));
+    }
+
+    static long environmentTemperature(float biomeTemperature) {
+        return Math.max(1L, 270L + (long) (biomeTemperature * 20.0F));
+    }
+
+    static long moveTemperatureTowardAmbient(long temperature, long ambientTemperature) {
+        if (temperature > ambientTemperature) {
+            return temperature - Math.min(COOLING_STEP, temperature - ambientTemperature);
+        }
+        if (temperature < ambientTemperature) {
+            return temperature + Math.min(COOLING_STEP, ambientTemperature - temperature);
+        }
+        return temperature;
+    }
+
+    static boolean shouldMeltDown(long temperature, long maxTemperature, long boilingPoint) {
+        return temperature > maxTemperature ||
+                (boilingPoint != Long.MAX_VALUE && temperature > boilingPoint);
     }
 
     @Override
@@ -461,22 +503,12 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
     }
 
     @Nullable
-    private static Material resolveMaterial(@Nullable String materialName) {
-        if (materialName == null || materialName.isEmpty()) {
-            return null;
-        }
-        Material material = GregTechAPI.materialManager.getMaterial(materialName);
-        if (material != null) {
-            return material;
-        }
-        // Keep molds from older saves working; they stored Material#getName()
-        // without the namespace used by this mod's registered materials.
-        for (Material registeredMaterial : GregTechAPI.materialManager.getRegisteredMaterials()) {
-            if (registeredMaterial != null && materialName.equals(registeredMaterial.getName())) {
-                return registeredMaterial;
-            }
-        }
-        return null;
+    static Material resolveMaterial(@Nullable String materialName) {
+        // Mold contents use the same wire/NBT identity as crucible displays.
+        // Keep namespace validation, retired-name migration, and normalized
+        // legacy aliases in one place so a client does not discard an external
+        // material while it is cooling even though the crucible can display it.
+        return MetaTileEntityCrucible.resolveMaterial(materialName);
     }
 
     private OrePrefix getMoldRecipe(int moldShape) {

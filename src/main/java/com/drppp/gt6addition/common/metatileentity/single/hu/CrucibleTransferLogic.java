@@ -343,6 +343,11 @@ public final class CrucibleTransferLogic {
         if (normalizedName == null || normalizedName.isEmpty()) {
             return null;
         }
+        // GT6's literal MT snapshot is authoritative for its native identities.
+        // Keep the following explicit tables for technical/dynamic and external
+        // materials without a positive literal GT6 ID.
+        Double literal = GT6LiteralDensityData.densityKgPerCubicMeter(normalizedName);
+        if (literal != null) return literal;
         if ("tungstencarbide".equals(normalizedName)) {
             return GT6_TUNGSTEN_CARBIDE_DENSITY_KG_PER_CUBIC_METER;
         }

@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-/** Explicit Kelvin values from GT6 gregapi/data/MT.java; unknown is not a guessed boiling point. */
+/** GT6 Kelvin values take priority; unknown host identities are not assigned guessed boiling points. */
 public final class CrucibleMaterialPhaseData {
     private static final Map<String, Long> BOILING_POINTS;
 
@@ -46,6 +46,8 @@ public final class CrucibleMaterialPhaseData {
         if (materialName == null) return -1;
         GT6TechnicalMaterialData.Profile family = GT6TechnicalMaterialData.find(materialName);
         if (family != null) return GT6TechnicalMaterialData.meltingPoint(family);
+        int literal = GT6LiteralPhaseData.meltingPoint(materialName);
+        if (literal >= 0) return literal;
         CrucibleSmeltingRule rule = CrucibleSmeltingRule.find(materialName);
         if (rule != null && rule.meltingPoint >= 0) return rule.meltingPoint;
         int point = GT6ElementPhaseData.meltingPoint(materialName);
@@ -64,6 +66,8 @@ public final class CrucibleMaterialPhaseData {
         if (materialName == null) return Long.MAX_VALUE;
         GT6TechnicalMaterialData.Profile family = GT6TechnicalMaterialData.find(materialName);
         if (family != null) return GT6TechnicalMaterialData.boilingPoint(family);
+        long literal = GT6LiteralPhaseData.boilingPoint(materialName);
+        if (literal != Long.MAX_VALUE) return literal;
         CrucibleSmeltingRule rule = CrucibleSmeltingRule.find(materialName);
         if (rule != null && rule.boilingPoint != Long.MAX_VALUE) return rule.boilingPoint;
         long inherited = GT6InheritedPhaseData.boilingPoint(materialName);

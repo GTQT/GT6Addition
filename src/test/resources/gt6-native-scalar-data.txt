@@ -1,0 +1,168 @@
+9218|Kimberlite|3826|constructor_scalar|1000|3000|1000.0
+9219|Prismarine|1639|constructor_scalar|1000|3000|1000.0
+8452|Moonstone|1482|constructor_scalar|1000|3000|1000.0
+9220|PrismarineDark|1640|constructor_scalar|1000|3000|1000.0
+8453|Sunstone|1483|constructor_scalar|1000|3000|1000.0
+8454|Chimerite|1484|constructor_scalar|1000|3000|1000.0
+9222|Slate|3840|constructor_scalar|1000|3000|1000.0
+9223|Blackstone|3833|constructor_scalar|1000|3000|1000.0
+8200|Ashes|1228|constructor_scalar|1000|3000|1000.0
+8201|Dark Ashes|1229|constructor_scalar|1000|3000|1000.0
+8715|Yellorium|1798|constructor_scalar|1000|3000|1000.0
+8716|Blutonium|1799|constructor_scalar|1000|3000|1000.0
+8717|Cyanite|1800|constructor_scalar|1000|3000|1000.0
+8210|Blizz|1274|constructor_scalar|1000|3000|1000.0
+8723|Ludicrite|1801|constructor_scalar|1000|3000|1000.0
+8211|Blaze|1275|constructor_scalar|4000|8000|1000.0
+8469|Golden Amber|1440|constructor_scalar|473|946|1000.0
+8470|Carminite|1438|constructor_scalar|1000|3000|1000.0
+8471|Breeze|1276|constructor_scalar|1000|3000|1000.0
+8216|Paper|1300|constructor_scalar|1000|3000|1000.0
+9244|Grayschist|3823|constructor_scalar|1000|3000|1000.0
+9245|Pinkschist|3824|constructor_scalar|1000|3000|1000.0
+9248|Deepslate|3841|constructor_scalar|1000|3000|1000.0
+8736|Endium|1824|constructor_scalar|1000|3000|1000.0
+9249|PhobosRock|3843|constructor_scalar|1000|3000|1000.0
+9250|DeimosRock|3844|constructor_scalar|1000|3000|1000.0
+9251|VenusRock|3845|constructor_scalar|1000|3000|1000.0
+8228|Indigo|1314|constructor_scalar|1000|3000|1000.0
+9252|MercuryRock|3846|constructor_scalar|1000|3000|1000.0
+9253|CeresRock|3847|constructor_scalar|1000|3000|1000.0
+9254|JupiterRock|3848|constructor_scalar|1000|3000|1000.0
+8743|Iffesal|1829|constructor_scalar|1000|3000|1000.0
+9255|IoRock|3849|constructor_scalar|1000|3000|1000.0
+9256|EuropaRock|3850|constructor_scalar|1000|3000|1000.0
+9257|GanymedeRock|3851|constructor_scalar|1000|3000|1000.0
+9258|CallistoRock|3852|constructor_scalar|1000|3000|1000.0
+9259|SaturnRock|3853|constructor_scalar|1000|3000|1000.0
+9260|RheaRock|3854|constructor_scalar|1000|3000|1000.0
+9261|TitanRock|3855|constructor_scalar|1000|3000|1000.0
+9262|OberonRock|3856|constructor_scalar|1000|3000|1000.0
+9263|IapetusRock|3857|constructor_scalar|1000|3000|1000.0
+9264|UranusRock|3858|constructor_scalar|1000|3000|1000.0
+8241|Leather|1313|constructor_scalar|1000|3000|1000.0
+8753|Dolamide|1842|constructor_scalar|1000|3000|1000.0
+9265|TitaniaRock|3859|constructor_scalar|1000|3000|1000.0
+9266|NeptuneRock|3860|constructor_scalar|1000|3000|1000.0
+8754|Oriharukon|1843|constructor_scalar|1000|3000|1000.0
+9778|Tofu|1331|constructor_scalar|422|500|1000.0
+9267|TritonRock|3861|constructor_scalar|1000|3000|1000.0
+8755|Adamantite|1844|constructor_scalar|1000|3000|1000.0
+9779|Soylent Green|1332|constructor_scalar|422|500|1000.0
+9268|PlutoRock|3862|constructor_scalar|1000|3000|1000.0
+8244|Tallow|1312|constructor_scalar|350|700|1000.0
+9780|Cheese|1333|constructor_scalar|320|500|1000.0
+9781|Chili|1334|constructor_scalar|1000|3000|1000.0
+9269|ErisRock|3863|constructor_scalar|1000|3000|1000.0
+9782|Cocoa|1335|constructor_scalar|1000|3000|1000.0
+9270|Kepler22bRock|3864|constructor_scalar|1000|3000|1000.0
+8247|Basalz|1272|constructor_scalar|1000|3000|1000.0
+8248|Blitz|1273|constructor_scalar|1000|3000|1000.0
+9784|Coffee|1337|constructor_scalar|1000|3000|1000.0
+9785|Cinnamon|1338|constructor_scalar|1000|3000|1000.0
+8250|Black|989|constructor_scalar|1000|3000|1000.0
+9786|Nutmeg|1339|constructor_scalar|1000|3000|1000.0
+8251|Red|990|constructor_scalar|1000|3000|1000.0
+8252|Green|991|constructor_scalar|1000|3000|1000.0
+9788|PepperBlack|1347|constructor_scalar|1000|3000|1000.0
+8253|Brown|992|constructor_scalar|1000|3000|1000.0
+9789|Curry|1348|constructor_scalar|1000|3000|1000.0
+8254|Blue|993|constructor_scalar|1000|3000|1000.0
+9790|Milk|1349|constructor_scalar|273|373|1000.0
+8255|Purple|994|constructor_scalar|1000|3000|1000.0
+8511|Diorite|3832|constructor_scalar|1000|3000|1000.0
+9791|Honey|1352|constructor_scalar|273|373|1000.0
+8256|Cyan|995|constructor_scalar|1000|3000|1000.0
+9792|Tea|1354|constructor_scalar|1000|3000|1000.0
+8512|Space Stone|3797|constructor_scalar|1000|3000|1000.0
+8257|Light Gray|996|constructor_scalar|1000|3000|1000.0
+8513|Moon Stone|3798|constructor_scalar|1000|3000|1000.0
+9793|Honeydew|1353|constructor_scalar|273|373|1000.0
+8258|Gray|997|constructor_scalar|1000|3000|1000.0
+9794|Mint|1355|constructor_scalar|1000|3000|1000.0
+8514|Moon Turf|3799|constructor_scalar|1000|3000|1000.0
+8259|Pink|998|constructor_scalar|1000|3000|1000.0
+9795|Peanut|1340|constructor_scalar|1000|3000|1000.0
+8515|Mars Stone|3800|constructor_scalar|1000|3000|1000.0
+8260|Lime|999|constructor_scalar|1000|3000|1000.0
+9796|Hazelnut|1341|constructor_scalar|1000|3000|1000.0
+8516|Mars Sand|3801|constructor_scalar|1000|3000|1000.0
+8261|Yellow|1000|constructor_scalar|1000|3000|1000.0
+9797|Pistachio|1342|constructor_scalar|1000|3000|1000.0
+8517|Umber|3812|constructor_scalar|987|1974|1000.0
+8262|Light Blue|1001|constructor_scalar|1000|3000|1000.0
+8263|Magenta|1002|constructor_scalar|1000|3000|1000.0
+8519|Betweenstone|3806|constructor_scalar|1000|2000|1000.0
+8264|Orange|1003|constructor_scalar|1000|3000|1000.0
+8520|Pitstone|3807|constructor_scalar|1200|2400|1000.0
+8265|White|1004|constructor_scalar|1000|3000|1000.0
+8521|Livingrock|3804|constructor_scalar|1800|3600|1000.0
+8266|Asphalt|1311|constructor_scalar|1000|3000|1000.0
+8522|Holystone|3803|constructor_scalar|2000|4000|1000.0
+8523|Deadrock|3805|constructor_scalar|1800|3600|1000.0
+8524|Cragrock|3808|constructor_scalar|1400|2800|1000.0
+8525|Templerock|3809|constructor_scalar|1600|3200|1000.0
+8526|Mazestone|3810|constructor_scalar|2000|4000|1000.0
+8527|Castlerock|3811|constructor_scalar|2000|4000|1000.0
+8282|Crimson Middle|1487|constructor_scalar|1000|3000|1000.0
+8283|Green Middle|1488|constructor_scalar|1000|3000|1000.0
+8284|Aqua Middle|1489|constructor_scalar|1000|3000|1000.0
+8285|Valonite|1490|constructor_scalar|1000|3000|1000.0
+8288|Scabyst|1491|constructor_scalar|1000|3000|1000.0
+8293|Ambrosium|1494|constructor_scalar|1000|3000|1000.0
+8805|Unstable|1868|constructor_scalar|1000|3000|1000.0
+8295|Continuum|1495|constructor_scalar|1000|3000|1000.0
+8812|Crystalline Alloy|1816|constructor_scalar|1000|3000|1000.0
+8813|Crystalline Pink Slime|1817|constructor_scalar|1000|3000|1000.0
+8310|Amber|1439|constructor_scalar|473|946|1000.0
+9851|Oil Sand|1199|constructor_scalar|100|400|1000.0
+9852|Crude Oil|1200|constructor_scalar|100|400|1000.0
+8317|Dilithium|1508|constructor_scalar|1000|3000|1000.0
+8320|Nether Star|1501|constructor_scalar|3896|5127|1000.0
+8321|Jade|1443|constructor_scalar|1000|3000|1000.0
+8322|Craponite|1442|constructor_scalar|1000|3000|1000.0
+8342|Firestone|1537|constructor_scalar|3000|3700|1000.0
+8343|Force|1627|constructor_scalar|1000|3000|1000.0
+8344|Forcicium|1628|constructor_scalar|1000|3000|1000.0
+8345|Forcillium|1629|constructor_scalar|1000|3000|1000.0
+8350|Infused Dull|1585|constructor_scalar|1000|3000|1000.0
+8351|Infused Vis|1586|constructor_scalar|1000|3000|1000.0
+8352|Infused Air|1587|constructor_scalar|1000|3000|1000.0
+8353|Infused Fire|1588|constructor_scalar|1000|3000|1000.0
+8354|Infused Earth|1589|constructor_scalar|1000|3000|1000.0
+8355|Infused Water|1590|constructor_scalar|1000|3000|1000.0
+8356|Infused Entropy|1591|constructor_scalar|1000|3000|1000.0
+8357|Infused Order|1592|constructor_scalar|1000|3000|1000.0
+8358|Infused Balance|1593|constructor_scalar|1000|3000|1000.0
+8360|Peat|1530|constructor_scalar|1000|3000|1000.0
+8361|PeatBituminous|1531|constructor_scalar|1000|3000|1000.0
+8366|Arcane Compound|1481|constructor_scalar|1000|3000|1000.0
+8367|Arcane Ashes|1480|constructor_scalar|1000|3000|1000.0
+8373|Ectoplasm|1536|constructor_scalar|400|3000|1000.0
+8381|Dark Matter|1577|constructor_scalar|1000|3000|1000.0
+8382|Red Matter|1578|constructor_scalar|1000|3000|1000.0
+8391|Frezarite|1504|constructor_scalar|1000|3000|1000.0
+8392|Red Meteor|1505|constructor_scalar|1000|3000|1000.0
+9170|Gneiss|3825|constructor_scalar|1000|3000|1000.0
+9171|Greenschist|3821|constructor_scalar|1000|3000|1000.0
+9172|Greenstone|1642|constructor_scalar|1000|3000|1000.0
+9173|Greywacke|3834|constructor_scalar|1000|3000|1000.0
+9178|Siltstone|3835|constructor_scalar|1000|3000|1000.0
+9179|Rhyolite|3836|constructor_scalar|1000|3000|1000.0
+9180|Quartzite|3827|constructor_scalar|1000|3000|1000.0
+9181|Migmatite|3837|constructor_scalar|1000|3000|1000.0
+9182|Epidote|1644|constructor_scalar|1000|3000|1000.0
+9183|Emery|1240|constructor_scalar|1000|3000|1000.0
+9184|Blueschist|3822|constructor_scalar|1000|3000|1000.0
+9185|Bluestone|1643|constructor_scalar|1000|3000|1000.0
+9186|Chert|3838|constructor_scalar|1000|3000|1000.0
+9187|Dacite|3839|constructor_scalar|1000|3000|1000.0
+9188|Andesite|3831|constructor_scalar|1000|3000|1000.0
+8422|Dominican Amber|1441|constructor_scalar|473|946|1000.0
+9191|Eclogite|3842|constructor_scalar|1000|3000|1000.0
+8683|Sunnarium|1778|constructor_scalar|1000|3000|1000.0
+9709|Potato|1330|constructor_scalar|1000|3000|1000.0
+9714|Almond|1343|constructor_scalar|1000|3000|1000.0
+9716|PEZ|1344|constructor_scalar|1000|3000|1000.0
+9717|Licorice|1345|constructor_scalar|1000|3000|1000.0
+9718|Nougat|1346|constructor_scalar|1000|3000|1000.0

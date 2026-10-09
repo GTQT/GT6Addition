@@ -1,0 +1,209 @@
+Natrium|110|Sodium|399|alkali
+Aluminum|130|Aluminium|401|posttrans
+Sulphur|160|Sulfur|404|polyatomic
+Kalium|190|Potassium|407|alkali
+Titan|220|Titanium|410|refractmetal
+Chrome|240|Chromium|412|refractmetal
+Co60|278|Cobalt-60|416|transmetal
+Osmium|320|Germanium|421|metalloid
+Columbium|410|Niobium|430|refractmetal
+Gregorium|430|Technetium|432|transmetal
+Lantanium|570|Lanthanium|446|lanthanide
+Lantanum|570|Lanthanium|446|lanthanide
+Lanthanum|570|Lanthanium|446|lanthanide
+Tantalium|730|Tantalum|462|refractmetal
+Wolframium|740|Tungsten|463|refractmetal
+Wolfram|740|Tungsten|463|refractmetal
+ElnTungsten|740|Tungsten|463|refractmetal
+Gol198|791|Gold-198|469|noblemetal
+Au198|791|Gold-198|469|noblemetal
+Quicksilver|800|Mercury|470|precmetal
+QuickSilver|800|Mercury|470|precmetal
+Astatine209|850|Astatine|475|metalloid
+At209|850|Astatine|475|metalloid
+Radium226|880|Radium|478|alkaline
+Thorium232|900|Thorium|480|actinide
+Th232|900|Thorium|480|actinide
+Uranium238|920|Uranium|482|actinide
+Uran|920|Uranium|482|actinide
+U238|920|Uranium|482|actinide
+UraniumEnriched|921|Uranium-235|483|actinide
+U235|921|Uranium-235|483|actinide
+U233|922|Uranium-233|484|actinide
+Neptunium237|930|Neptunium|485|actinide
+Np237|930|Neptunium|485|actinide
+Plutonium244|940|Plutonium|486|actinide
+Pu240|942|Plutonium-240|487|actinide
+Pu241|943|Plutonium-241|488|actinide
+Pu238|946|Plutonium-238|490|actinide
+Pu239|947|Plutonium-239|491|actinide
+Am241|951|Americium-241|493|actinide
+Am242|952|Americium-242|494|actinide
+Tennessine|1170|Farnsium|517|element
+Unbipentium|1250|TritaniumElemental|695|element
+Unbihexium|1260|Trinium|696|element
+Unquadpentium|1450|DuraniumElemental|715|element
+Unpentbium|1520|Vibranium|722|element
+Unseptquadium|1740|Naquadah|744|element
+Unoctpentium|1850|Abyssalnite|757|element
+Unocthexium|1860|Coralium|758|element
+LiquifiedCoralium|1860|Coralium|758|element
+Unoctseptium|1870|Dreadium|759|element
+Unoctoctium|1880|Ethaxium|760|element
+Bibiunium|2210|Atlarus|793|element
+Adamant|2220|Adamantium|794|element
+Bibibium|2220|Adamantium|794|element
+Bitriennium|2390|Mac-Guffium|811|element
+Triseptbium|3720|Gravitonium|944|element
+SulphurDioxide|9834|Sulfur Dioxide|1044|gaschemdcmp
+SulphurTrioxide|9835|Sulfur Trioxide|1045|gaschemdcmp
+SulphuricAcid|9824|Sulfuric Acid|1047|lqudaciddcmp
+BoricAcid|8007|Hydrogen Borate|1061|dustelec
+TungstenOxide|8026|Tungsten Trioxide|1077|oredustdcmp
+NaturalAluminum|8008|Alumina|1081|oredustdcmp
+Gibbsite|8014|Aluminium Hydroxide|1083|oredustdcmp
+BandedIron|9104|Hematite|1094|oredustdcmp
+IronOxide|9104|Hematite|1094|oredustdcmp
+Magnesite|8016|Magnesium Carbonate|1101|oredustdcmp
+CalciumSulphate|8274|Calcium Sulfate|1105|dustdcmp
+Valerite|9107|Calcite|1108|oredustdcmp
+Aragonite|9107|Calcite|1108|oredustdcmp
+Flux|9107|Calcite|1108|oredustdcmp
+Soda|8039|Sodium Hydrogencarbonate|1132|oredustdcmp
+SodiumBisulphate|8230|Sodium Bisulfate|1133|dustdcmp
+SodiumHydrogenSulfate|8230|Sodium Bisulfate|1133|dustdcmp
+SodiumHydrogenSulphate|8230|Sodium Bisulfate|1133|dustdcmp
+SodiumPersulphate|9822|Sodium Persulfate|1134|dustdcmp
+SodiumSulphide|9823|Sodium Sulfide|1135|dustdcmp
+SodiumSulphite|8269|Sodium Sulfite|1136|dustdcmp
+SodiumSulphate|8270|Sodium Sulfate|1137|dustdcmp
+SodiumPyrosulphate|8231|Sodium Pyrosulfate|1138|dustdcmp
+SaltWater|9804|Saltwater|1143|lqudelec
+Brine|9804|Saltwater|1143|lqudelec
+RockSalt|8203|Sylvite|1147|oredustdcmp
+Sylvine|8203|Sylvite|1147|oredustdcmp
+Saltpeter|8205|Potassium Nitrate|1148|oredustelec
+Nitrate|8205|Potassium Nitrate|1148|oredustelec
+Salpeter|8205|Potassium Nitrate|1148|oredustelec
+PotassiumBisulphate|8232|Potassium Bisulfate|1150|dustdcmp
+PotassiumPersulphate|8022|Potassium Persulfate|1151|dustdcmp
+PotassiumSulphide|8272|Potassium Sulfide|1152|dustdcmp
+PotassiumSulphite|8021|Potassium Sulfite|1153|dustdcmp
+PotassiumSulphate|8271|Potassium Sulfate|1154|dustdcmp
+PotassiumPyrosulphate|8233|Potassium Pyrosulfate|1155|dustdcmp
+Saltedwater|9815|Salted Water|1160|lqudelec
+RomanVitriol|8404|Blue Vitriol|1169|lqudaciddcmp
+CyprusVitriol|8404|Blue Vitriol|1169|lqudaciddcmp
+SolutionBlueVitriol|8404|Blue Vitriol|1169|lqudaciddcmp
+SolutionNickelSulfate|8408|Cyan Vitriol|1173|lqudaciddcmp
+SolutionNickelSulphate|8408|Cyan Vitriol|1173|lqudaciddcmp
+BioMass|9840|Biomass|1195|lqudflam
+Oilsands|9851|Oil Sand|1199|oredust
+FuelOil|9860|Fuel|1201|lqudexpl
+Gasoline|9864|Petrol|1205|lqudexpl
+Creosote Oil|9870|Creosote|1210|lqudflam
+Ash|8200|Ashes|1228|dust
+DarkAsh|8201|Dark Ashes|1229|dust
+AshDark|8201|Dark Ashes|1229|dust
+AshesDark|8201|Dark Ashes|1229|dust
+VolcanicAsh|8202|Volcanic Ashes|1230|dustcent
+AshVolcanic|8202|Volcanic Ashes|1230|dustcent
+AshesVolcanic|8202|Volcanic Ashes|1230|dustcent
+Chrysotile|9103|Asbestos|1235|oredustelec
+Soapstone|9169|Talc|1236|oredustelec
+WoodSealed|8222|WoodTreated|1245|wood
+Peanutwood|8227|Peanut Wood|1256|wood
+BeesWax|8236|WaxBee|1263|wax
+Beeswax|8236|WaxBee|1263|wax
+BeeWax|8236|WaxBee|1263|wax
+Beewax|8236|WaxBee|1263|wax
+RefractoryWax|8237|WaxRefractory|1264|wax
+Refractorywax|8237|WaxRefractory|1264|wax
+ParaffinWax|8238|WaxParaffin|1265|wax
+Paraffinwax|8238|WaxParaffin|1265|wax
+Brick|9243|Clay Brick|1280|create
+FullersEarth|9154|Palygorskite|1285|clay
+Nitre|8206|Niter|1293|oredustcent
+Phosphorous|8208|Phosphorus|1294|cent
+Polymer|8196|Teflon|1303|create
+PTFE|8196|Teflon|1303|create
+Polycarbonate|8199|Hard Plastic|1306|create
+Fossil|8219|Bone|1307|oredustelec
+Meat|9701|MeatCooked|1317|meat
+Flour|9702|Wheat|1323|grain
+Oats|9707|Oat|1327|grain
+AbyssalOats|9719|Abyssal Oat|1328|grain
+CoffeeDust|9784|Coffee|1337|dustfood
+Pepper|9788|PepperBlack|1347|dustfood
+ScarletEmerald|8386|Bixbite|1376|emerald
+Saphire|8304|Sapphire|1380|sapphire
+FoolsRuby|8303|Balas Ruby|1390|valgemelec
+GarnetRed|9101|Almandine|1393|garnet
+GarnetOrange|9119|Grossular|1394|garnet
+GarnetPurple|9127|Pyrope|1395|garnet
+Garnet|9129|Spessartine|1396|garnet
+GarnetYellow|9102|Andradite|1397|garnet
+GarnetGreen|9135|Uvarovite|1398|garnet
+Jasper|8309|Red Jasper|1401|jasper
+YellowTigerEye|8430|Tiger Eye|1409|tigereye
+GreenTigerEye|8431|Cat's Eye|1410|tigereye
+RedTigerEye|8432|Dragon Eye|1411|tigereye
+BlueTigerEye|8433|Hawk's Eye|1412|tigereye
+BlackTigerEye|8434|Black Eye|1413|tigereye
+Aventurine|8448|Green Aventurine|1417|aventurine
+Onyx|8416|OnyxBlack|1433|valgemelec
+Olivine|8311|Peridot|1435|valgemelec
+ArcaneAsh|8367|Arcane Ashes|1480|dust
+Ender|8318|EnderPearl|1499|elec
+Coke|8349|Coal Coke|1523|coal
+PetCoke|8390|Petroleum Coke|1529|coal
+Electrotine|8340|Nikolite|1541|redstone
+Teslatite|8340|Nikolite|1541|redstone
+QuartzSmoky|8397|Smokey Quartz|1560|quartz
+SmokyQuartz|8397|Smokey Quartz|1560|quartz
+BrickNether|8503|Nether Brick|1634|stone
+Oilshale|9853|Oil Shale|1646|oredustcent
+WrougtIron|8643|Wrought Iron|1655|metalmachnd
+Adluorite|8760|Alduorite|1659|setalore
+Ardaite|8701|Aredrite|1664|metalore
+Fettelite|8771|Sanguinite|1669|metalore
+Mythril|8678|Mithril|1681|slloymachore
+Tumbaga|8602|Rose Gold|1693|slloymachine
+TungstenSteel|8635|Tungstensteel|1719|alloymachine
+Wolframsteel|8635|Tungstensteel|1719|alloymachine
+WolframSteel|8635|Tungstensteel|1719|alloymachine
+Carbide|8638|Tungsten Carbide|1720|alloymachine
+WolframCarbide|8638|Tungsten Carbide|1720|alloymachine
+HSLA|8637|HSLA-Steel|1721|alloymachine
+FzDarkIron|8648|Dark Iron|1730|metalmachore
+FZDarkIron|8648|Dark Iron|1730|metalmachore
+TeslatineAlloy|8737|Nikoline Alloy|1749|clloy
+Cupronickel|8662|Constantan|1755|clloymachine
+IronWood|8672|Ironwood|1764|alloymachine
+KnightMetal|8674|Knightmetal|1766|alloymachine
+Fiery|8675|Fiery Steel|1767|alloymachine
+Void|8681|Void Metal|1776|alloymachine
+AluminumBrass|8700|Aluminium Brass|1784|clloymachine
+DarkSteel|8731|Obsidian Steel|1805|alloy
+PhasedIron|8725|Pulsating Iron|1806|alloy
+PhasedGold|8726|Vibrant Alloy|1808|slloy
+Vibrant|8726|Vibrant Alloy|1808|slloy
+CrudeSteel|8806|Clay Compound|1811|alloy
+Elementium|8722|Elven Elementium|1822|slloymachore
+HeeEndium|8736|Endium|1824|metalore
+Ancient|8744|Ancient Debris|1832|metalore
+Unstableingot|8805|Unstable|1868|setal
+NaquadahAlloy|8684|Trinaquadalloy|1871|alloymachine
+Iritanium|8793|Titanium Iridium|1875|alloymachine
+CassiteriteSand|9108|Cassiterite|3700|oredustelec
+Sheldonite|9116|Cooperite|3717|oredustdcmp
+CalciumTungstate|9128|Scheelite|3724|oredustdcmp
+Gyubnera|9195|Huebnerite|3727|oredustdcmp
+Raspite|9193|Stolzite|3730|oredustdcmp
+BogIron|9137|Yellow Limonite|3740|oredustdcmp
+Ferrovanadium|9143|Vanadium Magnetite|3742|oredustcent
+Illmenite|9120|Ilmenite|3747|oredustdcmp
+TitaniumIron|9120|Ilmenite|3747|oredustdcmp
+GlauconiteSand|9150|Glauconite|3769|oredustelec
+RedRock|8509|Redrock|3814|stonecent
+Paduak|9357|Padauk|3939|woodnormal

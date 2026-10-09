@@ -1,0 +1,6 @@
+8368|GlowstoneCeres|1545
+8369|GlowstoneIo|1546
+8370|GlowstoneEnceladus|1547
+8371|GlowstoneProteus|1548
+8372|GlowstonePluto|1549
+8456|Gloomstone|1550

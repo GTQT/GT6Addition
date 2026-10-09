@@ -7,6 +7,7 @@
 .idea/modules/GT6Addition.test.iml
 .idea/vcs.xml
 /run
+/logs/
 /run/cache/
 /run/config/
 /run/crash-reports/
@@ -54,3 +55,4 @@ run/config/gregtech/gregtech.cfg
 run/config/gregtech/modules.cfg
 run/config/gregtech/persistent_data.dat
 run/config/splash.properties
+/run/

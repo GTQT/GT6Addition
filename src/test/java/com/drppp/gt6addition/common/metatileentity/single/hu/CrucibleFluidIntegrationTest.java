@@ -81,7 +81,7 @@ class CrucibleFluidIntegrationTest {
     private static MTEManager previousMtes;
     private static MarkerMaterialRegistry previousMarkers;
     private static Capability<IFluidHandler> previousCapability;
-    private static Material previousWater, previousLava, previousObsidian, previousIce;
+    private static Material previousWater, previousLava, previousObsidian, previousIce, previousAir;
     private static Material previousBandedIron;
     private static Material coreIronOxide;
     private static Material osmium;
@@ -101,6 +101,7 @@ class CrucibleFluidIntegrationTest {
     private static Material cryolite, anyFluorite, neutralCalcite;
     private static Material externalObsidian, externalWater, externalLava;
     private static Material liveRoot, marshmallow, silverwood, peanutwood, nativeWood;
+    private static Material redstonia;
     private static Material[] woodFamilies, grainFamilies;
     private static final Map<String, Material> technicalFixtures = new LinkedHashMap<>();
     private static final Map<String, Material> mineralFixtures = new LinkedHashMap<>();
@@ -121,6 +122,7 @@ class CrucibleFluidIntegrationTest {
         previousLava = Materials.Lava;
         previousObsidian = Materials.Obsidian;
         previousIce = Materials.Ice;
+        previousAir = Materials.Air;
         previousBandedIron = Materials.BandedIron;
 
         // Use the dependency's real registry and Material.Builder, isolated from
@@ -142,6 +144,7 @@ class CrucibleFluidIntegrationTest {
                                 .setTemperature(1000).setGaseous(true),
                         FluidStorageKeys.GAS, FluidState.GAS).build();
         Materials.Ice = Material.builder(1530, new ResourceLocation("gregtech", "ice")).dust().build();
+        Materials.Air = Material.builder(32760, new ResourceLocation("gregtech", "air")).dust().build();
         osmium = Material.builder(77, new ResourceLocation("gregtech", "osmium"))
                 .dust().color(0x445566).build();
         Material iron = Material.builder(26, new ResourceLocation("gregtech", "iron")).ingot().build();
@@ -333,6 +336,7 @@ class CrucibleFluidIntegrationTest {
             material.getProperty(PropertyKey.INGOT).setSmeltingInto(ash);
             mineralFixtures.put(configuredNames[i], material);
         }
+        redstonia = Material.builder(2015, new ResourceLocation("gregtech", "redstonia")).gem().build();
         // Same-name external identities, deliberately distinct from CEu's
         // singletons. No production registration or host-property changes.
         externalObsidian = Material.builder(2, new ResourceLocation("gtqtcore", "obsidian")).ingot().build();
@@ -380,6 +384,7 @@ class CrucibleFluidIntegrationTest {
         Materials.Lava = previousLava;
         Materials.Obsidian = previousObsidian;
         Materials.Ice = previousIce;
+        Materials.Air = previousAir;
         Materials.BandedIron = previousBandedIron;
         for (Map.Entry<Field, Object> entry : previousFluidRegistry.entrySet()) {
             entry.getKey().set(null, entry.getValue());
@@ -1017,6 +1022,15 @@ class CrucibleFluidIntegrationTest {
         Vessel loaded = new Vessel();
         loaded.readFromNBT(vessel.save());
         assertEquals(saved, onlyContent(loaded.save()));
+    }
+
+    @Test
+    void moldUsesTheSameNamespacedAndLegacyMaterialResolverAsCrucible() {
+        assertSame(coreIronOxide, MetaTileEntityMold.resolveMaterial("gtqtcore:iron_iii_oxide"));
+        assertSame(Materials.BandedIron, MetaTileEntityMold.resolveMaterial("Hematite"));
+        assertSame(enderAmethyst, MetaTileEntityMold.resolveMaterial(GT6MaterialIdentity.name(8329)));
+        assertNull(MetaTileEntityMold.resolveMaterial("thirdparty:hematite"));
+        assertNull(MetaTileEntityMold.resolveMaterial("gt6addition:hematite"));
     }
 
     @Test
@@ -2113,6 +2127,27 @@ class CrucibleFluidIntegrationTest {
     }
 
     @Test
+    void kineticBlowingUsesOxygenOnlyInGalacticraftDimensionsAndStillConsumesKu() {
+        Vessel normalDimension = new Vessel();
+        assertEquals(1000, normalDimension.receiveCrucibleEnergy(ICrucibleEnergyReceiver.Type.KU, 1000, false));
+        assertEquals("gregtech:air", onlyContent(normalDimension.save()).getString("Material"));
+
+        micdoodle8.mods.galacticraft.core.util.OxygenUtil.oxygenAvailable = false;
+        Vessel airlessDimension = new Vessel(new FakeGalacticraftProvider());
+        NBTTagCompound before = airlessDimension.save();
+        assertEquals(1000, airlessDimension.receiveCrucibleEnergy(ICrucibleEnergyReceiver.Type.KU, 1000, true));
+        assertEquals(before, airlessDimension.save(), "Simulated KU must not query or change the world");
+        assertEquals(1000, airlessDimension.receiveCrucibleEnergy(ICrucibleEnergyReceiver.Type.KU, 1000, false));
+        assertEquals(0, airlessDimension.save().getTagList("Contents", 10).tagCount());
+
+        micdoodle8.mods.galacticraft.core.util.OxygenUtil.oxygenAvailable = true;
+        Vessel oxygenatedDimension = new Vessel(new FakeGalacticraftProvider());
+        assertEquals(1000, oxygenatedDimension.receiveCrucibleEnergy(ICrucibleEnergyReceiver.Type.KU, 1000, false));
+        assertEquals("gregtech:air", onlyContent(oxygenatedDimension.save()).getString("Material"));
+        assertEquals(BlockPos.ORIGIN.up(), micdoodle8.mods.galacticraft.core.util.OxygenUtil.lastPosition);
+    }
+
+    @Test
     void perCraftToolAccountUsesExactRemainingDurabilityAndPreservesInputNbt() {
         Vessel vessel = new Vessel();
         ItemStack stack = toolAccount(25, 100);
@@ -2869,6 +2904,31 @@ class CrucibleFluidIntegrationTest {
     }
 
     @Test
+    void missingExplicitSolidificationTargetKeepsContentsMoltenAndUnchanged() throws Exception {
+        assertNull(GregTechAPI.materialManager.getMaterial("gregtech:redstone"));
+        assertNull(MetaTileEntityCrucible.getSolidifyingTarget(redstonia));
+        int meltingPoint = CrucibleMaterialPhaseData.knownMeltingPoint("redstonia");
+        assertTrue(meltingPoint > 0);
+
+        Vessel vessel = new Vessel();
+        NBTTagCompound initial = state(meltingPoint - 1L, redstonia.getRegistryName(), GTValues.L, GTValues.L);
+        initial.setLong("OldTemperature", meltingPoint);
+        onlyContent(initial).setBoolean("Molten", true);
+        vessel.readFromNBT(initial);
+
+        java.lang.reflect.Method transition = MetaTileEntityCrucible.class
+                .getDeclaredMethod("processMaterialTemperatureState");
+        transition.setAccessible(true);
+        assertFalse((Boolean) transition.invoke(vessel));
+
+        NBTTagCompound result = onlyContent(vessel.save());
+        assertEquals(redstonia.getRegistryName(), result.getString("Material"));
+        assertEquals(GTValues.M, result.getLong("Amount"));
+        assertTrue(result.getBoolean("Molten"), "Missing GT6 target must not commit a fallback solidification");
+        assertEquals(0, vessel.world.blockChanges);
+    }
+
+    @Test
     void magicIronUsesManasteelTemperatureRatherThanItsIronOutputTemperature() {
         Material source = technicalFixtures.get("any_magic_iron");
         Material target = GregTechAPI.materialManager.getMaterial("gregtech:iron");
@@ -3350,17 +3410,25 @@ class CrucibleFluidIntegrationTest {
     }
 
     private static final class Vessel extends MetaTileEntityCrucible {
-        final TestWorld world = new TestWorld();
+        final TestWorld world;
         int dirtyCalls, renderCalls;
         long offsetTick = 1;
-        Vessel() { this(null); }
-        Vessel(Material shell) { this(shell, 10_000); }
+        Vessel() { this(null, new TestWorld()); }
+        Vessel(net.minecraft.world.WorldProvider provider) { this(null, new TestWorld(provider)); }
+        Vessel(Material shell) { this(shell, new TestWorld()); }
         Vessel(Material shell, int maximumTemperature) {
-            this(shell, maximumTemperature, false);
+            this(shell, maximumTemperature, false, new TestWorld());
         }
         Vessel(Material shell, int maximumTemperature, boolean acidProof) {
+            this(shell, maximumTemperature, acidProof, new TestWorld());
+        }
+        private Vessel(Material shell, TestWorld world) {
+            this(shell, 10_000, false, world);
+        }
+        private Vessel(Material shell, int maximumTemperature, boolean acidProof, TestWorld world) {
             super(new ResourceLocation("gt6addition", "fluid_integration_test"), 2, 0xFFFFFF,
                     maximumTemperature, shell, acidProof, 6, 6);
+            this.world = world;
         }
         @Override public World getWorld() { return world; }
         @Override public BlockPos getPos() { return BlockPos.ORIGIN; }
@@ -3405,8 +3473,9 @@ class CrucibleFluidIntegrationTest {
         boolean rain, thunder, exposeWrittenBlock;
         Biome biome = Biomes.PLAINS;
         final List<Entity> entities = new ArrayList<>();
-        TestWorld() {
-            super(null, new WorldInfo(new NBTTagCompound()), new WorldProviderSurface(), new Profiler(), false);
+        TestWorld() { this(new WorldProviderSurface()); }
+        TestWorld(net.minecraft.world.WorldProvider provider) {
+            super(null, new WorldInfo(new NBTTagCompound()), provider, new Profiler(), false);
         }
         @Override protected IChunkProvider createChunkProvider() { return null; }
         @Override protected boolean isChunkLoaded(int x, int z, boolean allowEmpty) { return false; }
@@ -3439,6 +3508,9 @@ class CrucibleFluidIntegrationTest {
             return true;
         }
     }
+
+    private static final class FakeGalacticraftProvider extends WorldProviderSurface
+            implements micdoodle8.mods.galacticraft.api.world.IGalacticraftWorldProvider {}
 
     private static final class ProbePlayer extends EntityPlayer {
         ProbePlayer(World world, boolean creative) {

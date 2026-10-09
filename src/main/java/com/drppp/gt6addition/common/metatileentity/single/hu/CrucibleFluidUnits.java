@@ -7,9 +7,12 @@ import java.util.Locale;
 
 /** Explicit special units from GT6; unverified fluids retain current project units. */
 public final class CrucibleFluidUnits {
-    // LCM of 144, 504, 1000, 250, 160000 and 20736 mB/U.
-    // One material can receive several fluid phases without losing fractions.
-    static final int STORAGE_UNIT = 90720000;
+    // LCM of the prior fluid denominators (90,720,000) and every exact
+    // denominator in GT6's literal targetSmelting ratios (through 13,860).
+    // This preserves both legacy fluid fractions and non-terminating GT6
+    // material conversions such as 1/11 without rounding their remainders.
+    static final int LEGACY_STORAGE_UNIT = 90720000;
+    static final int STORAGE_UNIT = 997920000;
     private CrucibleFluidUnits() {}
 
     /** Unit of the actual default fluid used by output and JEI; zero means

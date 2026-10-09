@@ -101,6 +101,10 @@ final class GT6MaterialHazardData {
     /** Zero is a verified absence of tags; null is an unknown host material. */
     static Integer knownCombustionFlags(String name) {
         if (name == null) return null;
+        GT6LiteralHazardData.Profile literal = GT6LiteralHazardData.find(name);
+        if (literal != null) {
+            return literal.flags & (GT6LiteralHazardData.FLAMMABLE | GT6LiteralHazardData.EXPLOSIVE);
+        }
         // woodnormal grants FLAMMABLE even to its UNBURNABLE variants;
         // positive setSmelting also grants MELTING, so burning is exempt.
         if (GT6WoodMaterialData.contains(name)) return FLAMMABLE;
@@ -134,10 +138,17 @@ final class GT6MaterialHazardData {
         Integer flags = knownCombustionFlags(name);
         boolean flammable = flags == null ? hostFlammable : (flags & FLAMMABLE) != 0;
         return temperature > 313 && flammable &&
-                !GT6ElementPhaseData.hasMeltingFlag(name) &&
+                !hasGt6BurningExemption(name) &&
                 !GT6DeclaredPhaseData.hasBurningExemption(name) &&
                 !GT6InheritedBurningExemptions.contains(name) &&
                 !CrucibleSmeltingRule.hasMeltingFlag(name);
+    }
+
+    private static boolean hasGt6BurningExemption(String name) {
+        GT6LiteralHazardData.Profile literal = GT6LiteralHazardData.find(name);
+        return (literal != null && (literal.flags &
+                (GT6LiteralHazardData.UNBURNABLE | GT6LiteralHazardData.MELTING)) != 0) ||
+                GT6ElementPhaseData.hasMeltingFlag(name);
     }
 
     static boolean isAcidMaterial(Material material) {
@@ -162,6 +173,8 @@ final class GT6MaterialHazardData {
      */
     static Boolean knownAcidFlag(String name) {
         if (name == null) return null;
+        GT6LiteralHazardData.Profile literal = GT6LiteralHazardData.find(name);
+        if (literal != null) return (literal.flags & GT6LiteralHazardData.ACID) != 0;
         if (isAcid(name)) return Boolean.TRUE;
         return isKnownSnapshotMaterial(name) ? Boolean.FALSE : null;
     }

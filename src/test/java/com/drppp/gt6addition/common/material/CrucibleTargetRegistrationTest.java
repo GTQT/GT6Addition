@@ -83,12 +83,15 @@ class CrucibleTargetRegistrationTest {
     }
 
     @Test void missingTargetsStayAbsent() {
+        Material anyWax = new Material.Builder(1, new ResourceLocation("gtqtcore", "anywax")).dust().build();
         registry.closeRegistries();
-        int before = registry.getRegisteredMaterials().size();
         for (String path : new String[]{"fluorite", "columbite", "adamantium", "adamantine", "dolamide", "meat_raw"}) {
             assertNull(GT6MaterialCompatibility.findExternal(path));
             assertNull(MetaTileEntityCrucible.resolveMaterial("gt6addition:" + path));
         }
+        int before = registry.getRegisteredMaterials().size();
+        assertNull(MetaTileEntityCrucible.getSmeltingTarget(anyWax));
+        assertNull(registry.getMaterial("gt6addition:wax"));
         assertEquals(before, registry.getRegisteredMaterials().size());
     }
 
@@ -147,6 +150,15 @@ class CrucibleTargetRegistrationTest {
         assertNull(GT6MaterialCompatibility.retiredPath("anothermod:netherite"));
         assertNull(GT6MaterialCompatibility.retiredPath("netherite"));
         assertNull(GT6MaterialCompatibility.retiredPath(null));
+    }
+
+    @Test void retiredCrucibleTargetsReuseExternalWaxWithoutRestoringAddonMaterial() {
+        Material wax = new Material.Builder(4, new ResourceLocation("gtqtcore", "wax")).dust().build();
+        Material anyWax = new Material.Builder(5, new ResourceLocation("gtqtcore", "anywax")).dust().build();
+
+        assertSame(wax, MetaTileEntityCrucible.getSmeltingTarget(anyWax));
+        assertSame(wax, GT6MaterialCompatibility.findExternal("wax"));
+        assertNull(registry.getMaterial("gt6addition:wax"));
     }
 
     @Test void normalizedCoreSpellingKeepsPriorityOverExactHostSpelling() {
