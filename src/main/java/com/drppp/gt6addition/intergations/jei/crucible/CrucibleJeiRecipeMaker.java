@@ -42,16 +42,16 @@ public final class CrucibleJeiRecipeMaker {
         List<ItemStack> input = getMaterialInputs(material, GTValues.M);
         Material target = MetaTileEntityCrucible.getSmeltingTarget(material);
         if (input.isEmpty() || !MetaTileEntityCrucible.hasMaterialMeltingTarget(material)) return;
-        long outputAmount = MetaTileEntityCrucible.getSmeltingOutputAmount(material, GTValues.M);
-        if (outputAmount <= 0) return;
         List<List<ItemStack>> inputs = new ArrayList<>();
         inputs.add(input);
-        if (isUsableOutputMaterial(target)) {
-            FluidStack output = target.getFluid(CrucibleFluidUnits.fluidAmount(outputAmount, 0,
-                    CrucibleFluidUnits.defaultFluidUnit(target)));
-            if (output == null || output.amount <= 0) return;
+        FluidStack fluidOutput = MetaTileEntityCrucible.getSmeltingOutputFluidStack(
+                material, target, GTValues.M);
+        if (fluidOutput != null) {
+            FluidStack output = fluidOutput;
             recipes.add(new CrucibleJeiRecipe(inputs, output, getMeltingTemperature(material), false));
         } else {
+            long outputAmount = MetaTileEntityCrucible.getSmeltingOutputAmount(material, GTValues.M);
+            if (outputAmount <= 0) return;
             List<ItemStack> previews = getMaterialInputs(target, GTValues.M);
             recipes.add(new CrucibleJeiRecipe(inputs, java.util.Collections.singletonList(
                     java.util.Collections.emptyList()), target.getLocalizedName(), outputAmount,
@@ -134,16 +134,17 @@ public final class CrucibleJeiRecipeMaker {
             if (!representable) continue;
             long outputAmount = scaledMaterialAmount(outputUnits, scale);
             if (isUsableOutputMaterial(alloy)) {
-                int volume = exactDisplayFluidAmount(outputAmount, CrucibleFluidUnits.defaultFluidUnit(alloy));
-                if (volume <= 0) continue;
-                FluidStack output = alloy.getFluid(volume);
-                if (output == null || output.amount <= 0) continue;
-                recipes.add(new CrucibleJeiRecipe(inputs, fluids, output, temperature, true, info));
-            } else {
-                List<ItemStack> previews = getMaterialInputs(alloy, GTValues.M);
-                recipes.add(new CrucibleJeiRecipe(inputs, fluids, alloy.getLocalizedName(), outputAmount,
-                        previews.isEmpty() ? ItemStack.EMPTY : previews.get(0), temperature, true, info));
+                int volume = exactDisplayFluidAmount(outputAmount,
+                        MetaTileEntityCrucible.getLiquidFluidUnit(alloy));
+                FluidStack output = MetaTileEntityCrucible.getLiquidFluidStack(alloy, volume);
+                if (output != null && output.amount > 0) {
+                    recipes.add(new CrucibleJeiRecipe(inputs, fluids, output, temperature, true, info));
+                    return;
+                }
             }
+            List<ItemStack> previews = getMaterialInputs(alloy, GTValues.M);
+            recipes.add(new CrucibleJeiRecipe(inputs, fluids, alloy.getLocalizedName(), outputAmount,
+                    previews.isEmpty() ? ItemStack.EMPTY : previews.get(0), temperature, true, info));
             return;
         }
     }
@@ -222,7 +223,8 @@ public final class CrucibleJeiRecipeMaker {
     }
 
     private static boolean isUsableOutputMaterial(Material material) {
-        return material != null && material != Materials.NULL && material.hasFluid() && material.getFluid(GTValues.L) != null;
+        return material != null && material != Materials.NULL &&
+                MetaTileEntityCrucible.getLiquidFluidUnit(material) > 0;
     }
 
     private static List<ItemStack> getMaterialInputs(Material material, long amount) {

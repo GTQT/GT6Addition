@@ -4,6 +4,7 @@ import com.drppp.gt6addition.Tags;
 import com.drppp.gt6addition.GT6AdditionMain;
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
 import com.drppp.gt6addition.common.item.GT6AdditionItems;
+import com.drppp.gt6addition.common.fluid.GT6CalciteFluid;
 import com.drppp.gt6addition.common.material.GT6AdditionOrePrefixes;
 import com.drppp.gt6addition.common.material.GT6MaterialCompatibility;
 import gregtech.api.GTValues;
@@ -77,8 +78,26 @@ public final class GT6AdditionMachineRecipes {
         registerCrucibleSeries();
         registerItemMachines();
         registerMuSeries();
+        registerMoltenCalciteRecipe();
         registerScrapMaceratorRecipes();
         registerTreeCokeOvenRecipes();
+    }
+
+    /** GT6 melts one dust-unit of calcite into 72 mB of molten.calcite. */
+    private static void registerMoltenCalciteRecipe() {
+        FluidStack moltenCalcite = GT6CalciteFluid.getFluidStack(GT6CalciteFluid.MILLIBUCKETS_PER_DUST);
+        ItemStack calciteDust = OreDictUnifier.get(OrePrefix.dust, Materials.Calcite, 1);
+        if (moltenCalcite == null || calciteDust.isEmpty()) {
+            GT6AdditionMain.LOGGER.warn("Calcite dust or molten calcite fluid is unavailable; molten calcite recipe was skipped.");
+            return;
+        }
+        RecipeMaps.BLAST_RECIPES.recipeBuilder()
+                .inputs(calciteDust)
+                .fluidOutputs(moltenCalcite)
+                .duration(200)
+                .EUt(30)
+                .blastFurnaceTemp(GT6CalciteFluid.TEMPERATURE)
+                .buildAndRegister();
     }
 
     /**

@@ -1,12 +1,74 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
+import com.drppp.gt6addition.Tags;
+import com.drppp.gt6addition.common.material.GT6MaterialCompatibility;
+import gregtech.api.GregTechAPI;
+import gregtech.api.unification.material.Material;
+import gregtech.api.unification.material.Materials;
+
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Map;
+
 /** Explicit numeric IDs from the bundled GT6 MT.java reference snapshot.
  * Factories forward the ID unchanged to OreDictMaterial.createMaterial.
  * Only literal positive IDs with literal names are included; unknown/dynamic
  * IDs and third-party ranges must not be interpreted as CEu registry IDs.
  */
 final class GT6MaterialIdentity {
+    private static final Map<Material, String> CANONICAL_MECHANICS_NAMES =
+            Collections.synchronizedMap(new IdentityHashMap<Material, String>());
+
     private GT6MaterialIdentity() {}
+
+    /**
+     * Returns the GT6 read-only data key only when this exact Material object
+     * is the identity selected by the shared host-material compatibility rule.
+     * Unqualified table names alone are not identity: another mod may register
+     * a same-named material with different properties.
+     */
+    static String canonicalMechanicsName(Material material) {
+        if (material == null || material == Materials.NULL) return null;
+        String cached = CANONICAL_MECHANICS_NAMES.get(material);
+        if (cached != null) return cached.isEmpty() ? null : cached;
+
+        String registryName = material.getRegistryName();
+        String mechanicsName = null;
+        if ((Tags.MOD_ID + ":anthracite").equals(registryName)) {
+            mechanicsName = "anthracite";
+        } else if (registryName != null && registryName.startsWith(Tags.MOD_ID + ":")) {
+            // Anthracite is the only production material this addon owns.
+            mechanicsName = null;
+        } else if (material == Materials.BandedIron) {
+            // GT6's Hematite is CEu's explicit BandedIron identity.
+            mechanicsName = "hematite";
+        } else {
+            String hostName = material.getName();
+            if (hostName != null && GT6MaterialCompatibility.findExternal(hostName) == material) {
+                mechanicsName = unqualifiedMechanicsName(hostName);
+            } else if (registryName != null) {
+                int separator = registryName.indexOf(':');
+                String registryPath = separator < 0 ? registryName : registryName.substring(separator + 1);
+                if (!registryPath.isEmpty() && GT6MaterialCompatibility.findExternal(registryPath) == material) {
+                    mechanicsName = registryPath;
+                }
+            }
+        }
+
+        // A failed lookup during the PRE phase may become resolvable once all
+        // optional registries close; only cache misses after that point.
+        if (mechanicsName != null || (GregTechAPI.materialManager != null &&
+                GregTechAPI.materialManager.getPhase() !=
+                        gregtech.api.unification.material.registry.IMaterialRegistryManager.Phase.PRE)) {
+            CANONICAL_MECHANICS_NAMES.put(material, mechanicsName == null ? "" : mechanicsName);
+        }
+        return mechanicsName;
+    }
+
+    private static String unqualifiedMechanicsName(String name) {
+        int separator = name.lastIndexOf(':');
+        return separator < 0 ? name : name.substring(separator + 1);
+    }
 
     /** Source-verified Fe2O3 names; never infer identity from name similarity. */
     static String canonicalOxideName(String normalizedName) {

@@ -1,10 +1,5 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,45 +23,35 @@ final class GT6LiteralTargetData {
         Map<Integer, Profile> byId = new HashMap<>();
         Map<String, Profile> byName = new HashMap<>();
         Set<String> ambiguous = new HashSet<>();
-        InputStream stream = GT6LiteralTargetData.class.getResourceAsStream("/gt6-material-target-data.txt");
-        if (stream == null) throw new ExceptionInInitializerError("Missing read-only GT6 target data");
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.isEmpty() || line.startsWith("#")) continue;
-                String[] fields = line.split("\\|", -1);
-                if (fields.length != 9) throw new IllegalStateException("Malformed GT6 target row: " + line);
-                int id = Integer.parseInt(fields[0]);
-                String sourceName = fields[1];
-                int sourceLine = Integer.parseInt(fields[2]);
-                int hotTargetId = Integer.parseInt(fields[3]);
-                long hotAmount = Long.parseLong(fields[5]);
-                int coldTargetId = Integer.parseInt(fields[6]);
-                long coldAmount = Long.parseLong(fields[8]);
-                if (id <= 0 || sourceName.isEmpty() || sourceLine <= 0 || hotTargetId <= 0 ||
-                        coldTargetId <= 0 || hotAmount < 0 || coldAmount < 0) {
-                    throw new IllegalStateException("Invalid GT6 target row: " + line);
-                }
-                String mechanicsName = GT6MaterialIdentity.mechanicsName(id);
-                String hotTargetName = GT6MaterialIdentity.mechanicsName(hotTargetId);
-                String coldTargetName = GT6MaterialIdentity.mechanicsName(coldTargetId);
-                GT6LiteralHazardData.Profile hazard = GT6LiteralHazardData.findById(id);
-                if (mechanicsName == null || hotTargetName == null || coldTargetName == null || hazard == null ||
-                        !sourceName.equals(hazard.sourceName) || sourceLine != hazard.sourceLine) {
-                    throw new IllegalStateException("Unknown GT6 target identity/flags: " + line);
-                }
-                Profile profile = new Profile(id, sourceName, mechanicsName, sourceLine,
-                        hotTargetId, hotTargetName, hotAmount, coldTargetId, coldTargetName, coldAmount);
-                if (byId.put(id, profile) != null) throw new IllegalStateException("Duplicate GT6 target ID: " + line);
-                String key = normalize(mechanicsName);
-                Profile previous = byName.putIfAbsent(key, profile);
-                if (previous != null && !previous.sameContract(profile)) {
-                    byName.remove(key);
-                    ambiguous.add(key);
-                }
+        for (GT6LiteralTargetRows.Row row : GT6LiteralTargetRows.ROWS) {
+            int id = row.id;
+            String sourceName = row.sourceName;
+            int sourceLine = row.sourceLine;
+            int hotTargetId = row.hotTargetId;
+            long hotAmount = row.hotAmount;
+            int coldTargetId = row.coldTargetId;
+            long coldAmount = row.coldAmount;
+            if (id <= 0 || sourceName.isEmpty() || sourceLine <= 0 || hotTargetId <= 0 ||
+                    coldTargetId <= 0 || hotAmount < 0 || coldAmount < 0) {
+                throw new IllegalStateException("Invalid GT6 target row: " + sourceName);
             }
-        } catch (IOException | NumberFormatException exception) {
-            throw new ExceptionInInitializerError(exception);
+            String mechanicsName = GT6MaterialIdentity.mechanicsName(id);
+            String hotTargetName = GT6MaterialIdentity.mechanicsName(hotTargetId);
+            String coldTargetName = GT6MaterialIdentity.mechanicsName(coldTargetId);
+            GT6LiteralHazardData.Profile hazard = GT6LiteralHazardData.findById(id);
+            if (mechanicsName == null || hotTargetName == null || coldTargetName == null || hazard == null ||
+                    !sourceName.equals(hazard.sourceName) || sourceLine != hazard.sourceLine) {
+                throw new IllegalStateException("Unknown GT6 target identity/flags: " + sourceName);
+            }
+            Profile profile = new Profile(id, sourceName, mechanicsName, sourceLine,
+                    hotTargetId, hotTargetName, hotAmount, coldTargetId, coldTargetName, coldAmount);
+            if (byId.put(id, profile) != null) throw new IllegalStateException("Duplicate GT6 target ID: " + id);
+            String key = normalize(mechanicsName);
+            Profile previous = byName.putIfAbsent(key, profile);
+            if (previous != null && !previous.sameContract(profile)) {
+                byName.remove(key);
+                ambiguous.add(key);
+            }
         }
         if (byId.size() != EXPECTED_ROWS) {
             throw new ExceptionInInitializerError("Expected " + EXPECTED_ROWS +

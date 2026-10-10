@@ -360,8 +360,8 @@
 9183|Emery|1240|0
 8275|Bark|1243|9
 8221|Wood|1244|9
-8222|WoodTreated|1245|1
-8267|WoodPolished|1246|1
+8222|WoodTreated|1245|9
+8267|WoodPolished|1246|9
 8224|WoodRubber|1247|9
 8418|Bamboo|1248|9
 8291|Skyroot|1249|9
@@ -389,7 +389,7 @@
 8211|Blaze|1275|12
 8471|Breeze|1276|0
 8225|Ceramic|1279|0
-9243|Clay Brick|1280|0
+9243|Clay Brick|1280|8
 8215|Clay|1281|8
 8276|ClayBrown|1282|8
 8455|ClayRed|1283|8
@@ -594,12 +594,12 @@
 8347|Certus Quartz|1564|8
 8348|Charged Certus Quartz|1565|8
 8389|Fluix|1566|8
-8375|Redstonia|1569|0
-8376|Palis|1570|0
-8377|Diamantine|1571|0
-8378|VoidCrystal|1572|0
-8379|Emeradic|1573|0
-8380|Enori|1574|0
+8375|Redstonia|1569|8
+8376|Palis|1570|8
+8377|Diamantine|1571|8
+8378|VoidCrystal|1572|8
+8379|Emeradic|1573|8
+8380|Enori|1574|8
 8381|Dark Matter|1577|4
 8382|Red Matter|1578|4
 8298|EnergiumRed|1581|0
@@ -625,9 +625,9 @@
 8343|Force|1627|4
 8344|Forcicium|1628|0
 8345|Forcillium|1629|0
-8500|Stone|1631|0
+8500|Stone|1631|8
 8501|Concrete|1632|8
-8502|Netherrack|1633|9
+8502|Netherrack|1633|13
 8503|Nether Brick|1634|4
 8504|Endstone|1635|0
 8214|Obsidian|1636|12
@@ -801,9 +801,9 @@
 8742|Muspelheim Power|1828|12
 8743|Iffesal|1829|0
 8744|Ancient Debris|1832|12
-8745|Netherite|1833|8
+8745|Netherite|1833|12
 8746|Netherized Diamond|1834|12
-8747|Efrine|1835|8
+8747|Efrine|1835|12
 8750|Desh|1838|8
 8780|Workers Alloy|1839|8
 8751|Duranium|1840|8
@@ -821,8 +821,8 @@
 8797|HSS-E|1854|12
 8798|HSS-S|1855|12
 8795|Bedrockium|1858|12
-8791|Draconium|1861|8
-8792|DraconiumAwakened|1862|8
+8791|Draconium|1861|12
+8792|DraconiumAwakened|1862|12
 8799|Crystal Matrix|1865|12
 8800|Cosmic Neutronium|1866|12
 8801|Infinity|1867|12
@@ -909,9 +909,9 @@
 9208|Tritanium Hexaiodide|3789|0
 9209|Tritanium Hexaastatide|3790|0
 8512|Space Stone|3797|8
-8513|Moon Stone|3798|0
+8513|Moon Stone|3798|8
 8514|Moon Turf|3799|0
-8515|Mars Stone|3800|0
+8515|Mars Stone|3800|8
 8516|Mars Sand|3801|0
 8528|Sky Stone|3802|0
 8522|Holystone|3803|0
@@ -929,7 +929,7 @@
 9177|Komatiite|3815|4
 9000|Pumice|3816|4
 9176|Gabbro|3817|4
-8505|Basalt|3818|0
+8505|Basalt|3818|4
 8506|Marble|3819|8
 9189|Limestone|3820|8
 9171|Greenschist|3821|0

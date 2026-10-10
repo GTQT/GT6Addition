@@ -25,9 +25,12 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Actual battery-product manufacturing inputs, not an arbitrary static recipe or EU capacity. */
 public final class CrucibleComponentProvenance {
@@ -192,6 +195,9 @@ public final class CrucibleComponentProvenance {
 
     private static NBTTagCompound account(ItemStack output, List<ItemStack> items, List<FluidStack> fluids) {
         NBTTagCompound invalid = new NBTTagCompound();
+        if (output == null || output.isEmpty() || output.getCount() <= 0 || GTValues.L <= 0 || GTValues.M <= 0) {
+            return invalid;
+        }
         List<MaterialStack> totals = Collections.emptyList();
         List<MaterialStack> hullTotals = Collections.emptyList();
         ItemStack hull = ItemStack.EMPTY;
@@ -228,17 +234,35 @@ public final class CrucibleComponentProvenance {
                 if (hullTotals.isEmpty()) return invalid;
             }
         }
+        // Keep CEu's M/L material conversion exact until all item and fluid
+        // inputs have been combined. Truncating each fluid stack separately
+        // loses material when several fractional inputs together make a unit.
+        Map<Material, BigInteger> scaledTotals = new LinkedHashMap<>();
+        BigInteger fluidDenominator = BigInteger.valueOf(GTValues.L);
+        for (MaterialStack component : totals) {
+            if (component == null || component.material == null || component.amount <= 0) return invalid;
+            scaledTotals.put(component.material, BigInteger.valueOf(component.amount).multiply(fluidDenominator));
+        }
         for (FluidStack fluid : fluids) {
+            if (fluid == null || fluid.getFluid() == null || fluid.tag != null) return invalid;
             Material material = FluidUnifier.getMaterialFromFluid(fluid.getFluid());
             // CEu manufacturing/recycling measures dust-bearing fluids in M/L.
             // Do not interpret unrelated coolant, gases or unknown fluids as metal.
             if (material == null || material == Materials.NULL || material instanceof MarkerMaterial ||
                     !material.hasProperty(PropertyKey.DUST) || fluid.amount <= 0) return invalid;
-            long amount = (long) GTValues.M * fluid.amount / GTValues.L;
-            totals = CrucibleRecyclingOverride.combine(totals, Collections.singletonList(new MaterialStack(material, amount)));
-            if (totals.isEmpty()) return invalid;
+            BigInteger amount = BigInteger.valueOf(GTValues.M).multiply(BigInteger.valueOf(fluid.amount));
+            scaledTotals.merge(material, amount, BigInteger::add);
         }
-        NBTTagCompound result = encoded(output, totals, output.getCount());
+        BigInteger perOutputDenominator = fluidDenominator.multiply(BigInteger.valueOf(output.getCount()));
+        List<MaterialStack> perOutputMaterials = new ArrayList<>();
+        for (Map.Entry<Material, BigInteger> entry : scaledTotals.entrySet()) {
+            BigInteger[] perOutput = entry.getValue().divideAndRemainder(perOutputDenominator);
+            if (perOutput[1].signum() != 0 || perOutput[0].signum() <= 0 ||
+                    perOutput[0].compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0) return invalid;
+            perOutputMaterials.add(new MaterialStack(entry.getKey(), perOutput[0].longValue()));
+        }
+        if (perOutputMaterials.isEmpty()) return invalid;
+        NBTTagCompound result = encoded(output, perOutputMaterials, 1);
         if (result.isEmpty()) return invalid;
         if (isElectricBattery(output) && !hull.isEmpty()) {
             if (hullCount != output.getCount()) return invalid;
@@ -420,7 +444,6 @@ public final class CrucibleComponentProvenance {
             return result;
         }
 
-        @Nullable
         private NBTTagCompound findAccount(ItemStack output) {
             for (OutputAccount candidate : outputAccounts) {
                 if (ItemStack.areItemsEqual(candidate.output, output)) return candidate.account;

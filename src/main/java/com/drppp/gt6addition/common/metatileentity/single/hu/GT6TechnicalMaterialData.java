@@ -6,21 +6,29 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-/** ANY.java:36-92,97-149. Statistics and processing outputs are independent.
+/** ANY.java:36-92,97-149. Statistics, processing outputs and tags are independent.
  * steal() copies heat/density, stealLooks() does neither, and
- * setAllToTheOutputOf() copies both target identities AND their quantities.
- * These negative-ID recipe families must not inherit their members' tags.
+ * setAllToTheOutputOf() copies target identities/quantities (and can add MELTING
+ * through setSmelting). The profile stores only tags directly added by ANY.init;
+ * source-member tags are never inherited implicitly.
  */
 final class GT6TechnicalMaterialData {
     static final class Profile {
         final String statsSource;
         final String targetsSource;
         final String nativeSelfOutput;
+        final int declaredHazardFlags;
 
         private Profile(String statsSource, String targetsSource, String nativeSelfOutput) {
+            this(statsSource, targetsSource, nativeSelfOutput, 0);
+        }
+
+        private Profile(String statsSource, String targetsSource, String nativeSelfOutput,
+                        int declaredHazardFlags) {
             this.statsSource = statsSource;
             this.targetsSource = targetsSource;
             this.nativeSelfOutput = nativeSelfOutput;
+            this.declaredHazardFlags = declaredHazardFlags;
         }
     }
 
@@ -82,6 +90,18 @@ final class GT6TechnicalMaterialData {
         stats(profiles, "anysteel", null);
         stats(profiles, "anybronze", null);
         stats(profiles, "anymetal", null);
+        hazards(profiles, GT6LiteralHazardData.ACID | GT6LiteralHazardData.MELTING, "anyfluorite");
+        hazards(profiles, GT6LiteralHazardData.FLAMMABLE | GT6LiteralHazardData.EXPLOSIVE |
+                GT6LiteralHazardData.MELTING, "anyphosphorus");
+        hazards(profiles, GT6LiteralHazardData.FLAMMABLE,
+                "anygrains", "anyflour", "anyflourorgrains",
+                "anywood", "anydefaultwood", "anynormalwood", "anymagicalwood",
+                "anytreatedwood", "anyuntreatedwood");
+        hazards(profiles, GT6LiteralHazardData.MELTING,
+                "anyiron", "anyironorsteel", "anyironsteel", "anyblacksteel", "anybluesteel",
+                "anyredsteel", "anymagiciron", "anycopper", "anysilicon", "anysilicondioxide",
+                "quartz", "anysand");
+        hazards(profiles, GT6LiteralHazardData.MELTING | GT6LiteralHazardData.UNBURNABLE, "anytungsten");
         PROFILES = Collections.unmodifiableMap(profiles);
     }
 
@@ -93,6 +113,15 @@ final class GT6TechnicalMaterialData {
 
     private static void stats(Map<String, Profile> profiles, String name, String source) {
         profiles.put(name, new Profile(source, null, null));
+    }
+
+    private static void hazards(Map<String, Profile> profiles, int flags, String... names) {
+        for (String name : names) {
+            Profile profile = profiles.get(name);
+            if (profile == null) throw new ExceptionInInitializerError("Missing GT6 technical profile " + name);
+            profiles.put(name, new Profile(profile.statsSource, profile.targetsSource,
+                    profile.nativeSelfOutput, flags));
+        }
     }
 
     static Profile find(String name) {

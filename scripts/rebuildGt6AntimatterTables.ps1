@@ -83,14 +83,16 @@ if ($aliasRows.Count -ne 22 -or $normalizedAliases.Count -ne 21) {
     throw "Expected 22 AM aliases / 21 normalized aliases, found $($aliasRows.Count) / $($normalizedAliases.Count)"
 }
 
-$resourcesMain = Join-Path (Get-Location) 'src\main\resources'
 $resourcesTest = Join-Path (Get-Location) 'src\test\resources'
-[System.IO.Directory]::CreateDirectory($resourcesMain) | Out-Null
 [System.IO.Directory]::CreateDirectory($resourcesTest) | Out-Null
 $encoding = [System.Text.UTF8Encoding]::new($false)
-[System.IO.File]::WriteAllLines((Join-Path $resourcesMain 'gt6-antimatter-materials.txt'), @("# AM_SHA256=$actualHash") + $materialRows, $encoding)
-[System.IO.File]::WriteAllLines((Join-Path $resourcesMain 'gt6-antimatter-aliases.txt'), @("# AM_SHA256=$actualHash") + (($aliasRows | ForEach-Object { $parts = $_.Split('|'); ([regex]::Replace($parts[0].ToLowerInvariant(), '[^a-z0-9]', '') + '|' + [regex]::Replace($parts[1].ToLowerInvariant(), '[^a-z0-9]', '')) } | Sort-Object -Unique)), $encoding)
 [System.IO.File]::WriteAllLines((Join-Path $resourcesTest 'gt6-antimatter-source-values.txt'), @("# AM_SHA256=$actualHash") + $sourceRows, $encoding)
 [System.IO.File]::WriteAllLines((Join-Path $resourcesTest 'gt6-antimatter-source-aliases.txt'), @("# AM_SHA256=$actualHash") + $aliasRows, $encoding)
+
+$generator = Join-Path (Get-Location) 'scripts\generateGt6JavaMaterialTables.py'
+python $generator --group antimatter
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to generate GT6 antimatter Java tables (exit code $LASTEXITCODE)"
+}
 
 Write-Output "Rebuilt 418 AM identity rows and 22 alias source rows (21 normalized aliases) from $amPath"

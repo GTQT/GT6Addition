@@ -54,6 +54,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 import org.apache.logging.log4j.LogManager;
 
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.ArrayList;
 import java.util.List;
@@ -514,13 +515,25 @@ final class CrucibleToolWorldSmoke {
     }
 
     private static Map<String, Long> machineMaterials(List<ItemStack> inputs, List<FluidStack> fluids, Assembly known) {
-        Map<String, Long> result = new LinkedHashMap<>();
+        Map<String, BigInteger> scaled = new LinkedHashMap<>();
         for (ItemStack input : inputs) {
             Map<String, Long> unit = known != null && ItemStack.areItemsEqual(input, known.stack) ? known.materials : staticMaterials(input);
-            unit.forEach((material, amount) -> result.merge(material, amount * input.getCount(), Long::sum));
+            unit.forEach((material, amount) -> scaled.merge(material,
+                    BigInteger.valueOf(amount).multiply(BigInteger.valueOf(input.getCount()))
+                            .multiply(BigInteger.valueOf(GTValues.L)), BigInteger::add));
         }
-        fluids.forEach(fluid -> result.merge(gregtech.api.unification.FluidUnifier.getMaterialFromFluid(fluid.getFluid()).getRegistryName(),
-                (long) GTValues.M * fluid.amount / GTValues.L, Long::sum));
+        fluids.forEach(fluid -> scaled.merge(
+                gregtech.api.unification.FluidUnifier.getMaterialFromFluid(fluid.getFluid()).getRegistryName(),
+                BigInteger.valueOf(GTValues.M).multiply(BigInteger.valueOf(fluid.amount)), BigInteger::add));
+        Map<String, Long> result = new LinkedHashMap<>();
+        BigInteger denominator = BigInteger.valueOf(GTValues.L);
+        scaled.forEach((material, amount) -> {
+            BigInteger[] whole = amount.divideAndRemainder(denominator);
+            check(whole[1].signum() == 0 && whole[0].signum() > 0 &&
+                    whole[0].compareTo(BigInteger.valueOf(Long.MAX_VALUE)) <= 0,
+                    "Manufacturing fixture has nonintegral material total: " + material);
+            result.put(material, whole[0].longValue());
+        });
         return result;
     }
 

@@ -176,7 +176,7 @@ public class MetaTileEntityMold extends MetaTileEntity implements ICrucibleMold,
             return;
         }
 
-        long boilingPoint = CrucibleMaterialPhaseData.boilingPoint(contentMaterial.getName());
+        long boilingPoint = CrucibleMaterialPhaseData.boilingPoint(contentMaterial);
         if (shouldMeltDown(temperature, maxTemperature, boilingPoint)) {
             getWorld().playSound(null, getPos(), SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS,
                     1.0F, 1.0F);

@@ -1,6 +1,5 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
-import gregtech.api.fluids.FluidState;
 import gregtech.api.fluids.attribute.AttributedFluid;
 import gregtech.api.fluids.attribute.FluidAttributes;
 import gregtech.api.fluids.store.FluidStorageKey;
@@ -25,7 +24,7 @@ final class GT6MaterialHazardData {
         putCombustion(FLAMMABLE, "carbon", "carbon13", "carbon14", "magnesium", "sulfur", "sulphur");
         putCombustion(FLAMMABLE | EXPLOSIVE, "phosphor", "phosphorus", "phosphorous", "hafnium",
                 "glyceryl", "phosphate", "tricalciumphosphate", "nitrocarbon", "bluephosphorus", "redphosphorus",
-                "whitephosphorus", "anyphosphorus", "gunpowder", "dynamite", "tnt");
+                "whitephosphorus", "gunpowder", "dynamite", "tnt");
         putCombustion(EXPLOSIVE, "naquadahenriched", "enrichednaquadah", "naquadria"); // :745-746
         // MT.java:1201-1205 lqudexpl actually grants both tags; literal aliases included.
         putCombustion(FLAMMABLE | EXPLOSIVE, "fuel", "fueloil", "nitrofuel", "kerosine", "diesel",
@@ -33,14 +32,10 @@ final class GT6MaterialHazardData {
         // In this snapshot gasexpl -> gas -> create only grants DECOMPOSABLE.
         // Do not infer flags from its method name or override it with host flags.
         putCombustion(0, "propane", "butane", "propylene", "ethylene"); // :1206-1209
-        // ANY technical families do not copy their source's flags via steal.
-        putCombustion(0, "anymagiciron", "anywoodorplastic");
-        putCombustion(0, "anygarnet", "anyjasper", "anytigereye", "anyaventurine", "anyamber");
         putCombustion(0, "wax", "stone", "calcite", "sand", "silicondioxide");
-        putCombustion(0, "blaze", "anyblaze", "prismarine", "prismarinedark", "anyprismarine");
+        putCombustion(0, "blaze", "prismarine", "prismarinedark");
         putCombustion(0, "fishraw", "fishcooked", "fishrotten", "tofu", "bone");
         putCombustion(0, "potato"); // setBurning(Ash, U9) does not grant FLAMMABLE.
-        putCombustion(0, "anythaumiccrystal", "anyhexorium");
         // MT.java:3734-3742,3779-3790,3813-3814: neither combustion
         // tag is inherited from the ore/stone factories or configurations.
         putCombustion(0, "wollastonite", "zeolite", "pollucite", "vanadiummagnetite", "ferrovanadium",
@@ -65,11 +60,6 @@ final class GT6MaterialHazardData {
                 "opal", "onyxred", "onyxblack", "onyx", "sugilite", "peridot", "olivine",
                 "amethyst", "dioptase", "amethystender", "enderamethyst", "dilithium",
                 "hexoriumblack", "hexoriumred", "hexoriumgreen", "hexoriumblue", "hexoriumwhite");
-        // ANY.java:111-113,136-141 explicitly grants these tags. Copying
-        // processing targets grants MELTING separately, not combustion tags.
-        putCombustion(FLAMMABLE, "anygrains", "anyflour", "anyflourorgrains",
-                "anywood", "anydefaultwood", "anynormalwood", "anymagicalwood",
-                "anytreatedwood", "anyuntreatedwood");
         // MT.java:1037-1198 explicit tags and lqudflam; :1210-1220 oil factories.
         putCombustion(FLAMMABLE, "methane", "sugar", "glycerol", "hydrosulfuricacid", "hydrogensulfide",
                 "sodiumnitrate", "potassiumnitrate", "methaneice", "biomass", "biofuel", "ethanol", "oil",
@@ -105,6 +95,10 @@ final class GT6MaterialHazardData {
         if (literal != null) {
             return literal.flags & (GT6LiteralHazardData.FLAMMABLE | GT6LiteralHazardData.EXPLOSIVE);
         }
+        GT6TechnicalMaterialData.Profile technical = GT6TechnicalMaterialData.find(name);
+        if (technical != null) {
+            return technical.declaredHazardFlags & (GT6LiteralHazardData.FLAMMABLE | GT6LiteralHazardData.EXPLOSIVE);
+        }
         // woodnormal grants FLAMMABLE even to its UNBURNABLE variants;
         // positive setSmelting also grants MELTING, so burning is exempt.
         if (GT6WoodMaterialData.contains(name)) return FLAMMABLE;
@@ -124,13 +118,19 @@ final class GT6MaterialHazardData {
 
     static boolean isExplosiveMaterial(Material material) {
         if (material == null) return false;
-        Integer flags = knownCombustionFlags(material.getName());
+        String mechanicsName = GT6MaterialIdentity.canonicalMechanicsName(material);
+        if (mechanicsName == null) return material.hasFlags(MaterialFlags.EXPLOSIVE);
+        Integer flags = knownCombustionFlags(mechanicsName);
         return flags == null ? material.hasFlags(MaterialFlags.EXPLOSIVE) : (flags & EXPLOSIVE) != 0;
     }
 
     static boolean shouldBurn(Material material, long temperature) {
-        return material != null && shouldBurn(material.getName(), temperature,
-                material.hasFlags(MaterialFlags.FLAMMABLE));
+        if (material == null) return false;
+        String mechanicsName = GT6MaterialIdentity.canonicalMechanicsName(material);
+        if (mechanicsName == null) {
+            return temperature > 313 && material.hasFlags(MaterialFlags.FLAMMABLE);
+        }
+        return shouldBurn(mechanicsName, temperature, material.hasFlags(MaterialFlags.FLAMMABLE));
     }
 
     /** Unknown host materials keep their explicit host flag; known GT6 tags take priority. */
@@ -139,21 +139,30 @@ final class GT6MaterialHazardData {
         boolean flammable = flags == null ? hostFlammable : (flags & FLAMMABLE) != 0;
         return temperature > 313 && flammable &&
                 !hasGt6BurningExemption(name) &&
-                !GT6DeclaredPhaseData.hasBurningExemption(name) &&
-                !GT6InheritedBurningExemptions.contains(name) &&
                 !CrucibleSmeltingRule.hasMeltingFlag(name);
     }
 
     private static boolean hasGt6BurningExemption(String name) {
         GT6LiteralHazardData.Profile literal = GT6LiteralHazardData.find(name);
-        return (literal != null && (literal.flags &
-                (GT6LiteralHazardData.UNBURNABLE | GT6LiteralHazardData.MELTING)) != 0) ||
-                GT6ElementPhaseData.hasMeltingFlag(name);
+        GT6TechnicalMaterialData.Profile technical = GT6TechnicalMaterialData.find(name);
+        int exemptionFlags = GT6LiteralHazardData.UNBURNABLE | GT6LiteralHazardData.MELTING;
+        // The source-derived literal table covers the complete positive-ID MT
+        // snapshot. Its exact zero is authoritative too: older curated lists
+        // must not turn a verified non-exempt material into an exemption.
+        if (literal != null) return (literal.flags & exemptionFlags) != 0;
+        if (technical != null) return (technical.declaredHazardFlags & exemptionFlags) != 0;
+
+        // These compact tables remain fallbacks for non-literal identities and
+        // verified aliases that are not represented by a unique snapshot row.
+        return GT6ElementPhaseData.hasMeltingFlag(name) ||
+                GT6DeclaredPhaseData.hasBurningExemption(name) ||
+                GT6InheritedBurningExemptions.contains(name);
     }
 
     static boolean isAcidMaterial(Material material) {
         if (material == null) return false;
-        Boolean sourceFlag = knownAcidFlag(material.getName());
+        String mechanicsName = GT6MaterialIdentity.canonicalMechanicsName(material);
+        Boolean sourceFlag = mechanicsName == null ? null : knownAcidFlag(mechanicsName);
         if (sourceFlag != null) return sourceFlag;
         if (!material.hasProperty(PropertyKey.FLUID)) return false;
         FluidProperty property = material.getProperty(PropertyKey.FLUID);
@@ -175,6 +184,8 @@ final class GT6MaterialHazardData {
         if (name == null) return null;
         GT6LiteralHazardData.Profile literal = GT6LiteralHazardData.find(name);
         if (literal != null) return (literal.flags & GT6LiteralHazardData.ACID) != 0;
+        GT6TechnicalMaterialData.Profile technical = GT6TechnicalMaterialData.find(name);
+        if (technical != null) return (technical.declaredHazardFlags & GT6LiteralHazardData.ACID) != 0;
         if (isAcid(name)) return Boolean.TRUE;
         return isKnownSnapshotMaterial(name) ? Boolean.FALSE : null;
     }
@@ -196,38 +207,9 @@ final class GT6MaterialHazardData {
                 ((AttributedFluid) fluid).getAttributes().contains(FluidAttributes.ACID);
     }
 
-    /** CEu fallback only when no authoritative boiling point is known.
-     * A registered gas/plasma variant does not make a condensed material a gas.
-     * Do not fabricate a boiling temperature from any of these fluid bindings.
-     */
-    static boolean isGasOnlyMaterial(Material material) {
-        if (material == null || !material.hasProperty(PropertyKey.FLUID)) return false;
-        FluidProperty property = material.getProperty(PropertyKey.FLUID);
-        if (isLiquid(property.get(FluidStorageKeys.MOLTEN)) ||
-                isLiquid(property.get(FluidStorageKeys.LIQUID))) return false;
-        FluidStorageKey primary = property.getPrimaryKey();
-        Fluid primaryFluid = primaryFluid(property);
-        if (primary != FluidStorageKeys.GAS && primary != FluidStorageKeys.PLASMA &&
-                primaryFluid != property.get(FluidStorageKeys.GAS) &&
-                primaryFluid != property.get(FluidStorageKeys.PLASMA) &&
-                isLiquid(primaryFluid)) return false;
-        // Standard storage keys also identify plain Forge fluids which do
-        // not implement CEu's AttributedFluid interface.
-        return property.get(FluidStorageKeys.GAS) != null ||
-                property.get(FluidStorageKeys.PLASMA) != null ||
-                (primaryFluid != null && (primaryFluid.isGaseous() ||
-                        (primaryFluid instanceof AttributedFluid &&
-                                ((AttributedFluid) primaryFluid).getState() != FluidState.LIQUID)));
-    }
-
     private static Fluid primaryFluid(FluidProperty property) {
         FluidStorageKey primary = property.getPrimaryKey();
         return primary == null ? null : property.get(primary);
-    }
-
-    private static boolean isLiquid(Fluid fluid) {
-        return fluid != null && !fluid.isGaseous() &&
-                (!(fluid instanceof AttributedFluid) || ((AttributedFluid) fluid).getState() == FluidState.LIQUID);
     }
 
     /** MT.java gasacid/lqudacid factories, fluorite(), and explicit ACID declarations.
@@ -290,7 +272,9 @@ final class GT6MaterialHazardData {
             case "yellowfluorite":
             case "orangefluorite":
             case "magentafluorite":
-            case "anyfluorite": return true; // ANY.java:106, not tag inheritance.
+                return true;
+            // ANY.java negative-ID families are checked through the explicit
+            // technical profile; don't infer a family flag from its members.
             default: return false;
         }
     }

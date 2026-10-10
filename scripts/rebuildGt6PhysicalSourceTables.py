@@ -4,6 +4,8 @@
 The evaluator reads only hash-pinned GT6 source. It does not import GT6Addition
 production data. By default it compares existing test fixtures without writes;
 --write is an explicit opt-in after reviewing the resolved source results.
+After rebuilding a fixture, run generateGt6JavaMaterialTables.py to refresh the
+corresponding production Java data table.
 """
 
 from __future__ import annotations
@@ -12,6 +14,7 @@ import argparse
 import hashlib
 import importlib.util
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -41,6 +44,10 @@ class Physical:
     boiling: int = 3000
     density: float = 1.0
     flags: int = 0
+    # OreDictMaterial initializes targetSmelting to self/U. Track its amount
+    # separately because setAllToTheOutputOf calls setSmelting and thereby
+    # grants MELTING even when it copies that default self target.
+    hot_target_amount: int = _source.U
 
 
 class SourceError(RuntimeError):
@@ -168,10 +175,37 @@ def apply_property(name: str, args: list[str], env: dict[str, str], material: ob
     if name == "setSmelting":
         if len(args) != 2:
             raise SourceError(f"Unexpected setSmelting arity {len(args)} for {material.name}")
-        amount = _source.eval_int(args[1], {})
+        amount = _source.eval_int(args[1], env)
+        own.hot_target_amount = amount
         if amount > 0:
             # OreDictMaterial.setSmelting adds Processing.MELTING only for
             # positive targets. A default self/U target does not grant it.
+            own.flags |= 8
+        return
+    if name == "setAllToTheOutputOf":
+        if len(args) not in (1, 3):
+            raise SourceError(f"Unexpected setAllToTheOutputOf arity {len(args)} for {material.name}")
+        source_expression = args[0].strip()
+        if source_expression in ("null", "this"):
+            source_id = material.material_id
+        else:
+            source_id = resolve(source_expression, env, fields, simple_fields, name_ids,
+                                material.material_id, scope)
+        if source_id not in states:
+            raise SourceError(f"setAllToTheOutputOf source {source_expression} is unresolved for {material.name}")
+        if source_id != material.material_id and source_id not in initialized:
+            raise SourceError(f"setAllToTheOutputOf source {source_expression} is not initialized for {material.name}")
+        amount = states[source_id].hot_target_amount
+        if len(args) == 3:
+            multiplier = _source.eval_int(args[1], env)
+            divider = _source.eval_int(args[2], env)
+            if divider == 0:
+                raise SourceError(f"setAllToTheOutputOf has zero divider for {material.name}")
+            amount = _source.java_divide(amount * multiplier, divider)
+        own.hot_target_amount = amount
+        if amount > 0:
+            # OreDictMaterial.setAllToTheOutputOf routes the copied target
+            # through setSmelting, which adds MELTING for a positive amount.
             own.flags |= 8
         return
     if name in ("alloySimple", "alloyCentrifuge", "alloyElectrolyzer"):
@@ -296,6 +330,7 @@ PROPERTY_METHODS = {
     "heat", "setStats", "setStatsElement", "setDensity", "steal",
     "stealStatsElement", "stealStatsEnergetic", "setMeltingPoint", "setStatsEnergetic",
     "alloySimple", "alloyCentrifuge", "alloyElectrolyzer", "put", "setSmelting",
+    "setAllToTheOutputOf",
     "setMcfg", "uumMcfg", "setAloy", "uumAloy",
 }
 
@@ -366,8 +401,12 @@ def apply_static_properties(mt: str, materials: list[object], states: dict[int, 
         opening = mt.index("{", static.start())
         closing = _source.matching(mt, opening, "{", "}")
         body = mt[opening + 1:closing]
-        call = re.compile(r"(?P<receiver>[A-Za-z_]\w*)\s*\.\s*(?P<name>" +
-                          "|".join(sorted(PROPERTY_METHODS)) + r")\s*\(")
+        # Match every property mutator in a fluent chain, not only the first
+        # `Material.method(...)` call. MT.java's Lava initializer chains
+        # setSolidifying(...).setDensity(Obsidian.mGramPerCubicCentimeter),
+        # and ignoring the second call leaves the runtime table at the stale
+        # constructor default instead of GT6's final initialized density.
+        call = re.compile(r"\.\s*(?P<name>" + "|".join(sorted(PROPERTY_METHODS)) + r")\s*\(")
         for statement in re.finditer(r"[^;]+;", body):
             root = re.match(r"\s*(?P<receiver>[A-Za-z_]\w*)\s*\.", statement.group())
             if not root:
@@ -536,6 +575,12 @@ def main() -> int:
         fixture.parent.mkdir(parents=True, exist_ok=True)
         fixture.write_text("\n".join(generated) + "\n", encoding="utf-8", newline="\n")
         print(f"Wrote {len(rows)} independently evaluated GT6 {args.mode} rows to {fixture}")
+        if args.fixture is None:
+            java_group = "flags" if args.mode == "flags" else args.mode
+            generator = Path(__file__).with_name("generateGt6JavaMaterialTables.py")
+            generated_java = subprocess.run([sys.executable, str(generator), "--group", java_group], check=False)
+            if generated_java.returncode != 0:
+                return generated_java.returncode
         return 0
     if not fixture.is_file():
         raise SourceError(f"Fixture missing; pass --write only after reviewing full source evaluation: {fixture}")

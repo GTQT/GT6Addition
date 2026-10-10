@@ -1,5 +1,7 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
+import gregtech.api.unification.material.Material;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -128,6 +130,12 @@ public final class CrucibleTransferLogic {
                 .divide(java.math.BigInteger.valueOf(materialUnit))
                 .min(java.math.BigInteger.valueOf(Integer.MAX_VALUE)).intValue();
         return boundedMaterialEffectCount(amount, materialUnit, fullVessel);
+    }
+
+    /** Mirrors GT6's bindInt(temperature / 25) meltdown fire-attempt count. */
+    public static int overheatFireAttempts(long temperature) {
+        if (temperature <= 0L) return 0;
+        return (int) Math.min(Integer.MAX_VALUE, temperature / 25L);
     }
 
     public static int contentExplosionStrength(long amount, long capacity) {
@@ -296,6 +304,17 @@ public final class CrucibleTransferLogic {
         }
         Double density = knownMaterialDensity(name);
         return density == null ? 0.0D : density;
+    }
+
+    /** Applies read-only GT6 density only to the canonical host Material identity. */
+    public static double knownGt6MaterialDensityKgPerCubicMeter(Material material) {
+        String mechanicsName = GT6MaterialIdentity.canonicalMechanicsName(material);
+        return mechanicsName == null ? 0.0D : knownGt6MaterialDensityKgPerCubicMeter(mechanicsName);
+    }
+
+    public static boolean hasKnownGt6MaterialDensity(Material material) {
+        String mechanicsName = GT6MaterialIdentity.canonicalMechanicsName(material);
+        return mechanicsName != null && hasKnownGt6MaterialDensity(mechanicsName);
     }
 
     public static boolean hasKnownGt6MaterialDensity(String materialName) {

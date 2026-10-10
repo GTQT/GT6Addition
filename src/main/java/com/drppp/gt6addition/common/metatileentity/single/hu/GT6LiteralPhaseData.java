@@ -1,10 +1,5 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -26,35 +21,25 @@ final class GT6LiteralPhaseData {
         Map<Integer, Profile> byId = new HashMap<>();
         Map<String, Profile> byName = new HashMap<>();
         Set<String> ambiguous = new HashSet<>();
-        InputStream stream = GT6LiteralPhaseData.class.getResourceAsStream("/gt6-material-phase-data.txt");
-        if (stream == null) throw new ExceptionInInitializerError("Missing read-only GT6 phase data");
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.isEmpty() || line.startsWith("#")) continue;
-                String[] fields = line.split("\\|", -1);
-                if (fields.length != 5) throw new IllegalStateException("Malformed GT6 phase row: " + line);
-                int id = Integer.parseInt(fields[0]);
-                String sourceName = fields[1];
-                int sourceLine = Integer.parseInt(fields[2]);
-                int melting = Integer.parseInt(fields[3]);
-                long boiling = Long.parseLong(fields[4]);
-                if (id <= 0 || sourceName.isEmpty() || sourceLine <= 0 || melting < 0 || boiling < melting) {
-                    throw new IllegalStateException("Invalid GT6 phase row: " + line);
-                }
-                String mechanicsName = GT6MaterialIdentity.mechanicsName(id);
-                if (mechanicsName == null) throw new IllegalStateException("Unknown GT6 phase identity: " + line);
-                Profile profile = new Profile(id, sourceName, mechanicsName, sourceLine, melting, boiling);
-                if (byId.put(id, profile) != null) throw new IllegalStateException("Duplicate GT6 phase ID: " + line);
-                String key = normalize(mechanicsName);
-                Profile previous = byName.putIfAbsent(key, profile);
-                if (previous != null && (previous.melting != melting || previous.boiling != boiling)) {
-                    byName.remove(key);
-                    ambiguous.add(key);
-                }
+        for (GT6LiteralPhaseRows.Row row : GT6LiteralPhaseRows.ROWS) {
+            int id = row.id;
+            String sourceName = row.sourceName;
+            int sourceLine = row.sourceLine;
+            int melting = row.melting;
+            long boiling = row.boiling;
+            if (id <= 0 || sourceName.isEmpty() || sourceLine <= 0 || melting < 0 || boiling < melting) {
+                throw new IllegalStateException("Invalid GT6 phase row: " + sourceName);
             }
-        } catch (IOException | NumberFormatException exception) {
-            throw new ExceptionInInitializerError(exception);
+            String mechanicsName = GT6MaterialIdentity.mechanicsName(id);
+            if (mechanicsName == null) throw new IllegalStateException("Unknown GT6 phase identity: " + sourceName);
+            Profile profile = new Profile(id, sourceName, mechanicsName, sourceLine, melting, boiling);
+            if (byId.put(id, profile) != null) throw new IllegalStateException("Duplicate GT6 phase ID: " + id);
+            String key = normalize(mechanicsName);
+            Profile previous = byName.putIfAbsent(key, profile);
+            if (previous != null && (previous.melting != melting || previous.boiling != boiling)) {
+                byName.remove(key);
+                ambiguous.add(key);
+            }
         }
         if (byId.size() != EXPECTED_ROWS) {
             throw new ExceptionInInitializerError("Expected " + EXPECTED_ROWS +

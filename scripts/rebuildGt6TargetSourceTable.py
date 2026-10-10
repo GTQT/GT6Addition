@@ -4,7 +4,8 @@
 The default mode is read-only and compares the evaluated source values with the
 checked-in test fixture. Pass --write only after reviewing a successful,
 fully-resolved evaluation to replace that fixture. No GT6Addition production
-table is imported or consulted.
+table is imported or consulted. After rebuilding the fixture, run
+generateGt6JavaMaterialTables.py to refresh the production Java data table.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,6 +33,7 @@ HEADER = [f"# {name.replace('.java', '')}_SHA256={digest}" for name, digest in E
 class Method:
     name: str
     params: list[str]
+    param_types: list[str]
     body: str
 
     @property
@@ -292,15 +295,18 @@ def method_table(mt: str) -> dict[str, list[Method]]:
             raise SourceError(f"Missing method body for {match.group('name')}")
         body_close = matching(mt, body_open, "{", "}")
         params: list[str] = []
+        param_types: list[str] = []
         for raw in raw_params:
             names = re.findall(r"[A-Za-z_]\w*", raw)
             if not names:
                 raise SourceError(f"Unrecognized parameter in {match.group('name')}: {raw}")
+            param_types.append(raw[:raw.rfind(names[-1])].strip())
             if "..." in raw:
                 params.append("..." + names[-1])
             else:
                 params.append(names[-1])
-        methods.setdefault(match.group("name"), []).append(Method(match.group("name"), params, mt[body_open + 1:body_close]))
+        methods.setdefault(match.group("name"), []).append(
+            Method(match.group("name"), params, param_types, mt[body_open + 1:body_close]))
     return methods
 
 
@@ -349,11 +355,29 @@ def add_method_field_aliases(mt: str, scopes: list[tuple[int, int, str]], method
 
 
 def choose_method(name: str, args: list[str], methods: dict[str, list[Method]]) -> Method:
+    def type_compatibility(method: Method) -> int:
+        score = 0
+        for argument, declared_type in zip(args[:method.fixed_count], method.param_types):
+            normalized_type = declared_type.replace("...", "[]").replace(" ", "")
+            expression = argument.strip()
+            has_number = bool(re.search(r"(?<![A-Za-z_])\d+(?![A-Za-z_])", expression))
+            has_string = '"' in expression
+            has_texture_set = bool(re.search(r"\b(?:SET_[A-Z0-9_]+|TextureSet)\b", expression))
+            has_flag = bool(re.search(r"\b(?:UNBURNABLE|UNRECYCLABLE|FLAMMABLE|EXPLOSIVE|MELTING|ACID)\b", expression))
+            if "TextureSet[]" in normalized_type:
+                score += 6 if has_texture_set else (-8 if has_number or has_flag or has_string else 0)
+            elif normalized_type in ("String", "java.lang.String"):
+                score += 4 if has_string else (-5 if has_number else 0)
+            elif normalized_type in ("int", "long", "short", "byte", "float", "double"):
+                score -= 8 if has_texture_set or has_string or has_flag else 0
+        return score
+
     candidates = []
     for method in methods.get(name, []):
         valid = len(args) == len(method.params) if not method.varargs else len(args) >= method.fixed_count
         if valid:
-            score = (1 if len(args) == len(method.params) else 0, method.fixed_count)
+            score = (type_compatibility(method), 1 if len(args) == len(method.params) else 0,
+                     method.fixed_count)
             candidates.append((score, method))
     if not candidates:
         raise SourceError(f"No GT6 source factory overload {name}/{len(args)}")
@@ -712,6 +736,11 @@ def main() -> int:
         args.fixture.parent.mkdir(parents=True, exist_ok=True)
         args.fixture.write_text("\n".join(generated) + "\n", encoding="utf-8", newline="\n")
         print(f"Wrote {len(rows)} independently evaluated source target rows to {args.fixture}")
+        if args.fixture == Path("src/test/resources/gt6-target-source-values.txt"):
+            generator = Path(__file__).with_name("generateGt6JavaMaterialTables.py")
+            generated_java = subprocess.run([sys.executable, str(generator), "--group", "targets"], check=False)
+            if generated_java.returncode != 0:
+                return generated_java.returncode
         return 0
     if not args.fixture.is_file():
         raise SourceError(f"Fixture missing; use --write only after reviewing source output: {args.fixture}")

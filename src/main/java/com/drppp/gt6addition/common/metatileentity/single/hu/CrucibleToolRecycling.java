@@ -5,19 +5,25 @@ import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.recipes.RecyclingHandler;
 import gregtech.api.recipes.ModHandler;
 import gregtech.api.recipes.Recipe;
+import gregtech.api.recipes.ingredients.GTRecipeFluidInput;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
 import gregtech.api.recipes.ingredients.GTRecipeItemInput;
 import gregtech.api.unification.material.Material;
+import gregtech.api.unification.material.Materials;
+import gregtech.api.unification.material.MarkerMaterial;
+import gregtech.api.unification.material.properties.PropertyKey;
 import gregtech.api.unification.stack.MaterialStack;
 import gregtech.api.unification.stack.RecyclingData;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.oredict.OreDictionary;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -134,15 +140,25 @@ public final class CrucibleToolRecycling {
         if (!isSafeTool(output) || output.getCount() <= 0 ||
                 !recipe.getChancedOutputs().getChancedEntries().isEmpty() ||
                 !recipe.getFluidOutputs().isEmpty() ||
-                !recipe.getChancedFluidOutputs().getChancedEntries().isEmpty() ||
-                !recipe.getFluidInputs().isEmpty()) return;
-        captureInputs(output, recipe.getInputs());
+                !recipe.getChancedFluidOutputs().getChancedEntries().isEmpty()) return;
+        captureInputs(output, recipe.getInputs(), recipe.getFluidInputs());
     }
 
     private static void captureInputs(ItemStack output, List<GTRecipeInput> inputs) {
+        captureInputs(output, inputs, Collections.emptyList());
+    }
+
+    /**
+     * Include only exact, registered material-fluid inputs in machine tool provenance.
+     * A fractional material unit may be combined with another input, but the final
+     * per-output account must still resolve to an integer material amount.
+     */
+    private static void captureInputs(ItemStack output, List<GTRecipeInput> inputs,
+                                      List<GTRecipeInput> fluidInputs) {
         // CEu's recycling helper chooses only the first alternative and silently
         // omits unknown ingredients. Check every consumable before using its data.
         Map<Material, Long> totals = new HashMap<>();
+        Map<Material, BigInteger> fluidTotals = new HashMap<>();
         for (GTRecipeInput input : inputs) {
             if (input == null) return;
             if (input.isNonConsumable()) continue;
@@ -175,13 +191,40 @@ public final class CrucibleToolRecycling {
                 totals.put(component.material, previous + amount);
             }
         }
-        if (totals.isEmpty()) return;
+        for (GTRecipeInput input : fluidInputs) {
+            if (input == null) return;
+            if (input.isNonConsumable()) continue;
+            if (!(input instanceof GTRecipeFluidInput) || input.getAmount() <= 0 ||
+                    input.hasNBTMatchingCondition()) return;
+            FluidStack fluid = input.getInputFluidStack();
+            if (fluid == null || fluid.getFluid() == null || fluid.tag != null) return;
+            CrucibleFluidInput resolved = CrucibleFluidInput.resolve(fluid);
+            if (resolved == null || resolved.material == null || resolved.material == Materials.NULL ||
+                    resolved.material instanceof MarkerMaterial ||
+                    !resolved.material.hasProperty(PropertyKey.DUST)) return;
+            CrucibleFluidUnits.Quantity amount = CrucibleFluidUnits.storedFluidAmount(
+                    input.getAmount(), resolved.unit);
+            if (amount == null) return;
+            BigInteger numerator = BigInteger.valueOf(amount.amount)
+                    .multiply(BigInteger.valueOf(CrucibleFluidUnits.STORAGE_UNIT))
+                    .add(BigInteger.valueOf(amount.remainder));
+            BigInteger previous = fluidTotals.getOrDefault(resolved.material, BigInteger.ZERO);
+            fluidTotals.put(resolved.material, previous.add(numerator));
+        }
+        if (totals.isEmpty() && fluidTotals.isEmpty()) return;
         List<MaterialStack> materials = new ArrayList<>();
-        for (Map.Entry<Material, Long> entry : totals.entrySet()) {
-            // A fractional internal unit cannot be stored exactly per output.
-            long amount = exactPerOutputAmount(entry.getValue(), output.getCount());
-            if (amount <= 0) return;
-            materials.add(new MaterialStack(entry.getKey(), amount));
+        Set<Material> materialsPresent = new HashSet<>(totals.keySet());
+        materialsPresent.addAll(fluidTotals.keySet());
+        BigInteger denominator = BigInteger.valueOf(CrucibleFluidUnits.STORAGE_UNIT)
+                .multiply(BigInteger.valueOf(output.getCount()));
+        for (Material material : materialsPresent) {
+            BigInteger numerator = BigInteger.valueOf(totals.getOrDefault(material, 0L))
+                    .multiply(BigInteger.valueOf(CrucibleFluidUnits.STORAGE_UNIT))
+                    .add(fluidTotals.getOrDefault(material, BigInteger.ZERO));
+            BigInteger[] perOutput = numerator.divideAndRemainder(denominator);
+            if (perOutput[1].signum() != 0 || perOutput[0].signum() <= 0 ||
+                    perOutput[0].compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0) return;
+            materials.add(new MaterialStack(material, perOutput[0].longValue()));
         }
         remember(output, materials);
     }

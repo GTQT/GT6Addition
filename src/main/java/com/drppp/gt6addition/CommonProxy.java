@@ -10,6 +10,7 @@ import com.drppp.gt6addition.common.item.GT6CastingIngotItem;
 import com.drppp.gt6addition.common.block.GT6AdditionBlocks;
 import com.drppp.gt6addition.common.material.GT6MachineMaterials;
 import com.drppp.gt6addition.common.fluid.GT6PotionFluids;
+import com.drppp.gt6addition.common.fluid.GT6CalciteFluid;
 import com.drppp.gt6addition.common.world.AnthraciteVeins;
 import com.drppp.gt6addition.common.world.GT6TreeWorldGenerator;
 import gregtech.api.unification.OreDictUnifier;
@@ -48,6 +49,7 @@ public class CommonProxy {
     public void preInit(FMLPreInitializationEvent event) {
         GT6AdditionMain.LOGGER.info("CommonProxy preInit");
         GT6PotionFluids.register();
+        GT6CalciteFluid.register();
         MaterialColorUtil.init();
         CapabilityHandler.init();
         Gt6AdditionTextures.init();

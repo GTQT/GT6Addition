@@ -7,8 +7,11 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-/** GT6 Kelvin values take priority; unknown host identities are not assigned guessed boiling points. */
+/** GT6 Kelvin defaults apply only to materials with a verified GT6 source identity. */
 public final class CrucibleMaterialPhaseData {
+    // OreDictMaterial initializes these values before MT/ANY-specific overrides.
+    static final int GT6_DEFAULT_MELTING_POINT = 1_000;
+    static final long GT6_DEFAULT_BOILING_POINT = 3_000L;
     private static final Map<String, Long> BOILING_POINTS;
 
     static {
@@ -30,16 +33,49 @@ public final class CrucibleMaterialPhaseData {
 
     private CrucibleMaterialPhaseData() {}
 
-    /** Shared by the crucible and casting receivers; fluid temperature is only a fallback. */
+    /** Shared by the crucible and casting receivers; host properties remain the fallback off-snapshot. */
     public static int meltingPoint(Material material) {
-        int point = knownMeltingPoint(material.getName());
-        if (point >= 0) return point;
+        if (material == null) return 1811;
         if (material == Materials.Obsidian) return CrucibleTransferLogic.OBSIDIAN_MELTING_TEMPERATURE;
         if (material == Materials.Water) return CrucibleTransferLogic.WATER_MELTING_TEMPERATURE;
         if (material == Materials.Lava) return 1300;
+        String mechanicsName = GT6MaterialIdentity.canonicalMechanicsName(material);
+        if (mechanicsName != null) {
+            int point = knownMeltingPoint(mechanicsName);
+            if (point >= 0) return point;
+            if (CrucibleSolidifyingRule.isSnapshotMaterial(mechanicsName)) {
+                // OreDictMaterial initializes to 1000 K before MT/ANY overrides.
+                return GT6_DEFAULT_MELTING_POINT;
+            }
+        }
+        // CEu materials outside the verified GT6 identity snapshot are not
+        // OreDictMaterial instances; retain the host's own phase hint instead
+        // of treating GT6 constructor defaults as their properties.
         if (material.hasFluid()) return material.getFluid().getTemperature();
         int blastTemperature = material.getBlastTemperature();
         return blastTemperature > 0 ? blastTemperature : 1811;
+    }
+
+    /** Runtime boiling lookup is identity-aware; the string overload is for source tables only. */
+    static long boilingPoint(Material material) {
+        if (material == Materials.Water) return boilingPoint("water");
+        if (material == Materials.Lava) return boilingPoint("lava");
+        if (material == Materials.Obsidian) return boilingPoint("obsidian");
+        String mechanicsName = GT6MaterialIdentity.canonicalMechanicsName(material);
+        if (mechanicsName == null) return Long.MAX_VALUE;
+        long point = boilingPoint(mechanicsName);
+        if (point != Long.MAX_VALUE) return point;
+        return CrucibleSolidifyingRule.isSnapshotMaterial(mechanicsName) ?
+                GT6_DEFAULT_BOILING_POINT : Long.MAX_VALUE;
+    }
+
+    /** Runtime melting-data lookup without applying GT6 names to an unrelated same-name material. */
+    static int knownMeltingPoint(Material material) {
+        if (material == Materials.Water) return knownMeltingPoint("water");
+        if (material == Materials.Lava) return knownMeltingPoint("lava");
+        if (material == Materials.Obsidian) return knownMeltingPoint("obsidian");
+        String mechanicsName = GT6MaterialIdentity.canonicalMechanicsName(material);
+        return mechanicsName == null ? -1 : knownMeltingPoint(mechanicsName);
     }
 
     static int knownMeltingPoint(String materialName) {
