@@ -53,7 +53,7 @@ class GT6TargetSourceAuditTest {
                     BigInteger expected = BigInteger.valueOf(amount).multiply(BigInteger.valueOf(hotAmount))
                             .divide(BigInteger.valueOf(SOURCE_U));
                     assertEquals(expected.longValueExact(), hot == null ? amount : hot.convert(amount), line);
-                    for (int remainder : new int[]{0, 1, CrucibleFluidUnits.STORAGE_UNIT - 1}) {
+                    for (long remainder : new long[]{0, 1, CrucibleFluidUnits.STORAGE_UNIT - 1}) {
                         BigInteger stored = BigInteger.valueOf(amount)
                                 .multiply(BigInteger.valueOf(CrucibleFluidUnits.STORAGE_UNIT))
                                 .add(BigInteger.valueOf(remainder)).multiply(BigInteger.valueOf(hotAmount))
@@ -63,7 +63,7 @@ class GT6TargetSourceAuditTest {
                         assertNotNull(converted, line);
                         BigInteger[] parts = stored.divideAndRemainder(BigInteger.valueOf(CrucibleFluidUnits.STORAGE_UNIT));
                         assertEquals(parts[0].longValueExact(), converted.amount, line);
-                        assertEquals(parts[1].intValueExact(), converted.remainder, line);
+                        assertEquals(parts[1].longValueExact(), converted.remainder, line);
                     }
                 }
                 // Every reviewed positive-ID solidifying relation is one U;

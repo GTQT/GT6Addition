@@ -356,7 +356,7 @@ final class CrucibleSmeltingRule {
         return result.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0 ? -1 : result.longValue();
     }
 
-    CrucibleFluidUnits.Quantity convertStored(long amount, int remainder) {
+    CrucibleFluidUnits.Quantity convertStored(long amount, long remainder) {
         return CrucibleFluidUnits.scaleStored(amount, remainder, numerator, denominator);
     }
 }

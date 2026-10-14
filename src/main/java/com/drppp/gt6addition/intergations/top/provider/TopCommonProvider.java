@@ -1,220 +1,247 @@
 package com.drppp.gt6addition.intergations.top.provider;
 
 import com.drppp.gt6addition.Tags;
-import com.drppp.gt6addition.api.top.IEnergyOutShow;
 import com.drppp.gt6addition.api.baseMTile.MetaTileEntityMutiEnergyMachine;
+import com.drppp.gt6addition.api.top.IEnergyOutShow;
+import com.drppp.gt6addition.api.utils.MachineEnergyAcceptFacing;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCastingBasin;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamber;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCombustionchamberLiquid;
-import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityMold;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
+import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityMold;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityTemperatureSensor;
 import com.drppp.gt6addition.common.metatileentity.single.item.MetaTileEntityGt6Hopper;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticGearbox;
 import com.drppp.gt6addition.common.metatileentity.single.ku.MetaTileEntityKineticSteamEngine;
+import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityDieselEngine;
+import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntityRotationPump;
+import com.drppp.gt6addition.common.metatileentity.single.ru.MetaTileEntitySteamTurbine;
+import gregtech.api.capability.GregtechTileCapabilities;
+import gregtech.api.capability.impl.AbstractRecipeLogic;
+import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.util.GTUtility;
-import gregtech.api.util.TextFormattingUtil;
 import mcjty.theoneprobe.api.IProbeHitData;
 import mcjty.theoneprobe.api.IProbeInfo;
 import mcjty.theoneprobe.api.IProbeInfoProvider;
-import mcjty.theoneprobe.api.NumberFormat;
 import mcjty.theoneprobe.api.ProbeMode;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.IFluidTank;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 
 import java.util.List;
 
+import static com.drppp.gt6addition.intergations.top.provider.TopDisplay.*;
+
 public class TopCommonProvider implements IProbeInfoProvider {
+    private static final String COMMON = "gt6addition.top.common.";
+    private static final String CRUCIBLE = "gt6addition.top.crucible.";
 
     @Override
     public String getID() {
         return Tags.MOD_ID + ":top_common_provider";
     }
 
+    /** Suppress only CEu rows already covered by this machine's own TOP presentation. */
+    public static boolean replacesDefaultMachineInfo(String providerId, Object machine) {
+        if (machine instanceof MetaTileEntityCrucible) {
+            // The native HU view exposes a pending buffer with Long.MAX_VALUE capacity.
+            // Its default temperature/EHU/percentage rows duplicate or obscure the physical display.
+            return "gregtech:heat_container_provider".equals(providerId);
+        }
+        if (!(machine instanceof MetaTileEntityMutiEnergyMachine)) return false;
+        return "gregtech:workable_provider".equals(providerId) ||
+                "gregtech:recipe_logic_provider".equals(providerId) ||
+                "gregtech:controllable_provider".equals(providerId);
+    }
+
     @Override
-    public void addProbeInfo(ProbeMode probeMode, IProbeInfo iProbeInfo, EntityPlayer entityPlayer,
-                             World world, IBlockState iBlockState, IProbeHitData iProbeHitData) {
-        Object metaTileEntity = GTUtility.getMetaTileEntity(world, iProbeHitData.getPos());
-        if (metaTileEntity instanceof MetaTileEntityMutiEnergyMachine) {
-            MetaTileEntityMutiEnergyMachine machine = (MetaTileEntityMutiEnergyMachine) metaTileEntity;
-            iProbeInfo.text(I18n.format("gt6addition.top.multi_energy.available",
-                    TextFormattingUtil.formatNumbers(Math.max(0, machine.mutiEnergyProxy.getEnergy())),
-                    machine.EnergyType));
+    public void addProbeInfo(ProbeMode mode, IProbeInfo info, EntityPlayer player,
+                             World world, IBlockState state, IProbeHitData hit) {
+        MetaTileEntity machine = GTUtility.getMetaTileEntity(world, hit.getPos());
+        boolean details = mode == ProbeMode.EXTENDED || player.isSneaking();
+        if (machine instanceof MetaTileEntityMutiEnergyMachine) {
+            addProcessingMachine(info, (MetaTileEntityMutiEnergyMachine) machine, details);
+            return;
         }
-        if (metaTileEntity instanceof MetaTileEntityCrucible) {
-            MetaTileEntityCrucible s = (MetaTileEntityCrucible) metaTileEntity;
-            ItemStack input = s.getImportItems().getStackInSlot(0).copy();
-            long heat = Math.max(0L, s.getCurrentTemperature());
-            long heatMax = Math.max(1L, s.getMaxTemperature());
-            iProbeInfo.progress(Math.min(heat, heatMax), heatMax, iProbeInfo.defaultProgressStyle()
-                    .prefix(I18n.format("gt6addition.top.crucible.temperature"))
-                    .suffix(" / " + heatMax + " K")
-                    .filledColor(0xFFFF6600)
-                    .alternateFilledColor(0xFFFFC040)
-                    .borderColor(0xFF555555)
-                    .backgroundColor(0xFF111111)
-                    .numberFormat(NumberFormat.FULL));
-            iProbeInfo.text(TextFormatting.BOLD + I18n.format("gt6addition.top.crucible.capacity_equivalent") + TextFormatting.GREEN +
-                    s.getStoredFluidAmount() + "/" + s.getCapacityFluidAmount() + " L");
-            iProbeInfo.text(TextFormatting.BOLD + I18n.format("gt6addition.top.crucible.input_slot") + TextFormatting.GREEN +
-                    (input.isEmpty() ? I18n.format("gt6addition.top.crucible.empty") :
-                            input.getDisplayName() + " ×" + input.getCount()));
-            iProbeInfo.text(TextFormatting.BOLD + I18n.format("gt6addition.top.crucible.pending_items") +
-                    TextFormatting.GREEN + I18n.format("gt6addition.top.crucible.pending_count",
-                    s.getPendingItemCount(), s.getPendingItemCapacity()));
-            List<MetaTileEntityCrucible.CrucibleContentInfo> contents = s.getTopContents();
-            if (contents.isEmpty()) {
-                iProbeInfo.text(TextFormatting.BOLD + I18n.format("gt6addition.top.crucible.contents") +
-                        TextFormatting.GREEN + I18n.format("gt6addition.top.crucible.empty"));
-            } else {
-                iProbeInfo.text(TextFormatting.BOLD + I18n.format("gt6addition.top.crucible.contents"));
-                for (MetaTileEntityCrucible.CrucibleContentInfo content : contents) {
-                    ItemStack displayStack = content.getDisplayStack();
-                    IProbeInfo line = iProbeInfo.horizontal();
-                    if (!displayStack.isEmpty()) {
-                        line.item(displayStack);
-                    }
-                    line.text(TextFormatting.GREEN + content.getMaterialName() + TextFormatting.GRAY + " " +
-                            content.getFluidAmount() + "L " +
-                            I18n.format(content.isMolten() ? "gt6addition.top.crucible.molten" :
-                                    "gt6addition.top.crucible.solid"));
+
+        if (machine instanceof IEnergyOutShow) {
+            addEnergyOutput(info, (IEnergyOutShow) machine);
+        }
+
+        if (machine instanceof MetaTileEntityCrucible) {
+            addCrucible(info, (MetaTileEntityCrucible) machine);
+        } else if (machine instanceof MetaTileEntityCastingBasin) {
+            MetaTileEntityCastingBasin basin = (MetaTileEntityCastingBasin) machine;
+            commonRow(info, "capacity", number(basin.getStoredFluidAmount()) + " / " +
+                    number(basin.getCapacityFluidAmount()) + " L");
+            commonRow(info, "temperature", number(basin.getTemperature()) + " K");
+            String contents = basin.getContentsDisplayName();
+            commonRow(info, "contents", contents.isEmpty() ? common("empty") :
+                    contents + TextFormatting.GRAY + " · " + common(basin.isContentsMolten() ? "molten" : "solid"));
+        } else if (machine instanceof MetaTileEntityMold) {
+            addMold(info, (MetaTileEntityMold) machine);
+        } else if (machine instanceof MetaTileEntityTemperatureSensor) {
+            MetaTileEntityTemperatureSensor sensor = (MetaTileEntityTemperatureSensor) machine;
+            bar(info, COMMON + "temperature", sensor.getCurrentTemperature(), sensor.getMaxTemperature(), "K", HEAT);
+            commonRow(info, "mode", localize(sensor.getModeTranslationKey()));
+            commonRow(info, "set_temperature", number(sensor.getSetTemperature()) + " K");
+            commonRow(info, "reading_side", direction(sensor.getTargetFacing().getName()));
+            commonRow(info, "redstone_output", number(sensor.getRedstoneOutput()));
+        } else if (machine instanceof MetaTileEntityKineticSteamEngine) {
+            MetaTileEntityKineticSteamEngine engine = (MetaTileEntityKineticSteamEngine) machine;
+            bar(info, COMMON + "energy_buffer", engine.getStoredEnergy(), engine.getEnergyCapacity(), "KU", KINETIC);
+            commonRow(info, "steam", number(engine.getSteamAmount()) + " / " + number(engine.getTankCapacity()) + " L");
+            commonRow(info, "distilled_water", number(engine.getWaterAmount()) + " / " +
+                    number(engine.getTankCapacity()) + " L");
+        } else if (machine instanceof MetaTileEntityKineticGearbox) {
+            MetaTileEntityKineticGearbox gearbox = (MetaTileEntityKineticGearbox) machine;
+            // The existing accessor returns an output-side name, not a gear ratio.
+            commonRow(info, "output_side", direction(gearbox.getRatioName()));
+        } else if (machine instanceof MetaTileEntityGt6Hopper) {
+            addHopper(info, (MetaTileEntityGt6Hopper) machine);
+        } else if (machine instanceof MetaTileEntityCombustionchamber) {
+            MetaTileEntityCombustionchamber chamber = (MetaTileEntityCombustionchamber) machine;
+            addBurningBox(info, chamber.isActive, chamber.outPutHu,
+                    chamber.currentItemHasBurnedTime, chamber.currentItemBurnTime, chamber.burnSpeed, details);
+            item(info, "fuel", chamber.getImportItems().getStackInSlot(0));
+            item(info, "ash", chamber.getExportItems().getStackInSlot(0));
+        } else if (machine instanceof MetaTileEntityCombustionchamberLiquid) {
+            MetaTileEntityCombustionchamberLiquid chamber = (MetaTileEntityCombustionchamberLiquid) machine;
+            addBurningBox(info, chamber.isActive, chamber.outPutHu,
+                    chamber.currentItemHasBurnedTime, chamber.currentItemBurnTime, chamber.burnSpeed, details);
+            tank(info, "fuel", chamber.getImportFluids().getTankAt(0));
+            tank(info, "byproduct", chamber.getExportFluids().getTankAt(0));
+        } else if (machine instanceof MetaTileEntitySteamTurbine) {
+            MetaTileEntitySteamTurbine turbine = (MetaTileEntitySteamTurbine) machine;
+            tank(info, "steam", turbine.getImportFluids().getTankAt(0));
+            tank(info, "distilled_water", turbine.getExportFluids().getTankAt(0));
+        } else if (machine instanceof MetaTileEntityDieselEngine) {
+            MetaTileEntityDieselEngine engine = (MetaTileEntityDieselEngine) machine;
+            percentBar(info, COMMON + "fuel_remaining",
+                    Math.max(0L, (long) engine.currentItemBurnTime - engine.currentItemHasBurnedTime),
+                    engine.currentItemBurnTime, HEAT);
+            tank(info, "fuel", engine.getImportFluids().getTankAt(0));
+            tank(info, "byproduct", engine.getExportFluids().getTankAt(0));
+        } else if (machine instanceof MetaTileEntityRotationPump) {
+            status(info, machine.isActive() ? "running" : "idle",
+                    machine.isActive() ? TextFormatting.GREEN : TextFormatting.GRAY);
+            energyType(info, "RU");
+            Object fluidHandler = machine.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
+            if (fluidHandler instanceof IFluidTank) tank(info, "output_fluid", (IFluidTank) fluidHandler);
+        }
+    }
+
+    private void addProcessingMachine(IProbeInfo info, MetaTileEntityMutiEnergyMachine machine, boolean details) {
+        AbstractRecipeLogic logic = machine.getCapability(GregtechTileCapabilities.CAPABILITY_RECIPE_LOGIC, null);
+        long available = machine.mutiEnergyProxy == null ? 0L : Math.max(0, machine.mutiEnergyProxy.getEnergy());
+        long required = logic == null || !logic.isActive() ? 0L : Math.max(0L, logic.getRecipeEUt());
+        if (logic != null && !logic.isWorkingEnabled()) {
+            status(info, "stopped", TextFormatting.RED);
+        } else if (logic != null && logic.isActive() && (logic.isHasNotEnoughEnergy() || available < required)) {
+            status(info, "insufficient_energy", TextFormatting.GOLD);
+        } else {
+            boolean active = logic != null && logic.isActive();
+            status(info, active ? "running" : "idle", active ? TextFormatting.GREEN : TextFormatting.GRAY);
+        }
+        energyType(info, machine.EnergyType);
+        energyRate(info, "energy_available", available, machine.EnergyType);
+        if (logic != null && logic.isActive()) {
+            energyRate(info, "energy_required", required, machine.EnergyType);
+            bar(info, COMMON + "progress", logic.getProgress(), logic.getMaxProgress(), "t", GREEN);
+        }
+        if (details) {
+            commonRow(info, "parallel_limit", number(Math.max(1,
+                    logic == null ? machine.parallel : logic.getParallelLimit())));
+            if (machine.acceptFacing != null && machine.acceptFacing.length > 0) {
+                StringBuilder sides = new StringBuilder();
+                for (MachineEnergyAcceptFacing side : machine.acceptFacing) {
+                    if (side == null) continue;
+                    if (sides.length() > 0) sides.append(" / ");
+                    sides.append(direction(side.name()));
                 }
+                if (sides.length() > 0) commonRow(info, "input_side", sides.toString());
             }
-        } else if (metaTileEntity instanceof MetaTileEntityCastingBasin) {
-            MetaTileEntityCastingBasin s = (MetaTileEntityCastingBasin) metaTileEntity;
-            iProbeInfo.text(TextFormatting.BOLD + "\u5bb9\u91cf:" + TextFormatting.GREEN +
-                    s.getStoredFluidAmount() + "/" + s.getCapacityFluidAmount() + " L");
-            iProbeInfo.text(TextFormatting.BOLD + "\u6e29\u5ea6:" + TextFormatting.GREEN + s.getTemperature() + " K");
-            String contents = s.getContentsDisplayName();
-            iProbeInfo.text(TextFormatting.BOLD + "\u5185\u5bb9\u7269:" + TextFormatting.GREEN +
-                    (contents.isEmpty() ? "\u7a7a" : contents + " " +
-                            (s.isContentsMolten() ? "\u7194\u878d" : "\u56fa\u6001")));
-        } else if (metaTileEntity instanceof MetaTileEntityMold) {
-            MetaTileEntityMold s = (MetaTileEntityMold) metaTileEntity;
-            iProbeInfo.text(TextFormatting.BOLD + "\u96d5\u523b\u6a21\u5177:" + TextFormatting.GREEN + "5×5");
-            iProbeInfo.text(TextFormatting.BOLD + "\u8010\u6e29:" + TextFormatting.GREEN + s.getMoldMaxTemperature() + " K");
-            if (s.isCooling()) {
-                iProbeInfo.text(TextFormatting.BOLD + "\u51b7\u5374\u4e2d:" + TextFormatting.GREEN +
-                        s.getCoolingMaterialName());
-                iProbeInfo.progress(s.getCoolingProgressPercent(), 100, iProbeInfo.defaultProgressStyle()
-                        .prefix("\u51b7\u5374\u8fdb\u5ea6: ")
-                        .suffix("%  " + s.getTemperatureValue(null) + " K / " +
-                                s.getCoolingTargetTemperature() + " K")
-                        .filledColor(0xFF4DA6FF)
-                        .alternateFilledColor(0xFF80D8FF)
-                        .borderColor(0xFF555555)
-                        .backgroundColor(0xFF111111)
-                        .numberFormat(NumberFormat.FULL));
-            } else {
-                ItemStack output = s.getOutputStack();
-                if (!output.isEmpty()) {
-                    IProbeInfo line = iProbeInfo.horizontal();
-                    line.item(output);
-                    line.text(TextFormatting.BOLD + "\u6210\u54c1:" + TextFormatting.GREEN +
-                            output.getDisplayName() + " ×" + output.getCount());
-                }
-            }
-        } else if (metaTileEntity instanceof MetaTileEntityTemperatureSensor) {
-            MetaTileEntityTemperatureSensor s = (MetaTileEntityTemperatureSensor) metaTileEntity;
-            long max = Math.max(1L, s.getMaxTemperature());
-            iProbeInfo.progress(Math.min(s.getCurrentTemperature(), max), max, iProbeInfo.defaultProgressStyle()
-                    .prefix("\u6e29\u5ea6: ")
-                    .suffix(" / " + max + " K")
-                    .filledColor(0xFFFF5533)
-                    .alternateFilledColor(0xFFFFAA44)
-                    .borderColor(0xFF555555)
-                    .backgroundColor(0xFF111111)
-                    .numberFormat(NumberFormat.FULL));
-            iProbeInfo.text(TextFormatting.BOLD + "\u6a21\u5f0f:" + TextFormatting.GREEN + s.getModeDisplayName());
-            iProbeInfo.text(TextFormatting.BOLD + "\u8bbe\u5b9a\u6e29\u5ea6:" + TextFormatting.GREEN +
-                    s.getSetTemperature() + " K");
-            iProbeInfo.text(TextFormatting.BOLD + "\u8bfb\u53d6\u9762:" + TextFormatting.GREEN +
-                    s.getTargetFacing().getName());
-            iProbeInfo.text(TextFormatting.BOLD + "\u7ea2\u77f3\u8f93\u51fa:" + TextFormatting.GREEN +
-                    s.getRedstoneOutput());
-        } else if (metaTileEntity instanceof MetaTileEntityKineticSteamEngine) {
-            MetaTileEntityKineticSteamEngine s = (MetaTileEntityKineticSteamEngine) metaTileEntity;
-            iProbeInfo.progress(Math.min(s.getStoredEnergy(), s.getEnergyCapacity()), s.getEnergyCapacity(),
-                    iProbeInfo.defaultProgressStyle()
-                            .prefix("KU\u7f13\u5b58: ")
-                            .suffix(" / " + s.getEnergyCapacity())
-                            .filledColor(0xFF66CCFF)
-                            .alternateFilledColor(0xFF88EEFF)
-                            .borderColor(0xFF555555)
-                            .backgroundColor(0xFF111111)
-                            .numberFormat(NumberFormat.FULL));
-            iProbeInfo.text(TextFormatting.BOLD + "\u72b6\u6001:" + TextFormatting.GREEN +
-                    (s.isStopped() ? "\u505c\u6b62" : s.isActive() ? "\u8fd0\u884c" : "\u5f85\u673a"));
-            iProbeInfo.text(TextFormatting.BOLD + "\u84b8\u6c7d:" + TextFormatting.GREEN +
-                    s.getSteamAmount() + "/" + s.getTankCapacity() + " L");
-            iProbeInfo.text(TextFormatting.BOLD + "\u84b8\u998f\u6c34:" + TextFormatting.GREEN +
-                    s.getWaterAmount() + "/" + s.getTankCapacity() + " L");
-        } else if (metaTileEntity instanceof MetaTileEntityKineticGearbox) {
-            MetaTileEntityKineticGearbox s = (MetaTileEntityKineticGearbox) metaTileEntity;
-            iProbeInfo.text(TextFormatting.BOLD + "\u72b6\u6001:" + TextFormatting.GREEN +
-                    (s.isJammed() ? "\u5361\u6b7b" : s.isActive() ? "\u4f20\u52a8" : "\u7a7a\u8f6c"));
-            iProbeInfo.text(TextFormatting.BOLD + "\u500d\u7387:" + TextFormatting.GREEN + s.getRatioName());
-        } else if (metaTileEntity instanceof MetaTileEntityGt6Hopper) {
-            MetaTileEntityGt6Hopper s = (MetaTileEntityGt6Hopper) metaTileEntity;
-            iProbeInfo.progress(s.getUsedSlots(), Math.max(1, s.getSlotCount()), iProbeInfo.defaultProgressStyle()
-                    .prefix("\u69fd\u4f4d: ")
-                    .suffix(" / " + s.getSlotCount())
-                    .filledColor(0xFF77AA66)
-                    .alternateFilledColor(0xFF99CC88)
-                    .borderColor(0xFF555555)
-                    .backgroundColor(0xFF111111)
-                    .numberFormat(NumberFormat.FULL));
-            iProbeInfo.text(TextFormatting.BOLD + "\u6a21\u5f0f:" + TextFormatting.GREEN +
-                    (s.isQueueMode() ? "\u961f\u5217/FIFO" : "\u666e\u901a\u5408\u5e76"));
-            iProbeInfo.text(TextFormatting.BOLD + "\u5355\u6b21\u6570\u91cf:" + TextFormatting.GREEN +
-                    s.getStackSizeLimit() + (s.isExactMode() ? " exact" : ""));
-            iProbeInfo.text(TextFormatting.BOLD + "\u7269\u54c1\u603b\u6570:" + TextFormatting.GREEN +
-                    s.getTotalItemCount());
-            ItemStack preview = s.getOutputStackPreview();
-            if (!preview.isEmpty()) {
-                IProbeInfo line = iProbeInfo.horizontal();
-                line.item(preview);
-                line.text(TextFormatting.BOLD + "\u5f85\u8f93\u51fa:" + TextFormatting.GREEN +
-                        preview.getDisplayName() + "*" + preview.getCount());
-            }
-        } else if (metaTileEntity instanceof MetaTileEntityCombustionchamber) {
-            MetaTileEntityCombustionchamber s = (MetaTileEntityCombustionchamber) metaTileEntity;
-            ItemStack item = s.getImportItems().getStackInSlot(0).copy();
-            ItemStack itemOut = s.getExportItems().getStackInSlot(0).copy();
-            iProbeInfo.text(TextFormatting.BOLD + I18n.format("gt6addition.top.work.status") + TextFormatting.GREEN + s.isActive);
-            iProbeInfo.text(TextFormatting.BOLD + "\u71c3\u70e7\u901f\u5ea6:" + TextFormatting.GREEN + s.burnSpeed);
-            iProbeInfo.text(TextFormatting.BOLD + "\u71c3\u70e7\u70ed\u91cf:" + TextFormatting.GREEN +
-                    s.currentItemHasBurnedTime + "/" + s.currentItemBurnTime);
-            iProbeInfo.text(TextFormatting.BOLD + "HU\u8f93\u51fa:" + TextFormatting.GREEN + s.outPutHu);
-            iProbeInfo.text(TextFormatting.BOLD + "\u7f13\u5b58\u7269\u54c1:" + TextFormatting.GREEN +
-                    (item.isEmpty() ? "null" : item.getDisplayName() + "*" + item.getCount()));
-            iProbeInfo.text(TextFormatting.BOLD + "\u7070\u70ec\u680f\u72b6\u6001:" + TextFormatting.GREEN +
-                    (itemOut.isEmpty() ? "null" : itemOut.getCount() + "/64"));
-        } else if (metaTileEntity instanceof MetaTileEntityCombustionchamberLiquid) {
-            MetaTileEntityCombustionchamberLiquid s = (MetaTileEntityCombustionchamberLiquid) metaTileEntity;
-            FluidStack fluidIn = s.getImportFluids().getTankAt(0).getFluid();
-            FluidStack fluidOut = s.getExportFluids().getTankAt(0).getFluid();
-            iProbeInfo.text(TextFormatting.BOLD + "\u5de5\u4f5c\u72b6\u6001:" + TextFormatting.GREEN + s.isActive);
-            iProbeInfo.text(TextFormatting.BOLD + "\u71c3\u70e7\u901f\u5ea6:" + TextFormatting.GREEN + s.burnSpeed);
-            iProbeInfo.text(TextFormatting.BOLD + "\u71c3\u70e7\u70ed\u91cf:" + TextFormatting.GREEN +
-                    s.currentItemHasBurnedTime + "/" + s.currentItemBurnTime);
-            iProbeInfo.text(TextFormatting.BOLD + "HU\u8f93\u51fa:" + TextFormatting.GREEN + s.outPutHu);
-            iProbeInfo.text(TextFormatting.BOLD + "\u7f13\u5b58\u6d41\u4f53:" + TextFormatting.GREEN +
-                    (fluidIn == null ? "null" : fluidIn.getLocalizedName() + "*" + fluidIn.amount + "/1000"));
-            iProbeInfo.text(TextFormatting.BOLD + "\u8f93\u51fa\u6d41\u4f53:" + TextFormatting.GREEN +
-                    (fluidOut == null ? "null" : fluidOut.getLocalizedName() + "*" + fluidOut.amount + "/1000"));
         }
-        if (metaTileEntity instanceof IEnergyOutShow) {
-            IEnergyOutShow energyOutShow = (IEnergyOutShow) metaTileEntity;
-            iProbeInfo.text(TextFormatting.BOLD + "\u80fd\u91cf\u7c7b\u578b:" + TextFormatting.GREEN +
-                    energyOutShow.getEnergyName());
-            iProbeInfo.text(TextFormatting.BOLD + "\u80fd\u91cf\u8f93\u51fa:" + TextFormatting.GREEN +
-                    energyOutShow.getEnergyOut() + energyOutShow.getEnergyName() + "/t");
+    }
+
+    private void addEnergyOutput(IProbeInfo info, IEnergyOutShow machine) {
+        if (machine instanceof MetaTileEntityKineticSteamEngine &&
+                ((MetaTileEntityKineticSteamEngine) machine).isStopped()) {
+            status(info, "stopped", TextFormatting.RED);
+        } else if (machine instanceof MetaTileEntityKineticGearbox &&
+                ((MetaTileEntityKineticGearbox) machine).isJammed()) {
+            status(info, "jammed", TextFormatting.RED);
+        } else {
+            boolean active = machine.getEnergyOut() > 0;
+            status(info, active ? "running" : "idle", active ? TextFormatting.GREEN : TextFormatting.GRAY);
         }
+        energyType(info, machine.getEnergyName());
+        energyRate(info, "energy_output", machine.getEnergyOut(), machine.getEnergyName());
+    }
+
+    private void addBurningBox(IProbeInfo info, boolean active, int output,
+                               int burned, int total, int speed, boolean details) {
+        status(info, active ? "running" : "idle", active ? TextFormatting.GREEN : TextFormatting.GRAY);
+        energyType(info, "HU");
+        energyRate(info, "energy_output", active ? output : 0L, "HU");
+        percentBar(info, COMMON + "fuel_remaining", Math.max(0L, (long) total - burned), total, HEAT);
+        if (details) {
+            energyRate(info, "rated_output", output, "HU");
+            commonRow(info, "fuel_consumption", number(active ? speed : 0) + " " + common("fuel_heat_unit") + "/t");
+        }
+    }
+
+    private void addCrucible(IProbeInfo info, MetaTileEntityCrucible crucible) {
+        bar(info, CRUCIBLE + "temperature", crucible.getCurrentTemperature(), crucible.getMaxTemperature(), "K", HEAT);
+        row(info, CRUCIBLE + "capacity_equivalent", number(crucible.getStoredFluidAmount()) + " / " +
+                number(crucible.getCapacityFluidAmount()) + " L");
+        ItemStack input = crucible.getImportItems().getStackInSlot(0).copy();
+        row(info, CRUCIBLE + "input_slot", input.isEmpty() ? common("empty") :
+                input.getDisplayName() + TextFormatting.GRAY + " ×" + number(input.getCount()));
+        row(info, CRUCIBLE + "pending_items", number(crucible.getPendingItemCount()) + " / " +
+                number(crucible.getPendingItemCapacity()));
+        List<MetaTileEntityCrucible.CrucibleContentInfo> contents = crucible.getTopContents();
+        if (contents.isEmpty()) {
+            row(info, CRUCIBLE + "contents", common("empty"));
+            return;
+        }
+        info.text(TextFormatting.WHITE.toString() + TextFormatting.BOLD +
+                localize(CRUCIBLE + "contents") + TextFormatting.RESET);
+        for (MetaTileEntityCrucible.CrucibleContentInfo content : contents) {
+            IProbeInfo line = info.horizontal();
+            ItemStack stack = content.getDisplayStack();
+            if (!stack.isEmpty()) line.item(stack);
+            line.text(TextFormatting.GREEN + content.getMaterialName() + TextFormatting.GRAY + " · " +
+                    number(content.getFluidAmount()) + " L · " +
+                    common(content.isMolten() ? "molten" : "solid") + TextFormatting.RESET);
+        }
+    }
+
+    private void addMold(IProbeInfo info, MetaTileEntityMold mold) {
+        commonRow(info, "mold_grid", "5 × 5");
+        commonRow(info, "temperature_limit", number(mold.getMoldMaxTemperature()) + " K");
+        if (mold.isCooling()) {
+            status(info, "cooling", TextFormatting.AQUA);
+            commonRow(info, "contents", mold.getCoolingMaterialName());
+            percentBar(info, COMMON + "cooling_progress", mold.getCoolingProgressPercent(), 100L, COLD);
+            commonRow(info, "temperature", number(mold.getTemperatureValue(null)) + " K");
+            commonRow(info, "solidification_temperature", number(mold.getCoolingTargetTemperature()) + " K");
+        } else {
+            item(info, "finished_item", mold.getOutputStack());
+        }
+    }
+
+    private void addHopper(IProbeInfo info, MetaTileEntityGt6Hopper hopper) {
+        bar(info, COMMON + "slots", hopper.getUsedSlots(), hopper.getSlotCount(), "", GREEN);
+        commonRow(info, "mode", common(hopper.isQueueMode() ? "hopper.fifo" : "hopper.merge"));
+        commonRow(info, "batch_size", number(hopper.getStackSizeLimit()) +
+                (hopper.isExactMode() ? TextFormatting.GRAY + " · " + common("hopper.exact") : ""));
+        commonRow(info, "item_count", number(hopper.getTotalItemCount()));
+        ItemStack preview = hopper.getOutputStackPreview();
+        if (!preview.isEmpty()) item(info, "pending_output", preview);
     }
 }

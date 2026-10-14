@@ -386,6 +386,11 @@ public class MetaTileEntityTemperatureSensor extends MetaTileEntity {
         return I18n.format(getModeKey());
     }
 
+    /** Translation key for server-side information providers; the viewing client chooses its language. */
+    public String getModeTranslationKey() {
+        return getModeKey();
+    }
+
     @Override
     protected boolean canMachineConnectRedstone(EnumFacing side) {
         return true;

@@ -42,6 +42,18 @@ final class GT6MaterialIdentity {
         } else if (material == Materials.BandedIron) {
             // GT6's Hematite is CEu's explicit BandedIron identity.
             mechanicsName = "hematite";
+        } else if (material == Materials.Water) {
+            // GT6 H2O is explicitly bound to Forge Water and later assigned
+            // Ice as its cold target in MT's post-init block. Keep the exact
+            // CEu singleton recognizable even if Core has a preferred
+            // same-path/name material in the shared compatibility lookup.
+            mechanicsName = "water";
+        } else if (material == Materials.Lava) {
+            // GT6 Lava receives its Obsidian cold target after MT's literal
+            // declaration; the singleton is the verified Forge Lava binding.
+            mechanicsName = "lava";
+        } else if (material == Materials.Obsidian) {
+            mechanicsName = "obsidian";
         } else {
             String hostName = material.getName();
             if (hostName != null && GT6MaterialCompatibility.findExternal(hostName) == material) {
@@ -235,6 +247,7 @@ final class GT6MaterialIdentity {
 
     /** Literal MT.java alloy aliases, not similarity-based material matching. */
     static String canonicalAlloyName(String normalizedName) {
+        if ("ta4hfc5".equals(normalizedName)) return "tantalumhafniumcarbide"; // MT.Ta4HfC5, ID 8802.
         if ("carborundum".equals(normalizedName)) return "siliconcarbide";
         if ("cupronickel".equals(normalizedName)) return "constantan";
         if ("aluminumbrass".equals(normalizedName)) return "aluminiumbrass";

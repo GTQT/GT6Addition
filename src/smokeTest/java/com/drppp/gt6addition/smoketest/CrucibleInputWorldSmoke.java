@@ -75,7 +75,28 @@ final class CrucibleInputWorldSmoke {
         // Iron's explicit GT6 crushing target is hematite at 3 U per ore;
         // a 9-ore raw block exceeds this crucible's 16-U capacity and is refused.
         oreForm(world, 28, "blockRawIron", new ItemStack(Items.GUNPOWDER), Materials.BandedIron, -1);
-        return 26 + optional;
+        // GT6 OP.oreNetherrack/oreEndstone are STANDARD_ORE, while
+        // OP.oreNether/oreEnd are DENSE_ORE and therefore double the same
+        // material's targetCrushing yield. Exercise CEu's exact resolved
+        // prefixes in the real input slot, not only the pure multiplier helper.
+        input(world, 80, OrePrefix.oreNetherrack, Materials.Iron, Materials.BandedIron, 3 * GTValues.M);
+        input(world, 81, OrePrefix.oreEndstone, Materials.Iron, Materials.BandedIron, 3 * GTValues.M);
+        int dimensionOptional = optionalPrefixInput(world, 82, OrePrefix.oreNether, Materials.Iron,
+                Materials.BandedIron, 6 * GTValues.M);
+        dimensionOptional += optionalPrefixInput(world, 83, OrePrefix.oreEnd, Materials.Iron,
+                Materials.BandedIron, 6 * GTValues.M);
+        return 28 + optional + dimensionOptional;
+    }
+
+    private static int optionalPrefixInput(WorldServer world, int index, OrePrefix prefix,
+                                           Material source, Material target, long amount) {
+        if (OreDictUnifier.get(prefix, source).isEmpty()) {
+            LogManager.getLogger("CrucibleParitySmoke").info(
+                    "CRUCIBLE_WORLD_OPTIONAL_ORE_PREFIX unavailable prefix={} source={}", prefix, source);
+            return 0;
+        }
+        input(world, index, prefix, source, target, amount);
+        return 1;
     }
 
     private static int optionalInput(WorldServer world, int index, OrePrefix prefix, String sourceName,

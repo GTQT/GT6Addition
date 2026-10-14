@@ -17,7 +17,9 @@ import gregtech.api.unification.stack.RecyclingData;
 import gregtech.common.blocks.BlockBatteryPart.BatteryPartType;
 import gregtech.common.blocks.MetaBlocks;
 import gregtech.common.items.MetaItems;
+import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -73,7 +75,13 @@ public final class CrucibleComponentProvenance {
     }
 
     private static BatteryPartType batteryPartType(ItemStack stack) {
-        if (stack.isEmpty() || MetaBlocks.BATTERY_BLOCK == null) return null;
+        if (stack.isEmpty() || !(stack.getItem() instanceof ItemBlock)) return null;
+        Block block = ((ItemBlock) stack.getItem()).getBlock();
+        // Most crucible inputs are not battery blocks. Avoid touching
+        // MetaBlocks' registry-backed static initialization for ordinary
+        // items; besides reducing work, this keeps isolated material lookups
+        // independent of unrelated CEu block registration.
+        if (!(block instanceof gregtech.common.blocks.BlockBatteryPart) || MetaBlocks.BATTERY_BLOCK == null) return null;
         for (BatteryPartType type : BatteryPartType.values()) {
             if (ItemStack.areItemsEqual(stack, MetaBlocks.BATTERY_BLOCK.getItemVariant(type))) return type;
         }

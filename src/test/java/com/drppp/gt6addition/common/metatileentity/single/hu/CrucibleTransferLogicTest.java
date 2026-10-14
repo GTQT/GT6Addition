@@ -609,7 +609,7 @@ class CrucibleTransferLogicTest {
         CrucibleFluidUnits.Quantity bucket = CrucibleFluidUnits.storedFluidAmount(1000, GTValues.L);
         assertNotNull(bucket);
         assertEquals(0, bucket.remainder);
-        for (int remainder : new int[]{1, CrucibleFluidUnits.STORAGE_UNIT / 2, CrucibleFluidUnits.STORAGE_UNIT - 1}) {
+        for (long remainder : new long[]{1, CrucibleFluidUnits.STORAGE_UNIT / 2, CrucibleFluidUnits.STORAGE_UNIT - 1}) {
             CrucibleFluidUnits.LavaCondensation result = CrucibleFluidUnits.condenseLava(
                     bucket.amount, remainder, GTValues.L);
             assertNotNull(result);
@@ -689,28 +689,28 @@ class CrucibleTransferLogicTest {
     void preparedMultiMaterialIntakeChecksAllExpandedComponentsBeforeCommit() {
         long unit = GTValues.M;
         assertTrue(CrucibleFluidUnits.incomingBatchFits(12 * unit, 16 * unit,
-                new long[]{2 * unit, 2 * unit}, new int[]{0, 0}));
+                new long[]{2 * unit, 2 * unit}, new long[]{0, 0}));
         assertFalse(CrucibleFluidUnits.incomingBatchFits(13 * unit, 16 * unit,
-                new long[]{2 * unit, 2 * unit}, new int[]{0, 0}));
+                new long[]{2 * unit, 2 * unit}, new long[]{0, 0}));
         // Each component alone fits, but the batch must not commit the first
         // and then discover that the second has no space.
         assertFalse(CrucibleFluidUnits.incomingBatchFits(15 * unit, 16 * unit,
-                new long[]{unit, unit}, new int[]{0, 0}));
+                new long[]{unit, unit}, new long[]{0, 0}));
         assertTrue(CrucibleFluidUnits.incomingBatchFits(0, 2,
-                new long[]{0, 0}, new int[]{1, 1}));
+                new long[]{0, 0}, new long[]{1, 1}));
         assertFalse(CrucibleFluidUnits.incomingBatchFits(0, 1,
-                new long[]{0, 0}, new int[]{1, 1}));
+                new long[]{0, 0}, new long[]{1, 1}));
         assertFalse(CrucibleFluidUnits.incomingBatchFits(0, Long.MAX_VALUE,
-                new long[]{Long.MAX_VALUE, 1}, new int[]{0, 0}));
+                new long[]{Long.MAX_VALUE, 1}, new long[]{0, 0}));
         assertTrue(CrucibleFluidUnits.incomingBatchFits(0, Long.MAX_VALUE,
-                new long[]{Long.MAX_VALUE - 1, 1}, new int[]{0, 0}));
-        assertFalse(CrucibleFluidUnits.incomingBatchFits(17, 16, new long[]{1}, new int[]{0}));
-        assertFalse(CrucibleFluidUnits.incomingBatchFits(0, 16, new long[]{0}, new int[]{0}));
-        assertFalse(CrucibleFluidUnits.incomingBatchFits(0, 16, new long[]{1}, new int[]{-1}));
+                new long[]{Long.MAX_VALUE - 1, 1}, new long[]{0, 0}));
+        assertFalse(CrucibleFluidUnits.incomingBatchFits(17, 16, new long[]{1}, new long[]{0}));
+        assertFalse(CrucibleFluidUnits.incomingBatchFits(0, 16, new long[]{0}, new long[]{0}));
+        assertFalse(CrucibleFluidUnits.incomingBatchFits(0, 16, new long[]{1}, new long[]{-1}));
         assertFalse(CrucibleFluidUnits.incomingBatchFits(0, 16, new long[]{1},
-                new int[]{CrucibleFluidUnits.STORAGE_UNIT}));
-        assertFalse(CrucibleFluidUnits.incomingBatchFits(0, 16, new long[]{1}, new int[0]));
-        assertFalse(CrucibleFluidUnits.incomingBatchFits(0, 16, new long[0], new int[0]));
+                new long[]{CrucibleFluidUnits.STORAGE_UNIT}));
+        assertFalse(CrucibleFluidUnits.incomingBatchFits(0, 16, new long[]{1}, new long[0]));
+        assertFalse(CrucibleFluidUnits.incomingBatchFits(0, 16, new long[0], new long[0]));
         assertFalse(CrucibleFluidUnits.incomingBatchFits(0, 16, null, null));
     }
 
@@ -730,9 +730,9 @@ class CrucibleTransferLogicTest {
         assertNotNull(wood);
         assertEquals(2 * GTValues.M, diamond.amount);
         assertTrue(CrucibleFluidUnits.incomingBatchFits(0, 3 * GTValues.M,
-                new long[]{diamond.amount, wood.amount}, new int[]{diamond.remainder, wood.remainder}));
+                new long[]{diamond.amount, wood.amount}, new long[]{diamond.remainder, wood.remainder}));
         assertFalse(CrucibleFluidUnits.incomingBatchFits(GTValues.M, 3 * GTValues.M,
-                new long[]{diamond.amount, wood.amount}, new int[]{diamond.remainder, wood.remainder}));
+                new long[]{diamond.amount, wood.amount}, new long[]{diamond.remainder, wood.remainder}));
     }
 
     @Test
@@ -849,6 +849,8 @@ class CrucibleTransferLogicTest {
 
     @Test
     void phosphorusElementAndCompoundHaveSeparateGt6Identities() {
+        assertEquals("gregtech:phosphorus", GT6HostMaterialAliasData.hostPath("Phosphor"));
+        assertNull(GT6HostMaterialAliasData.hostPath("Phosphorus"));
         assertEquals("gregtech:phosphorus",
                 GT6MaterialIdentity.hostRecyclingName(GT6MaterialIdentity.name(150)));
         assertEquals("gregtech:tricalcium_phosphate",
@@ -1226,7 +1228,10 @@ class CrucibleTransferLogicTest {
         assertEquals(0, remaining.remainder);
         assertNull(CrucibleFluidUnits.drainStored(gas.amount, gas.remainder, 2, 1000));
         assertNull(CrucibleFluidUnits.storedFluidAmount(-1, 1000));
-        assertNull(CrucibleFluidUnits.storedFluidAmount(1, 11));
+        CrucibleFluidUnits.Quantity eleventh = CrucibleFluidUnits.storedFluidAmount(1, 11);
+        assertNotNull(eleventh);
+        assertEquals(GTValues.M / 11, eleventh.amount);
+        assertEquals((GTValues.M % 11) * (CrucibleFluidUnits.STORAGE_UNIT / 11), eleventh.remainder);
     }
 
     @Test
@@ -1495,8 +1500,10 @@ class CrucibleTransferLogicTest {
 
     @Test
     void duraniteElementAndAlloyRecyclingIdentitiesStaySeparate() {
-        assertGt6AlloyRecipe("duranium_alloy", 8, new String[]{"duranium", "magnesium"}, new long[]{7, 1});
-        assertGt6AlloyRecipe("tritanium_alloy", 4, new String[]{"tritanium", "duranium"}, new long[]{3, 1});
+        assertGt6AlloyRecipe("duranium_alloy", 8,
+                new String[]{"gregtech:duranium", "magnesium"}, new long[]{7, 1});
+        assertGt6AlloyRecipe("tritanium_alloy", 4,
+                new String[]{"gregtech:tritanium", "gregtech:duranium"}, new long[]{3, 1});
         int[] ids = {1450, 1250, 8751, 8752};
         String[] expected = {"gregtech:duranium", "gregtech:tritanium",
                 "gt6addition:duranium_alloy", "gt6addition:tritanium_alloy"};
@@ -1882,6 +1889,23 @@ class CrucibleTransferLogicTest {
         assertTrue(GT6AlloyRecipes.hasCompleteRecipeSet("end_steel"));
         assertFalse(GT6AlloyRecipes.hasCompleteRecipeSet("unknown_alloy"));
         assertFalse(GT6AlloyRecipes.hasCompleteRecipeSet(null));
+    }
+
+    @Test
+    void everyKnownGt6MaterialUsesAuthoritativeJavaAlloyDataInsteadOfHostCompositionFallback() {
+        assertTrue(GT6AlloyRecipes.blocksHostCompositionFallback("iron"));
+        assertTrue(GT6AlloyRecipes.blocksHostCompositionFallback("phosphorus"));
+        assertTrue(GT6AlloyRecipes.blocksHostCompositionFallback("tricalcium_phosphate"));
+        assertTrue(GT6AlloyRecipes.blocksHostCompositionFallback("anti-hydrogen"));
+        assertTrue(GT6AlloyRecipes.blocksHostCompositionFallback("refined_iron"));
+
+        // External CEu/other-mod materials absent from the fixed GT6 snapshot
+        // still retain the host's component-based alloying behavior.
+        assertFalse(GT6AlloyRecipes.blocksHostCompositionFallback("external_custom_alloy"));
+        // Anthracite is addon-owned on this branch, but remains an exact GT6
+        // snapshot identity (MT.java:1524), so its GT6 data is still trusted.
+        assertTrue(GT6AlloyRecipes.blocksHostCompositionFallback("gt6addition:anthracite"));
+        assertFalse(GT6AlloyRecipes.blocksHostCompositionFallback(null));
     }
 
     private static void assertGt6AlloyRecipe(String output, long amount, String[] inputs, long[] units) {
@@ -2484,7 +2508,7 @@ class CrucibleTransferLogicTest {
         assertEquals(273, CrucibleMaterialPhaseData.knownMeltingPoint("ice"));
         assertEquals(1070, CrucibleMaterialPhaseData.knownMeltingPoint("arsenic_copper"));
         assertEquals(-1, CrucibleMaterialPhaseData.knownMeltingPoint("unknown_material"));
-        assertEquals(-1, CrucibleMaterialPhaseData.knownMeltingPoint(null));
+        assertEquals(-1, CrucibleMaterialPhaseData.knownMeltingPoint((String) null));
     }
 
     @Test
@@ -2662,15 +2686,26 @@ class CrucibleTransferLogicTest {
     }
 
     @Test
-    void materialHazardFireCountMatchesGt6ThroughTheFullSixteenUnitCapacity() {
+    void materialHazardFireCountMatchesGt6WithoutAddingACapacityLimit() {
         long capacity = 16L * GTValues.M;
-        assertEquals(0, CrucibleTransferLogic.materialHazardFireAttempts(0, GTValues.M, capacity));
-        assertEquals(1, CrucibleTransferLogic.materialHazardFireAttempts(1, GTValues.M, capacity));
-        assertEquals(9, CrucibleTransferLogic.materialHazardFireAttempts(GTValues.M, GTValues.M, capacity));
-        assertEquals(72, CrucibleTransferLogic.materialHazardFireAttempts(8L * GTValues.M, GTValues.M, capacity));
-        assertEquals(144, CrucibleTransferLogic.materialHazardFireAttempts(capacity, GTValues.M, capacity));
-        assertEquals(144, CrucibleTransferLogic.materialHazardFireAttempts(Long.MAX_VALUE, GTValues.M, capacity));
-        assertEquals(0, CrucibleTransferLogic.materialHazardFireAttempts(1, 0, capacity));
+        assertEquals(0, CrucibleTransferLogic.materialHazardFireAttempts(0, 0, GTValues.M));
+        assertEquals(1, CrucibleTransferLogic.materialHazardFireAttempts(1, 0, GTValues.M));
+        assertEquals(1, CrucibleTransferLogic.materialHazardFireAttempts(0, 1, GTValues.M));
+        assertEquals(9, CrucibleTransferLogic.materialHazardFireAttempts(GTValues.M, 0, GTValues.M));
+        assertEquals(72, CrucibleTransferLogic.materialHazardFireAttempts(8L * GTValues.M, 0, GTValues.M));
+        // GT6 uses integer division (bindInt only clamps, it does not round).
+        // Fractional stored material crosses the second-attempt boundary only
+        // once the exact numerator reaches ceil(2 * U / 9).
+        assertEquals(1, CrucibleTransferLogic.materialHazardFireAttempts(222_222,
+                CrucibleFluidUnits.STORAGE_UNIT / 2, GTValues.M));
+        assertEquals(1, CrucibleTransferLogic.materialHazardFireAttempts(806_399,
+                CrucibleFluidUnits.STORAGE_UNIT - 1, GTValues.M));
+        assertEquals(2, CrucibleTransferLogic.materialHazardFireAttempts(806_400, 0, GTValues.M));
+        assertEquals(144, CrucibleTransferLogic.materialHazardFireAttempts(capacity, 0, GTValues.M));
+        assertEquals(153, CrucibleTransferLogic.materialHazardFireAttempts(capacity + GTValues.M, 0, GTValues.M));
+        assertEquals(Integer.MAX_VALUE,
+                CrucibleTransferLogic.materialHazardFireAttempts(Long.MAX_VALUE, 0, GTValues.M));
+        assertEquals(0, CrucibleTransferLogic.materialHazardFireAttempts(1, 0, 0));
     }
 
     @Test
@@ -3020,14 +3055,18 @@ class CrucibleTransferLogicTest {
 
     @Test
     void explosionStrengthMatchesGt6IntegerScaleBoundaries() {
-        assertEquals(0, CrucibleTransferLogic.contentExplosionStrength(0, 100));
-        assertEquals(1, CrucibleTransferLogic.contentExplosionStrength(1, 100));
-        assertEquals(1, CrucibleTransferLogic.contentExplosionStrength(19, 100));
-        assertEquals(2, CrucibleTransferLogic.contentExplosionStrength(20, 100));
-        assertEquals(5, CrucibleTransferLogic.contentExplosionStrength(99, 100));
-        assertEquals(6, CrucibleTransferLogic.contentExplosionStrength(100, 100));
-        assertEquals(6, CrucibleTransferLogic.contentExplosionStrength(101, 100));
-        assertEquals(5, CrucibleTransferLogic.contentExplosionStrength(Long.MAX_VALUE - 1, Long.MAX_VALUE));
+        assertEquals(0, CrucibleTransferLogic.contentExplosionStrength(0, 0, 100));
+        assertEquals(1, CrucibleTransferLogic.contentExplosionStrength(1, 0, 100));
+        assertEquals(1, CrucibleTransferLogic.contentExplosionStrength(19, 0, 100));
+        assertEquals(2, CrucibleTransferLogic.contentExplosionStrength(20, 0, 100));
+        assertEquals(2, CrucibleTransferLogic.contentExplosionStrength(199,
+                CrucibleFluidUnits.STORAGE_UNIT / 2, 997));
+        assertEquals(1, CrucibleTransferLogic.contentExplosionStrength(0, 1, 100));
+        assertEquals(5, CrucibleTransferLogic.contentExplosionStrength(99, 0, 100));
+        assertEquals(6, CrucibleTransferLogic.contentExplosionStrength(100, 0, 100));
+        assertEquals(6, CrucibleTransferLogic.contentExplosionStrength(101, 0, 100));
+        assertEquals(5, CrucibleTransferLogic.contentExplosionStrength(Long.MAX_VALUE - 1, 0,
+                Long.MAX_VALUE));
     }
 
     @Test

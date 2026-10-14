@@ -184,7 +184,7 @@ class GT6TechnicalMaterialDataTest {
             int numerator = Integer.parseInt(row[3]), denominator = Integer.parseInt(row[4]);
             CrucibleSmeltingRule rule = CrucibleSmeltingRule.find(name);
             for (long amount : new long[]{1, 17, U, Long.MAX_VALUE}) {
-                for (int remainder : new int[]{0, 1, CrucibleFluidUnits.STORAGE_UNIT - 1}) {
+                for (long remainder : new long[]{0, 1, CrucibleFluidUnits.STORAGE_UNIT - 1}) {
                     CrucibleFluidUnits.Quantity actual = rule.convertStored(amount, remainder);
                     assertNotNull(actual, name);
                     BigInteger expected = BigInteger.valueOf(amount).multiply(BigInteger.valueOf(CrucibleFluidUnits.STORAGE_UNIT))

@@ -7,13 +7,24 @@ import java.util.Locale;
 
 /** Explicit special units from GT6; unverified fluids retain current project units. */
 public final class CrucibleFluidUnits {
-    // LCM of the prior fluid denominators (90,720,000) and every exact
-    // denominator in GT6's literal targetSmelting ratios (through 13,860).
-    // This preserves both legacy fluid fractions and non-terminating GT6
-    // material conversions such as 1/11 without rounding their remainders.
-    static final int LEGACY_STORAGE_UNIT = 90720000;
-    static final int STORAGE_UNIT = 997920000;
+    // LCM of the previous material denominator, fluid units, GT6 phase ratios,
+    // and the GT6 U to CEu M ratio. The factor 13 makes one GT6 base subunit
+    // representable, including fractional alloy conversions and leftovers.
+    static final long LEGACY_STORAGE_UNIT = 90720000L;
+    static final long PHASE_STORAGE_UNIT = 997920000L;
+    // GT6's U is 648648000, whereas CEu's M is 3628800. Include the
+    // additional factor 13 so every GT6 base-unit alloy result is exact.
+    static final long STORAGE_UNIT = 12972960000L;
+    static final long GT6_MATERIAL_UNIT = GT6AlloyRecipes.GT6_U;
+    private static final BigInteger GT6_ATOM = gt6AtomQuantum();
     private CrucibleFluidUnits() {}
+
+    private static BigInteger gt6AtomQuantum() {
+        BigInteger[] parts = BigInteger.valueOf(GTValues.M).multiply(BigInteger.valueOf(STORAGE_UNIT))
+                .divideAndRemainder(BigInteger.valueOf(GT6_MATERIAL_UNIT));
+        if (parts[1].signum() != 0) throw new ExceptionInInitializerError("GT6 base unit is not representable");
+        return parts[0];
+    }
 
     /** Unit of the actual default fluid used by output and JEI; zero means
      * an unresolved/ambiguous registered binding, not a metal-unit fallback.
@@ -27,8 +38,9 @@ public final class CrucibleFluidUnits {
 
     static int gasUnit(String name) {
         String normalized = normalize(name);
+        int gt6Unit = GT6LiteralFluidUnitData.specialGasUnit(normalized);
+        if (gt6Unit > 0) return gt6Unit;
         if ("steam".equals(normalized) || "water".equals(normalized) || "ice".equals(normalized)) return 160000;
-        if ("aerotheum".equals(normalized) || "glowstone".equals(normalized)) return 250;
         return 1000;
     }
 
@@ -40,7 +52,7 @@ public final class CrucibleFluidUnits {
     static int legacyFluidUnit(String name) {
         // These liquids formerly fell through to the metal default. Decode
         // old fractional amounts with that denominator, never the new one.
-        if (isGt6GeneratedLiquid(normalize(name))) return GTValues.L;
+        if (GT6LiteralFluidUnitData.liquidMaterialUnit(normalize(name)) > 0) return GTValues.L;
         switch (normalize(name)) {
             case "blaze": case "kerosene": case "fueloil": case "gasoline":
             case "fishoil": case "whaleoil": case "seedoil": case "hempoil":
@@ -54,7 +66,8 @@ public final class CrucibleFluidUnits {
     static int plasmaUnit(String materialName) {
         String name = materialName == null ? "" : materialName.toLowerCase(Locale.ROOT)
                 .replace("_", "").replace("-", "").replace(" ", "");
-        return "helium".equals(name) || "nitrogen".equals(name) ? 1000 : 20736;
+        int gt6Unit = GT6LiteralFluidUnitData.specialPlasmaUnit(name);
+        return gt6Unit > 0 ? gt6Unit : 20736;
     }
 
     static Quantity storedFluidAmount(int fluidAmount, int fluidUnit) {
@@ -63,20 +76,20 @@ public final class CrucibleFluidUnits {
                 .multiply(BigInteger.valueOf(STORAGE_UNIT / fluidUnit)), STORAGE_UNIT);
     }
 
-    static Quantity migrateStoredQuantity(long amount, int remainder, int oldUnit) {
+    static Quantity migrateStoredQuantity(long amount, long remainder, long oldUnit) {
         if (!valid(amount, remainder, oldUnit) || STORAGE_UNIT % oldUnit != 0) return null;
         return quantity(numerator(amount, remainder, oldUnit)
                 .multiply(BigInteger.valueOf(STORAGE_UNIT / oldUnit)), STORAGE_UNIT);
     }
 
-    static int storedFluidVolume(long amount, int remainder, int fluidUnit) {
+    static int storedFluidVolume(long amount, long remainder, int fluidUnit) {
         if (!valid(amount, remainder, STORAGE_UNIT) || fluidUnit <= 0) return 0;
         return numerator(amount, remainder, STORAGE_UNIT).multiply(BigInteger.valueOf(fluidUnit))
                 .divide(BigInteger.valueOf(STORAGE_UNIT).multiply(BigInteger.valueOf(GTValues.M)))
                 .min(BigInteger.valueOf(Integer.MAX_VALUE)).intValue();
     }
 
-    static Quantity drainStored(long amount, int remainder, int fluidAmount, int fluidUnit) {
+    static Quantity drainStored(long amount, long remainder, int fluidAmount, int fluidUnit) {
         if (!valid(amount, remainder, STORAGE_UNIT)) return null;
         Quantity consumed = storedFluidAmount(fluidAmount, fluidUnit);
         if (consumed == null) return null;
@@ -85,7 +98,7 @@ public final class CrucibleFluidUnits {
     }
 
     /** Project rule: whole 1000 mB lava buckets become obsidian; retain every smaller remainder. */
-    static LavaCondensation condenseLava(long amount, int remainder, int fluidUnit) {
+    static LavaCondensation condenseLava(long amount, long remainder, int fluidUnit) {
         if (!valid(amount, remainder, STORAGE_UNIT) || fluidUnit <= 0) return null;
         int buckets = storedFluidVolume(amount, remainder, fluidUnit) / 1000;
         if (buckets <= 0) return null;
@@ -103,19 +116,19 @@ public final class CrucibleFluidUnits {
         }
     }
 
-    static Quantity scaleStored(long amount, int remainder, long multiplier, long divisor) {
+    static Quantity scaleStored(long amount, long remainder, long multiplier, long divisor) {
         if (!valid(amount, remainder, STORAGE_UNIT) || multiplier < 0 || divisor <= 0) return null;
         return quantity(numerator(amount, remainder, STORAGE_UNIT)
                 .multiply(BigInteger.valueOf(multiplier)).divide(BigInteger.valueOf(divisor)), STORAGE_UNIT);
     }
 
-    static long occupiedUnits(long amount, int remainder) {
+    static long occupiedUnits(long amount, long remainder) {
         if (!valid(amount, remainder, STORAGE_UNIT)) return -1;
         return remainder == 0 ? amount : amount == Long.MAX_VALUE ? -1 : amount + 1;
     }
 
-    static boolean replacementFits(long total, long capacity, long oldAmount, int oldRemainder,
-                                   long newAmount, int newRemainder, boolean replacing) {
+    static boolean replacementFits(long total, long capacity, long oldAmount, long oldRemainder,
+                                   long newAmount, long newRemainder, boolean replacing) {
         long oldUnits = replacing ? occupiedUnits(oldAmount, oldRemainder) : 0;
         long newUnits = occupiedUnits(newAmount, newRemainder);
         if (total < 0 || capacity < 0 || oldUnits < 0 || newUnits < 0 || oldUnits > total) return false;
@@ -126,7 +139,7 @@ public final class CrucibleFluidUnits {
     }
 
     /** Validate the complete prepared intake before any temperature/inventory commit. */
-    static boolean incomingBatchFits(long total, long capacity, long[] amounts, int[] remainders) {
+    static boolean incomingBatchFits(long total, long capacity, long[] amounts, long[] remainders) {
         if (total < 0 || capacity < total || amounts == null || remainders == null ||
                 amounts.length == 0 || amounts.length != remainders.length) return false;
         long remaining = capacity - total;
@@ -141,7 +154,10 @@ public final class CrucibleFluidUnits {
     public static int fluidUnit(String name) {
         if (name == null) return GTValues.L;
         String normalized = normalize(name);
-        if (isGt6GeneratedLiquid(normalized)) return 1000;
+        int gt6Unit = GT6LiteralFluidUnitData.specialFluidUnit(normalized);
+        if (gt6Unit > 0) return gt6Unit;
+        gt6Unit = GT6LiteralFluidUnitData.liquidMaterialUnit(normalized);
+        if (gt6Unit > 0) return gt6Unit;
         switch (normalized) {
             case "water":
             case "ice": return 1000; // MT.java:1007; Ice inherits Water's liquid representation.
@@ -224,56 +240,6 @@ public final class CrucibleFluidUnits {
         }
     }
 
-    /** Explicit LIQUID tags in MT.java, consumed by Loader_Fluids:658 and
-     * FL.createLiquid:1072 (1000 mB/U). lqud* factories alone do not imply
-     * this tag: Mercury, for example, is explicitly registered with 144.
-     */
-    private static boolean isGt6GeneratedLiquid(String normalized) {
-        switch (GT6MaterialIdentity.canonicalCompoundName(normalized)) {
-            case "bromine": // MT.java:424.
-            case "semiheavywater": // :1008-1019.
-            case "heavywater":
-            case "tritiatedwater":
-            case "seawater":
-            case "waterdirty":
-            case "hydrogenperoxide":
-            case "nitricacid": // :1031-1054.
-            case "glycerol":
-            case "glyceryl":
-            case "sulfuricacid":
-            case "sulphuricacid": // Literal ore-name alias, :1047.
-            case "disulfuricacid":
-            case "hexafluorosilicicacid":
-            case "titaniumtetrachloride": // :1087.
-            case "saltwater": // :1143,1160.
-            case "brine":
-            case "saltedwater":
-            case "chloroauricacid": // :1163-1177,1188; literal aliases included.
-            case "chloroplatinicacid":
-            case "stannicchloride":
-            case "blackvitriol":
-            case "bluevitriol":
-            case "romanvitriol":
-            case "cyprusvitriol":
-            case "solutionbluevitriol":
-            case "greenvitriol":
-            case "redvitriol":
-            case "pinkvitriol":
-            case "cyanvitriol":
-            case "solutionnickelsulfate":
-            case "solutionnickelsulphate":
-            case "whitevitriol":
-            case "grayvitriol":
-            case "martianvitriol":
-            case "vitriolofclay":
-            case "aquaregia":
-            case "creosote": // :1210.
-            case "creosoteoil":
-            case "ectoplasm": return true; // :1536.
-            default: return false;
-        }
-    }
-
     static long materialAmount(int fluidAmount, int fluidUnit) {
         if (fluidAmount <= 0 || fluidUnit <= 0) return 0;
         return ceilDivide(BigInteger.valueOf(fluidAmount).multiply(BigInteger.valueOf(GTValues.M)), fluidUnit);
@@ -287,43 +253,66 @@ public final class CrucibleFluidUnits {
         return quantity(BigInteger.valueOf(Math.max(0L, amount)).multiply(BigInteger.valueOf(GTValues.L)), 1000);
     }
 
-    static Quantity merge(long first, int firstRemainder, long second, int secondRemainder, int unit) {
+    static Quantity merge(long first, long firstRemainder, long second, long secondRemainder, long unit) {
         if (!valid(first, firstRemainder, unit) || !valid(second, secondRemainder, unit)) return null;
         return quantity(numerator(first, firstRemainder, unit).add(numerator(second, secondRemainder, unit)), unit);
     }
 
-    static Quantity drain(long amount, int remainder, int fluidAmount, int unit) {
+    static Quantity drain(long amount, long remainder, int fluidAmount, int unit) {
         if (!valid(amount, remainder, unit) || fluidAmount < 0) return null;
         BigInteger remaining = numerator(amount, remainder, unit)
                 .subtract(BigInteger.valueOf(Math.max(0, fluidAmount)).multiply(BigInteger.valueOf(GTValues.M)));
         return remaining.signum() < 0 ? null : quantity(remaining, unit);
     }
 
-    public static int fluidAmount(long amount, int remainder, int unit) {
+    public static int fluidAmount(long amount, long remainder, int unit) {
         if (unit <= 0 || amount < 0 || remainder < 0 || remainder >= unit) return 0;
         return numerator(amount, remainder, unit).divide(BigInteger.valueOf(GTValues.M))
                 .min(BigInteger.valueOf(Integer.MAX_VALUE)).intValue();
     }
 
-    private static BigInteger numerator(long amount, int remainder, int unit) {
+    static BigInteger storedNumerator(long amount, long remainder) {
+        return numerator(amount, remainder, STORAGE_UNIT);
+    }
+
+    static Quantity fromStoredNumerator(BigInteger numerator) {
+        return quantity(numerator, STORAGE_UNIT);
+    }
+
+    static long gt6AtomicAmount(BigInteger storedNumerator) {
+        if (storedNumerator.signum() <= 0) return 0;
+        return storedNumerator.divide(GT6_ATOM).min(BigInteger.valueOf(Long.MAX_VALUE)).longValue();
+    }
+
+    static Quantity fromGt6Atoms(long amount) {
+        return amount < 0 ? null : quantity(BigInteger.valueOf(amount).multiply(GT6_ATOM), STORAGE_UNIT);
+    }
+
+    static Quantity subtractStored(long amount, long remainder, long removed, long removedRemainder) {
+        if (!valid(amount, remainder, STORAGE_UNIT) || !valid(removed, removedRemainder, STORAGE_UNIT)) return null;
+        return quantity(storedNumerator(amount, remainder).subtract(storedNumerator(removed, removedRemainder)),
+                STORAGE_UNIT);
+    }
+
+    private static BigInteger numerator(long amount, long remainder, long unit) {
         return BigInteger.valueOf(amount).multiply(BigInteger.valueOf(unit)).add(BigInteger.valueOf(remainder));
     }
 
-    private static boolean valid(long amount, int remainder, int unit) {
+    private static boolean valid(long amount, long remainder, long unit) {
         return unit > 0 && amount >= 0 && remainder >= 0 && remainder < unit;
     }
 
-    private static Quantity quantity(BigInteger numerator, int unit) {
+    private static Quantity quantity(BigInteger numerator, long unit) {
         if (unit <= 0 || numerator.signum() < 0) return null;
         BigInteger[] parts = numerator.divideAndRemainder(BigInteger.valueOf(unit));
         if (parts[0].compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0) return null;
-        return new Quantity(parts[0].longValue(), parts[1].intValue());
+        return new Quantity(parts[0].longValue(), parts[1].longValue());
     }
 
     static final class Quantity {
         final long amount;
-        final int remainder;
-        Quantity(long amount, int remainder) {
+        final long remainder;
+        Quantity(long amount, long remainder) {
             this.amount = amount;
             this.remainder = remainder;
         }

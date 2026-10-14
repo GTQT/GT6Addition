@@ -235,9 +235,23 @@ final class CrucibleToolWorldSmoke {
         AbstractRecipeLogic logic = recipeLogic(machine);
         check(logic.prepareRecipe(recipe), "Native Lapotron crystal assembler recipe failed");
         ItemStack output = finishMachine(machine, logic);
-        Map<String, Long> materials = machineMaterials(inputs, fluids, null);
-        checkAccount(output, materials);
-        recover(output, materials, "LAPOTRON_CRYSTAL_ASSEMBLER_PROVENANCE");
+        // The current CEu recipe consumes an Advanced Integrated Circuit for
+        // which CEu exposes no exact recycling composition. Do not manufacture
+        // a guessed material account: the output must stay unusable by the
+        // crucible until an authoritative composition source is available.
+        check(output.hasTagCompound() && output.getTagCompound().hasKey("gt6addition.electricMaterials", 10) &&
+                        output.getTagCompound().getCompoundTag("gt6addition.electricMaterials").isEmpty(),
+                "Unmapped Advanced Integrated Circuit acquired fabricated provenance");
+        MetaTileEntityCrucible vessel = place();
+        FakePlayer player = player();
+        ItemStack offered = output.copy();
+        player.setHeldItem(EnumHand.MAIN_HAND, offered);
+        NBTTagCompound before = vessel.writeToNBT(new NBTTagCompound());
+        vessel.onRightClick(player, EnumHand.MAIN_HAND, EnumFacing.NORTH, null);
+        check(ItemStack.areItemStacksEqual(offered, player.getHeldItemMainhand()) &&
+                        before.equals(vessel.writeToNBT(new NBTTagCompound())),
+                "Battery with incomplete exact material provenance was consumed");
+        passed("LAPOTRON_ASSEMBLER_UNMAPPED_COMPONENT_REJECTED");
     }
 
     private void assertTrackedBatteryRoutes(RecipeMap<?> map, ItemStack battery) {
@@ -272,7 +286,7 @@ final class CrucibleToolWorldSmoke {
         check(logic.prepareRecipe(recipe), "Native ULV assembler recipe failed");
         ItemStack assembled = finishMachine(machine, logic);
         check(assembled.getCount() == 8, "Native ULV assembler output changed");
-        Map<String, Long> assembler = divided(machineMaterials(inputs, fluids, null), assembled.getCount());
+        Map<String, Long> assembler = divided(machineMaterials(recipe, inputs, fluids, null), assembled.getCount());
         check(!assembler.equals(workbench), "Different ULV manufacturing routes collapsed");
         checkAccount(assembled, assembler);
         unit = new ItemStack(assembled.writeToNBT(new NBTTagCompound())); unit.setCount(1);
@@ -346,7 +360,7 @@ final class CrucibleToolWorldSmoke {
     private Assembly assembledHull(Recipe recipe, boolean parallel) {
         List<ItemStack> inputs = machineInputs(recipe);
         List<FluidStack> fluids = machineFluids(recipe);
-        Map<String, Long> expected = machineMaterials(inputs, fluids, null);
+        Map<String, Long> expected = machineMaterials(recipe, inputs, fluids, null);
         int count = parallel ? 2 : 1;
         for (ItemStack input : inputs) input.setCount(input.getCount() * count);
         for (FluidStack fluid : fluids) fluid.amount *= count;
@@ -376,7 +390,7 @@ final class CrucibleToolWorldSmoke {
             if (ItemStack.areItemsEqual(inputs.get(i), hull.stack)) inputs.set(i, hull.stack.copy());
         }
         List<FluidStack> fluids = machineFluids(recipe);
-        Map<String, Long> expected = machineMaterials(inputs, fluids, hull);
+        Map<String, Long> expected = machineMaterials(recipe, inputs, fluids, hull);
         int tier = machineTier(recipe);
         MetaTileEntity machine = nativeMachine(MetaTileEntities.CANNER[tier]);
         insertMachineInputs(machine, inputs, fluids);
@@ -514,17 +528,27 @@ final class CrucibleToolWorldSmoke {
         return result;
     }
 
-    private static Map<String, Long> machineMaterials(List<ItemStack> inputs, List<FluidStack> fluids, Assembly known) {
+    private static Map<String, Long> machineMaterials(Recipe recipe, List<ItemStack> inputs,
+                                                     List<FluidStack> fluids, Assembly known) {
         Map<String, BigInteger> scaled = new LinkedHashMap<>();
-        for (ItemStack input : inputs) {
+        List<GTRecipeInput> recipeInputs = recipe.getInputs();
+        check(recipeInputs.size() == inputs.size(), "Fixture item inputs differ from recipe inputs");
+        for (int i = 0; i < inputs.size(); i++) {
+            if (recipeInputs.get(i).isNonConsumable()) continue;
+            ItemStack input = inputs.get(i);
             Map<String, Long> unit = known != null && ItemStack.areItemsEqual(input, known.stack) ? known.materials : staticMaterials(input);
             unit.forEach((material, amount) -> scaled.merge(material,
                     BigInteger.valueOf(amount).multiply(BigInteger.valueOf(input.getCount()))
                             .multiply(BigInteger.valueOf(GTValues.L)), BigInteger::add));
         }
-        fluids.forEach(fluid -> scaled.merge(
-                gregtech.api.unification.FluidUnifier.getMaterialFromFluid(fluid.getFluid()).getRegistryName(),
-                BigInteger.valueOf(GTValues.M).multiply(BigInteger.valueOf(fluid.amount)), BigInteger::add));
+        List<GTRecipeInput> recipeFluids = recipe.getFluidInputs();
+        check(recipeFluids.size() == fluids.size(), "Fixture fluid inputs differ from recipe inputs");
+        for (int i = 0; i < fluids.size(); i++) {
+            if (recipeFluids.get(i).isNonConsumable()) continue;
+            FluidStack fluid = fluids.get(i);
+            scaled.merge(gregtech.api.unification.FluidUnifier.getMaterialFromFluid(fluid.getFluid()).getRegistryName(),
+                    BigInteger.valueOf(GTValues.M).multiply(BigInteger.valueOf(fluid.amount)), BigInteger::add);
+        }
         Map<String, Long> result = new LinkedHashMap<>();
         BigInteger denominator = BigInteger.valueOf(GTValues.L);
         scaled.forEach((material, amount) -> {
@@ -675,7 +699,7 @@ final class CrucibleToolWorldSmoke {
             NBTTagList contents = vessel.writeToNBT(new NBTTagCompound()).getTagList("Contents", 10);
             for (int i = 0; i < contents.tagCount(); i++) {
                 NBTTagCompound entry = contents.getCompoundTagAt(i);
-                check(entry.getInteger("FluidRemainder") == 0, "Unexpected fractional item recovery");
+                check(entry.getLong("FluidRemainder") == 0, "Unexpected fractional item recovery");
                 actual.merge(entry.getString("Material"), entry.getLong("Amount"), Long::sum);
             }
             check(expected.equals(actual), "Wrong recovered materials for " + name + ": " + actual + " expected " + expected);
@@ -751,7 +775,8 @@ final class CrucibleToolWorldSmoke {
         unit.setCount(1);
         RecyclingData data = RecyclingHandler.getRecyclingIngredients(1,
                 Collections.singletonList(new GTRecipeItemInput(unit)), null);
-        check(data != null && !data.getMaterials().isEmpty(), "Missing real recycling data for " + input);
+        check(data != null && !data.getMaterials().isEmpty(), "Missing real recycling data for " +
+                input.getItem().getRegistryName() + "#" + input.getMetadata() + " (" + input.getDisplayName() + ")");
         Map<String, Long> result = new LinkedHashMap<>();
         for (MaterialStack component : data.getMaterials()) result.merge(component.material.getRegistryName(), component.amount, Long::sum);
         return result;

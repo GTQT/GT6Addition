@@ -123,13 +123,26 @@ public final class CrucibleTransferLogic {
         return count.max(java.math.BigInteger.ONE).min(java.math.BigInteger.valueOf(limit)).intValue();
     }
 
-    /** Keep GT6's nine fire attempts per unit through a normal full vessel. */
-    public static int materialHazardFireAttempts(long amount, long materialUnit, long capacity) {
-        if (capacity <= 0 || materialUnit <= 0) return 0;
-        int fullVessel = java.math.BigInteger.valueOf(capacity).multiply(java.math.BigInteger.valueOf(9))
-                .divide(java.math.BigInteger.valueOf(materialUnit))
+    /**
+     * Mirrors GT6's max(1, bindInt((9 * amount) / U)) fire-attempt count.
+     * The stored amount is fractional, so include its exact remainder before
+     * division. The count intentionally is not capped by vessel capacity:
+     * legacy NBT may contain more than the current input limit, and GT6 scales
+     * effects by actual material amount. BigInteger preserves the ratio before
+     * applying GT6's int bound instead of overflowing the multiplication.
+     */
+    public static int materialHazardFireAttempts(long amount, long remainder, long materialUnit) {
+        if (amount < 0 || remainder < 0 || remainder >= CrucibleFluidUnits.STORAGE_UNIT || materialUnit <= 0) {
+            return 0;
+        }
+        java.math.BigInteger storageUnit = java.math.BigInteger.valueOf(CrucibleFluidUnits.STORAGE_UNIT);
+        java.math.BigInteger exactAmount = java.math.BigInteger.valueOf(amount)
+                .multiply(storageUnit).add(java.math.BigInteger.valueOf(remainder));
+        if (exactAmount.signum() <= 0) return 0;
+        java.math.BigInteger attempts = exactAmount.multiply(java.math.BigInteger.valueOf(9))
+                .divide(storageUnit.multiply(java.math.BigInteger.valueOf(materialUnit)));
+        return attempts.max(java.math.BigInteger.ONE)
                 .min(java.math.BigInteger.valueOf(Integer.MAX_VALUE)).intValue();
-        return boundedMaterialEffectCount(amount, materialUnit, fullVessel);
     }
 
     /** Mirrors GT6's bindInt(temperature / 25) meltdown fire-attempt count. */
@@ -138,12 +151,18 @@ public final class CrucibleTransferLogic {
         return (int) Math.min(Integer.MAX_VALUE, temperature / 25L);
     }
 
-    public static int contentExplosionStrength(long amount, long capacity) {
-        if (amount <= 0 || capacity <= 0) return 0;
-        if (amount >= capacity) return 6;
+    public static int contentExplosionStrength(long amount, long remainder, long capacity) {
+        if (amount < 0 || remainder < 0 || remainder >= CrucibleFluidUnits.STORAGE_UNIT || capacity <= 0) {
+            return 0;
+        }
+        java.math.BigInteger storageUnit = java.math.BigInteger.valueOf(CrucibleFluidUnits.STORAGE_UNIT);
+        java.math.BigInteger exactAmount = java.math.BigInteger.valueOf(amount)
+                .multiply(storageUnit).add(java.math.BigInteger.valueOf(remainder));
+        if (exactAmount.signum() <= 0) return 0;
+        java.math.BigInteger exactCapacity = java.math.BigInteger.valueOf(capacity).multiply(storageUnit);
+        if (exactAmount.compareTo(exactCapacity) >= 0) return 6;
         // GT6 UT.Code.scale(amount, capacity, 6, false): five interior steps.
-        long step = java.math.BigInteger.valueOf(amount).multiply(java.math.BigInteger.valueOf(5))
-                .divide(java.math.BigInteger.valueOf(capacity)).longValue();
+        long step = exactAmount.multiply(java.math.BigInteger.valueOf(5)).divide(exactCapacity).longValue();
         return 1 + (int) step;
     }
 
@@ -238,7 +257,7 @@ public final class CrucibleTransferLogic {
     }
 
     /** Include the stored fractional material unit, without using a capacity rounding as physical mass. */
-    static double materialWeightKg(long materialAmount, int remainder, int quantityUnit,
+    static double materialWeightKg(long materialAmount, long remainder, long quantityUnit,
                                     double densityKgPerCubicMeter, long materialUnitsPerIngot) {
         if (materialAmount < 0L || quantityUnit <= 0 || remainder < 0 || remainder >= quantityUnit ||
                 densityKgPerCubicMeter <= 0.0D || !Double.isFinite(densityKgPerCubicMeter) ||

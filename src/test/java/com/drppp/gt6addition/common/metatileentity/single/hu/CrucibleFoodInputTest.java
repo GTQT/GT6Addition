@@ -34,9 +34,9 @@ class CrucibleFoodInputTest {
             assertFalse(crop.sameContents(CrucibleFoodInput.oreName("cropWheat")));
             // A nine-unit bale must not enter the vessel's last eight units.
             assertFalse(CrucibleFluidUnits.incomingBatchFits(8 * GTValues.M, 16 * GTValues.M,
-                    bale.amounts, new int[1]));
+                    bale.amounts, new long[1]));
             assertTrue(CrucibleFluidUnits.incomingBatchFits(7 * GTValues.M, 16 * GTValues.M,
-                    bale.amounts, new int[1]));
+                    bale.amounts, new long[1]));
             assertTrue(crop.resolve(name -> {
                 assertEquals("gt6addition:" + family[1], name);
                 return null;
@@ -80,10 +80,10 @@ class CrucibleFoodInputTest {
         assertArrayEquals(new long[]{2 * GTValues.M, GTValues.M / 9}, raw.amounts);
         // Room for the meat alone must not consume an item containing bone.
         assertFalse(CrucibleFluidUnits.incomingBatchFits(14 * GTValues.M, 16 * GTValues.M,
-                raw.amounts, new int[2]));
+                raw.amounts, new long[2]));
         long total = 16 * GTValues.M - 2 * GTValues.M - GTValues.M / 9;
-        assertTrue(CrucibleFluidUnits.incomingBatchFits(total, 16 * GTValues.M, raw.amounts, new int[2]));
-        assertFalse(CrucibleFluidUnits.incomingBatchFits(total + 1, 16 * GTValues.M, raw.amounts, new int[2]));
+        assertTrue(CrucibleFluidUnits.incomingBatchFits(total, 16 * GTValues.M, raw.amounts, new long[2]));
+        assertFalse(CrucibleFluidUnits.incomingBatchFits(total + 1, 16 * GTValues.M, raw.amounts, new long[2]));
         assertEquals("gt6addition:meat_cooked",
                 CrucibleFoodInput.vanilla("minecraft:cooked_beef", 0).materials[0]);
         assertEquals("gt6addition:meat_rotten",

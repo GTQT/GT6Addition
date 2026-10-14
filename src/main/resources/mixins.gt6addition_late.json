@@ -9,6 +9,7 @@
     "gregtech.MetaItemLighterBehaviourMixin",
     "gregtech.GTFlintAndSteelToolBehaviorMixin",
     "gregtech.HeatNetTransferBudgetMixin",
+    "gregtech.MultiEnergyTopInfoProviderMixin",
     "gregtech.CrucibleToolRecipeMixin",
     "gregtech.CrucibleToolCraftingMixin",
     "gregtech.CrucibleToolMachineRecipeMixin",

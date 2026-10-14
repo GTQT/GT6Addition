@@ -8,7 +8,9 @@ import gregtech.api.metatileentity.registry.MTEManager;
 import gregtech.api.unification.material.event.MaterialEvent;
 import gregtech.api.unification.material.event.MaterialRegistryEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 
 @Mod.EventBusSubscriber(modid = Tags.MOD_ID)
@@ -28,6 +30,13 @@ public class EventHandlers {
     public static void registerMaterials(MaterialEvent event) {
         GT6MachineMaterials.register();
         MaterialColorUtil.init();
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void advanceServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.START) {
+            GT6ServerTickClock.advance();
+        }
     }
 
 }

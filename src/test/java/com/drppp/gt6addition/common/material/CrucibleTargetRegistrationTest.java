@@ -123,6 +123,23 @@ class CrucibleTargetRegistrationTest {
         assertNull(registry.getMaterial("gt6addition:adamantine"));
     }
 
+    @Test void gtqtCoreTungstenTrioxideIsReusedForTheExactGt6SmeltingTarget() {
+        // GTQTCore FirstDegreeMaterials registers W1O3 at gtqtcore:tungsten_trioxide;
+        // GT6 MT.H2WO4 explicitly targets that compound, not elemental tungsten.
+        Material source = new Material.Builder(8027, new ResourceLocation("gregtech", "tungstic_acid"))
+                .dust().build();
+        Material tungsten = new Material.Builder(74, new ResourceLocation("gtqtcore", "tungsten"))
+                .ingot().build();
+        Material trioxide = new Material.Builder(8026, new ResourceLocation("gtqtcore", "tungsten_trioxide"))
+                .dust().build();
+
+        assertSame(trioxide, GT6MaterialCompatibility.findExternal("TungstenTrioxide"));
+        assertSame(trioxide, MetaTileEntityCrucible.resolveMaterial("TungstenTrioxide"));
+        assertSame(trioxide, MetaTileEntityCrucible.getSmeltingTarget(source));
+        assertNotSame(tungsten, MetaTileEntityCrucible.getSmeltingTarget(source));
+        assertNull(registry.getMaterial("gt6addition:tungsten_trioxide"));
+    }
+
     @Test void absentNamespaceCannotMisidentifyHostMaterial() throws Exception {
         registry = newRegistry(false);
         Material host = new Material.Builder(1, new ResourceLocation("gregtech", "fluorite")).gem().build();
@@ -141,6 +158,10 @@ class CrucibleTargetRegistrationTest {
         assertNull(GT6MaterialCompatibility.findExternal("arsenic_copper"));
         assertNull(MetaTileEntityCrucible.resolveMaterial("gt6addition:arsenic_copper"));
         assertSame(external, GT6MaterialCompatibility.findExternal("thirdparty:arsenic_copper"));
+        GT6MaterialCompatibility.ExternalMaterialLookup lookup =
+                GT6MaterialCompatibility.createExternalMaterialLookup();
+        assertNull(lookup.findExternal("arsenic_copper"));
+        assertSame(external, lookup.findExternal("thirdparty:arsenic_copper"));
     }
 
     @Test void migrationIsRestrictedToKnownRetiredIdentities() {
@@ -163,9 +184,25 @@ class CrucibleTargetRegistrationTest {
 
     @Test void normalizedCoreSpellingKeepsPriorityOverExactHostSpelling() {
         Material core = new Material.Builder(1, new ResourceLocation("gtqtcore", "arseniccopper")).ingot().build();
-        new Material.Builder(3, new ResourceLocation("gregtech", "arsenic_copper")).ingot().build();
+        Material host = new Material.Builder(3, new ResourceLocation("gregtech", "arsenic_copper")).ingot().build();
         assertSame(core, GT6MaterialCompatibility.findExternal("arsenic_copper"));
         assertSame(core, MetaTileEntityCrucible.resolveMaterial("gt6addition:arsenic_copper"));
         assertNull(GT6MaterialCompatibility.findExternal("gtqtcore:arsenic_copper"));
+
+        Material thirdParty = new Material.Builder(4, new ResourceLocation("thirdparty", "tungsten_trioxide"))
+                .dust().build();
+        registry.closeRegistries();
+        GT6MaterialCompatibility.ExternalMaterialLookup lookup =
+                GT6MaterialCompatibility.createExternalMaterialLookup();
+        assertSame(core, GT6MaterialCompatibility.findExternal("arsenic_copper"));
+        assertSame(host, GT6MaterialCompatibility.findExternal("gregtech:arsenic_copper"));
+        assertNull(GT6MaterialCompatibility.findExternal("gtqtcore:arsenic_copper"));
+        assertSame(thirdParty, GT6MaterialCompatibility.findExternal("TungstenTrioxide"));
+        assertNull(GT6MaterialCompatibility.findExternal("missing_material"));
+        assertSame(core, lookup.findExternal("arsenic_copper"));
+        assertSame(host, lookup.findExternal("gregtech:arsenic_copper"));
+        assertNull(lookup.findExternal("gtqtcore:arsenic_copper"));
+        assertSame(thirdParty, lookup.findExternal("TungstenTrioxide"));
+        assertNull(lookup.findExternal("missing_material"));
     }
 }

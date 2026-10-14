@@ -37,6 +37,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.lang.management.ManagementFactory;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.UUID;
 
 /** Cross-process Anvil/CEu holder recovery. Test-only, never in the release JAR. */
@@ -123,6 +125,10 @@ final class CrucibleRestartWorldSmoke {
     }
 
     private static void verify(WorldServer world, MinecraftServer server, File directory) throws Exception {
+        File legacyMarker = new File(directory, "crucible-legacy-nbt-patched.txt");
+        check(legacyMarker.isFile() && "fixtures=3;fluidQuantityVersion=3->1;denominatorFactor=143\n".equals(
+                        new String(Files.readAllBytes(legacyMarker.toPath()), StandardCharsets.UTF_8)),
+                "Legacy NBT fixture was not written to the Anvil region data");
         NBTTagCompound checkpoint;
         try (FileInputStream input = new FileInputStream(new File(directory, CHECKPOINT))) {
             checkpoint = CompressedStreamTools.readCompressed(input);
@@ -140,6 +146,8 @@ final class CrucibleRestartWorldSmoke {
             MetaTileEntityCrucible vessel = loaded(world, i);
             check(expected.getCompoundTag("State").equals(persistentState(vessel)),
                     "Disk-restored persistent state changed for fixture " + i + ": " + save(vessel));
+            check(save(vessel).getInteger("FluidQuantityVersion") == 3,
+                    "Old on-disk fluid denominator was not migrated to the current format at fixture " + i);
             ItemStack expectedInput = new ItemStack(expected.getCompoundTag("Input"));
             check(ItemStack.areItemStacksEqual(expectedInput, items(vessel).getStackInSlot(0)), "Explicit input lost on restart");
             assertFixture(vessel, i);
@@ -150,10 +158,8 @@ final class CrucibleRestartWorldSmoke {
         MetaTileEntityCrucible queued = loaded(world, 0);
         FakePlayer player = player(world, server);
         player.inventory.currentItem = 8;
-        for (int i = 0; i < 3; i++) {
-            check(player.getHeldItemMainhand().isEmpty(), "Takeback hand unexpectedly occupied");
-            check(queued.onRightClick(player, EnumHand.MAIN_HAND, EnumFacing.UP, null), "Restored input not recoverable");
-        }
+        check(player.getHeldItemMainhand().isEmpty(), "Takeback hand unexpectedly occupied");
+        check(queued.onRightClick(player, EnumHand.MAIN_HAND, EnumFacing.UP, null), "Restored input not recoverable");
         check(items(queued).getStackInSlot(0).isEmpty() && queued.getPendingItemCount() == 64, "Takeback changed FIFO");
         for (int i = 0; i < 3; i++) {
             NBTTagCompound before = save(queued);
@@ -179,7 +185,8 @@ final class CrucibleRestartWorldSmoke {
         lava.update();
         check(amount(lava, Materials.Obsidian) == 0 && fluids(lava).drain(2000, false).amount == 1145,
                 "Restart/remelting lost or duplicated lava");
-        LogManager.getLogger("CrucibleParitySmoke").info("CRUCIBLE_RESTART_PASS checks=6 writer={} reader={}",
+        LogManager.getLogger("CrucibleParitySmoke").info(
+                "CRUCIBLE_RESTART_PASS checks=6 legacyNbtMigrations=3 writer={} reader={}",
                 checkpoint.getString("WriterJvm"), readerJvm);
     }
 

@@ -1,5 +1,6 @@
 package com.drppp.gt6addition.smoketest;
 
+import com.drppp.gt6addition.common.event.GT6ServerTickClock;
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import com.mojang.authlib.GameProfile;
@@ -122,18 +123,13 @@ final class CrucibleStorageWorldSmoke {
         // Empty-hand top access must take the explicit slot before the queue.
         player.setHeldItem(EnumHand.MAIN_HAND, ItemStack.EMPTY);
         check(vessel.onRightClick(player, EnumHand.MAIN_HAND, EnumFacing.UP, null), "Slot takeback unhandled");
-        check(inventoryCount(player, ingot(Materials.Gold, 1)) == 1 &&
-                items(vessel).getStackInSlot(0).getCount() == 2 && vessel.getPendingItemCount() == 64,
-                "Top takeback lost items or skipped explicit slot");
-        // The host's external item capability is insert-only for import slots.
-        // Keep the returned gold and select a genuinely empty hotbar slot.
+        check(inventoryCount(player, ingot(Materials.Gold, 1)) == 3 &&
+                items(vessel).getStackInSlot(0).isEmpty() && vessel.getPendingItemCount() == 64,
+                "Top takeback did not return the complete explicit stack before the queue");
+        // GT6 slotTake(0) returns the complete visible stack. The next click
+        // takes exactly one item from the FIFO queue.
         player.inventory.currentItem = 8;
-        for (int i = 0; i < 2; i++) {
-            check(player.getHeldItemMainhand().isEmpty(), "Takeback fixture hand is occupied");
-            check(vessel.onRightClick(player, EnumHand.MAIN_HAND, EnumFacing.UP, null), "Remaining slot takeback");
-        }
-        check(items(vessel).getStackInSlot(0).isEmpty() && inventoryCount(player, ingot(Materials.Gold, 1)) == 3,
-                "Repeated top takeback changed explicit slot quantity");
+        check(player.getHeldItemMainhand().isEmpty(), "Takeback fixture hand is occupied");
         check(vessel.onRightClick(player, EnumHand.MAIN_HAND, EnumFacing.UP, null), "Queue takeback unhandled");
         check(inventoryCount(player, ingot(Materials.Iron, 1)) == 1 && vessel.getPendingItemCount() == 63,
                 "Queue takeback count");
@@ -156,8 +152,8 @@ final class CrucibleStorageWorldSmoke {
                 "Unsupported input partially processed");
         player.setHeldItem(EnumHand.MAIN_HAND, ItemStack.EMPTY);
         vessel.onRightClick(player, EnumHand.MAIN_HAND, EnumFacing.UP, null);
-        check(items(vessel).getStackInSlot(0).getCount() == 1 && inventoryCount(player, invalid) == 1,
-                "Unsupported slot cannot be recovered intact");
+        check(items(vessel).getStackInSlot(0).isEmpty() && inventoryCount(player, invalid) == 2,
+                "Unsupported slot did not return its complete tagged stack");
         pass("INVALID_INPUT_PRESERVED");
     }
 
@@ -328,10 +324,16 @@ final class CrucibleStorageWorldSmoke {
                 for (MetaTileEntityCrucible vessel : new MetaTileEntityCrucible[]{open, covered}) {
                     MetaTileEntityHolder holder = (MetaTileEntityHolder) world.getTileEntity(vessel.getPos());
                     rainClock(holder);
+                    setWorldTick(world, 609);
+                    setServerTick(609);
                     holder.update(); // Offset time 609: before the rain opportunity.
                     check(save(vessel).getTagList("Contents", 10).isEmpty(), "Rain collected at wrong tick");
+                    setWorldTick(world, 610);
+                    setServerTick(610);
                     holder.update(); // 610: exactly the rain opportunity.
                     NBTTagCompound afterRain = save(vessel);
+                    setWorldTick(world, 611);
+                    setServerTick(611);
                     holder.update(); // 611: cannot collect a second time.
                     check(afterRain.getTagList("Contents", 10).equals(save(vessel).getTagList("Contents", 10)),
                             "Rain collected outside the interval");
@@ -365,6 +367,19 @@ final class CrucibleStorageWorldSmoke {
         }
     }
 
+    private static void setWorldTick(WorldServer world, long tick) {
+        // World.setTotalWorldTime is client-only in Forge 1.12; WorldInfo's
+        // dedicated-server setter is the actual source of getTotalWorldTime.
+        world.getWorldInfo().setWorldTotalTime(tick);
+    }
+
+    private static void setServerTick(long tick) {
+        GT6ServerTickClock.reset();
+        for (long current = 0; current < tick; current++) {
+            GT6ServerTickClock.advance();
+        }
+    }
+
     private static MetaTileEntityCrucible place(WorldServer world, FakePlayer player) {
         BlockPos pos = new BlockPos(1400 + 16 * nextPosition++, 70, 600);
         ItemStack machine = MetaTileEntityHandler.CRUCIBLE_HU[15].getStackForm();
@@ -384,7 +399,10 @@ final class CrucibleStorageWorldSmoke {
         world.removeTileEntity(pos);
         world.setTileEntity(pos, recreated);
         MetaTileEntityCrucible loaded = (MetaTileEntityCrucible) GTUtility.getMetaTileEntity(world, pos);
-        check(loaded != null && loaded != vessel && save(vessel).equals(save(loaded)), "Full tile NBT changed state");
+        NBTTagCompound beforeReload = save(vessel);
+        NBTTagCompound afterReload = loaded == null ? new NBTTagCompound() : save(loaded);
+        check(loaded != null && loaded != vessel && beforeReload.equals(afterReload),
+                "Full tile NBT changed state: before=" + beforeReload + "; after=" + afterReload);
         return loaded;
     }
 

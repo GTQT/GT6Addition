@@ -8,13 +8,21 @@ import java.util.Collections;
 
 /** Verified GT6 definition-time and additional alloying recipes, in material units. */
 public final class GT6AlloyRecipes {
+    /** GT6 CS.U: exact material quantity represented by one normal item. */
+    static final long GT6_U = 648648000L;
+
     private static final GT6AlloyRecipes[] FIXED = {
             // MT.java:1055: uumMcfg(...).alloyElectrolyzer(...) also
             // registers its component configuration as a crucible alloy.
             new GT6AlloyRecipes("silicon_carbide", 2, new String[]{"silicon", "carbon"}, new long[]{1, 1}),
             // Separate alloy outputs; inputs are the host's verified elements.
-            new GT6AlloyRecipes("duranium_alloy", 8, new String[]{"duranium", "magnesium"}, new long[]{7, 1}),
-            new GT6AlloyRecipes("tritanium_alloy", 4, new String[]{"tritanium", "duranium"}, new long[]{3, 1}),
+            // MT.Dn / MT.Tn are elemental identities, while MT.DuraniumAlloy /
+            // MT.TritaniumAlloy are distinct products. Use the exact CEu paths
+            // so same-named alloy materials from optional registries cannot win.
+            new GT6AlloyRecipes("duranium_alloy", 8,
+                    new String[]{"gregtech:duranium", "magnesium"}, new long[]{7, 1}),
+            new GT6AlloyRecipes("tritanium_alloy", 4,
+                    new String[]{"gregtech:tritanium", "gregtech:duranium"}, new long[]{3, 1}),
             // MT.java:1871-1872. Duranium/Tritanium are deliberately not
             // substituted for their distinct GT6 elemental input identities.
             new GT6AlloyRecipes("trinaquadalloy", 9, new String[]{"trinium", "naquadah", "carbon"},
@@ -394,9 +402,39 @@ public final class GT6AlloyRecipes {
             case "osmiridium":
             case "vanadiumgallium":
             case "niobiumtitanium":
-            case "aluminiumbrass": return true;
+            case "aluminiumbrass":
+            // Fixed GT6 recipes below are authoritative even when their
+            // ingredients are unavailable; never synthesize these outputs
+            // from a host Material's potentially different component list.
+            case "iron":
+            case "silicon":
+            case "yttriumbariumcuprate":
+            case "ferrite": return true;
             default: return false;
         }
+    }
+
+    /**
+     * Whether GT6's source snapshot is authoritative for this material's
+     * crucible-alloy behavior. Positive literal identities are represented by
+     * the generated Java target table; the remaining supported source
+     * identities come from their dedicated Java tables or explicit recipe
+     * allowlist. A known GT6 material with no recipe in {@link #ALL} must not
+     * fall through to a potentially different CEu component decomposition.
+     */
+    static boolean blocksHostCompositionFallback(String name) {
+        if (name == null || name.isEmpty()) return false;
+        if (hasCompleteRecipeSet(name)) return true;
+
+        int separator = name.lastIndexOf(':');
+        String unqualified = separator < 0 ? name : name.substring(separator + 1);
+        String normalized = unqualified.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+        normalized = GT6MaterialIdentity.canonicalAlloyName(normalized);
+        return GT6LiteralTargetData.find(normalized) != null ||
+                GT6AntimatterIdentityData.containsName(normalized) ||
+                GT6TechnicalMaterialData.contains(normalized) ||
+                GT6NonpositiveMaterialData.contains(normalized) ||
+                GT6WoodMaterialData.contains(normalized);
     }
 
     private static GT6AlloyRecipes[] withGlowstoneFamily() {

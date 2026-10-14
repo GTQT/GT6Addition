@@ -71,6 +71,10 @@ final class GT6LiteralPhaseData {
 
     static int size() { return BY_ID.size(); }
 
+    static Profile findById(int materialId) {
+        return BY_ID.get(materialId);
+    }
+
     private static String normalize(String name) {
         if (name == null || name.indexOf(':') >= 0) return "";
         String key = name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");

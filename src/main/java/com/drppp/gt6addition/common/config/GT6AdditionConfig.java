@@ -16,6 +16,7 @@ public final class GT6AdditionConfig {
     public static boolean portalRelayRedstoneComparator = true;
     public static boolean generateAnthraciteVeins = true;
     public static boolean generateGT6Trees = true;
+    public static boolean useTfcAttackMultiplierForCrucible = true;
 
     private GT6AdditionConfig() {
     }
@@ -43,6 +44,11 @@ public final class GT6AdditionConfig {
                 "是否生成 GT6 的榛树、柳树、枫树、椰子树和蓝云杉。\nWhether to generate GT6 Hazel, Willow, Maple, Coconut, and Blue Spruce trees.");
         gt6Trees.setLanguageKey("gt6addition.config.world_generation.generate_gt6_trees");
         generateGT6Trees = gt6Trees.getBoolean(true);
+        Property crucibleTfcMultiplier = configuration.get("crucible_dangers", "useTfcAttackMultiplier",
+                true, "是否在加载 TerraFirmaCraft 或 TerraFirmaCraft Plus 时按 GT6 规则将坩埚热/冻/爆炸伤害乘以80。\n" +
+                        "Whether crucible heat, frost, and explosion damage use GT6's 80x multiplier when TerraFirmaCraft or TerraFirmaCraft Plus is loaded.");
+        crucibleTfcMultiplier.setLanguageKey("gt6addition.config.crucible_dangers.use_tfc_attack_multiplier");
+        useTfcAttackMultiplierForCrucible = crucibleTfcMultiplier.getBoolean(true);
         if (configuration.hasChanged()) {
             configuration.save();
         }

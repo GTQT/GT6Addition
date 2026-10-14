@@ -1,6 +1,9 @@
 package com.drppp.gt6addition.smoketest;
 
 import com.drppp.gt6addition.common.metatileentity.MetaTileEntityHandler;
+import com.drppp.gt6addition.common.metatileentity.single.hu.CrucibleGalacticraftWorldSmoke;
+import com.drppp.gt6addition.common.metatileentity.single.hu.CrucibleGt6AlloyWorldSmoke;
+import com.drppp.gt6addition.common.metatileentity.single.hu.CrucibleGt6LiteralBindingWorldSmoke;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import com.mojang.authlib.GameProfile;
 import gregtech.api.GTValues;
@@ -78,6 +81,19 @@ public final class CrucibleWorldSmoke {
             check(!OreDictUnifier.get(OrePrefix.dust, Materials.Wheat).isEmpty(), "Host Wheat dust is missing");
             materialPolicy();
             int gtqtcoreCases = CrucibleGTQTCoreWorldSmoke.run();
+            int galacticraftCases = CrucibleGalacticraftWorldSmoke.run(world, server);
+            int literalBindingCases = CrucibleGt6LiteralBindingWorldSmoke.run();
+            MetaTileEntityCrucible phaseVessel = place(world, position(), player(world, server, true));
+            int phaseTransitionCases;
+            int solidificationCases;
+            int alloyRecipeCases;
+            try {
+                phaseTransitionCases = CrucibleGt6LiteralBindingWorldSmoke.runRuntimePhaseTransitions(phaseVessel);
+                solidificationCases = CrucibleGt6LiteralBindingWorldSmoke.runRuntimeSolidification(phaseVessel);
+                alloyRecipeCases = CrucibleGt6AlloyWorldSmoke.run(phaseVessel);
+            } finally {
+                world.setBlockToAir(phaseVessel.getPos());
+            }
             if (CrucibleRestartWorldSmoke.started(world, server)) return;
             removed(world, server, false, 1299);
             removed(world, server, false, 1300);
@@ -86,12 +102,15 @@ public final class CrucibleWorldSmoke {
             unprocessedDrops(world, server);
             creativeToolCancellation(world, server);
             int heatCases = CrucibleHeatWorldSmoke.run(world);
+            int fluidPipeCases = CrucibleFluidPipeWorldSmoke.run(world);
             int inputCases = CrucibleInputWorldSmoke.run(world, server);
             int moldCases = CrucibleMoldWorldSmoke.run(world, server);
             int storageCases = CrucibleStorageWorldSmoke.run(world, server);
             int hazardCases = CrucibleHazardWorldSmoke.run(world, server);
             int toolCases = CrucibleToolWorldSmoke.run(world);
-            LOG.info("CRUCIBLE_WORLD_PASS {}", 7 + gtqtcoreCases + heatCases + inputCases + moldCases + storageCases + hazardCases + toolCases);
+            LOG.info("CRUCIBLE_WORLD_PASS {}", 7 + gtqtcoreCases + galacticraftCases + literalBindingCases +
+                    phaseTransitionCases + solidificationCases + heatCases + inputCases + moldCases + storageCases +
+                    alloyRecipeCases + hazardCases + toolCases + fluidPipeCases);
         } catch (Throwable failure) {
             // A server can exit zero after a startup event failure. The Gradle
             // verifier requires the success marker and rejects this marker.

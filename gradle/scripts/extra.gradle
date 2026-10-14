@@ -126,6 +126,7 @@ tasks.named('check') { dependsOn tasks.named('verifyMaterialRegistrationPolicy')
 // Reuse an existing EULA decision; this task must never accept it for the user.
 if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
     def worldChecks = providers.gradleProperty('gt6ParityWorld').isPresent()
+    def galacticraftRuntimeJar = providers.gradleProperty('gt6ParityGalacticraftRuntimeJar').orNull
     def restartPhase = providers.gradleProperty('gt6ParityRestartPhase').orNull
     def restartWorld = providers.gradleProperty('gt6ParityRestartWorld').orNull
     if (restartPhase != null || restartWorld != null) {
@@ -152,6 +153,28 @@ if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
         standardInput = new ByteArrayInputStream('stop\n'.getBytes('UTF-8'))
         maxHeapSize = '3G'
         doFirst {
+            def smokeMods = new File(workingDir, 'mods')
+            def stagedGalacticraft = new File(smokeMods, 'gt6addition-parity-galacticraft.jar')
+            // Keep optional integration runs reproducible without adding a
+            // production dependency or allowing a previous smoke jar to leak
+            // into ordinary isolated server runs.
+            if (stagedGalacticraft.exists() && !stagedGalacticraft.delete()) {
+                throw new GradleException('Could not remove the prior isolated Galacticraft smoke jar')
+            }
+            if (galacticraftRuntimeJar != null) {
+                def optionalJar = file(galacticraftRuntimeJar)
+                if (!optionalJar.isFile() || optionalJar.length() == 0L) {
+                    throw new GradleException('gt6ParityGalacticraftRuntimeJar must name an existing non-empty JAR')
+                }
+                if (!smokeMods.exists() && !smokeMods.mkdirs()) {
+                    throw new GradleException('Could not create the isolated smoke mods directory')
+                }
+                copy {
+                    from optionalJar
+                    into smokeMods
+                    rename { 'gt6addition-parity-galacticraft.jar' }
+                }
+            }
             if (restartPhase != null) {
                 def isolatedWorld = new File(workingDir, restartWorld)
                 if (restartPhase == 'write' && isolatedWorld.exists()) {
@@ -206,7 +229,19 @@ if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
         }
     }
 
-    tasks.register('verifyCrucibleForgeStartup') {
+    def legacyNbtPatchTask = null
+    if (worldChecks && restartPhase == 'write') {
+        legacyNbtPatchTask = tasks.register('patchCrucibleLegacyRestartNbt', JavaExec) {
+            group = 'verification'
+            dependsOn tasks.named('runServer')
+            classpath = tasks.named('runServer').get().classpath + sourceSets.crucibleSmoke.output
+            mainClass.set('com.drppp.gt6addition.smoketest.CrucibleLegacyChunkNbtPatcher')
+            args(new File(layout.buildDirectory.dir('crucible-parity-smoke').get().asFile,
+                    restartWorld).absolutePath)
+        }
+    }
+
+    def verificationTask = tasks.register('verifyCrucibleForgeStartup') {
         group = 'verification'
         dependsOn tasks.named('runServer')
         doLast {
@@ -218,8 +253,22 @@ if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
                 throw new GradleException('Forge did not complete startup and normal shutdown')
             }
             def worldPass = latest =~ /CRUCIBLE_WORLD_PASS (\d+)/
+            def gt6AlloyAudit = latest =~ /CRUCIBLE_WORLD_GT6_ALLOY_COMMITS passed rows=(\d+) executed=(\d+) unavailableMaterials=(\d+) checks=(\d+)/
+            def gt6AlloyPriority = latest =~ /CRUCIBLE_WORLD_GT6_ALLOY_PRIORITY passed selected=gregtech:electrum yieldGt6Units=8 oneCommit=true checks=(\d+)/
+            def gt6AlloyAuditPassed = gt6AlloyAudit.find() &&
+                    Integer.parseInt(gt6AlloyAudit.group(1)) == 147 &&
+                    Integer.parseInt(gt6AlloyAudit.group(2)) > 0 &&
+                    Integer.parseInt(gt6AlloyAudit.group(2)) + Integer.parseInt(gt6AlloyAudit.group(3)) == 147 &&
+                    Integer.parseInt(gt6AlloyAudit.group(4)) > 0
+            def gt6AlloyPriorityPassed = gt6AlloyPriority.find() &&
+                    Integer.parseInt(gt6AlloyPriority.group(1)) > 0
             if (worldChecks && restartPhase == null && (!worldPass.find() || Integer.parseInt(worldPass.group(1)) < 137 ||
                     !latest.contains('CRUCIBLE_WORLD_MATERIAL_POLICY passed owned=1 crucibles=23') ||
+                    !latest.contains('CRUCIBLE_WORLD_GT6_LITERAL_BINDINGS passed rows=1084') ||
+                    !latest.contains('CRUCIBLE_WORLD_GT6_PHASE_COMMITS passed') ||
+                    !latest.contains('CRUCIBLE_WORLD_GT6_SOLIDIFY_COMMITS passed') ||
+                    !gt6AlloyAuditPassed ||
+                    !gt6AlloyPriorityPassed ||
                     !latest.contains('CRUCIBLE_WORLD_TOOL ULV_WORKBENCH_PER_OUTPUT_RECOVERED passed') ||
                     !latest.contains('CRUCIBLE_WORLD_TOOL ULV_ASSEMBLER_PER_OUTPUT_RECOVERED passed') ||
                     !latest.contains('CRUCIBLE_WORLD_TOOL SHAPELESS_NONCLEARING_REMAINDER_EXCLUDED_RECOVERED passed') ||
@@ -237,10 +286,14 @@ if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
                     }
                 }
             }
+            if (worldChecks && restartPhase == null && galacticraftRuntimeJar != null &&
+                    !latest.contains('CRUCIBLE_WORLD_GALACTICRAFT_OXYGEN passed')) {
+                throw new GradleException('Real Galacticraft oxygen integration smoke did not pass')
+            }
             if (restartPhase != null && (!latest.contains('CRUCIBLE_WORLD_MATERIAL_POLICY passed owned=1 crucibles=23') ||
                     latest.contains('CRUCIBLE_WORLD_FAIL') || latest.contains('CRUCIBLE_RESTART_FAIL') ||
                     !latest.contains(restartPhase == 'write' ? 'CRUCIBLE_RESTART_SAVED fixtures=3' :
-                            'CRUCIBLE_RESTART_PASS checks=6'))) {
+                            'CRUCIBLE_RESTART_PASS checks=6 legacyNbtMigrations=3'))) {
                 throw new GradleException('Cross-process crucible persistence checks did not pass: ' + restartPhase)
             }
             if (latest.contains('Invalid Recipe Found: Recipe output cannot be an empty ItemStack. Recipe: wheat_to_dust')) {
@@ -312,4 +365,5 @@ if (providers.gradleProperty('gt6ParitySmoke').isPresent()) {
             logger.lifecycle("Forge startup/shutdown and ${targetsVerified} transformed Mixin targets verified (server side only)")
         }
     }
+    if (legacyNbtPatchTask != null) verificationTask.configure { dependsOn legacyNbtPatchTask }
 }

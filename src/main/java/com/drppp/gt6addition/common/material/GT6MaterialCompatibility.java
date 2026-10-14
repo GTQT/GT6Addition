@@ -8,9 +8,13 @@ import gregtech.api.unification.material.registry.MaterialRegistry;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /** Read-only bindings. Missing materials remain absent; source statistics never create registry entries. */
@@ -75,6 +79,83 @@ public final class GT6MaterialCompatibility {
             }
         }
         return candidate;
+    }
+
+    /**
+     * Creates a short-lived lookup view for code that must resolve many GT6
+     * identities in one operation. The live resolver above remains the source
+     * of truth; this snapshot only replaces repeated whole-registry scans with
+     * one indexed pass and must not be retained across operations/registry changes.
+     */
+    public static ExternalMaterialLookup createExternalMaterialLookup() {
+        return new ExternalMaterialLookup();
+    }
+
+    public static final class ExternalMaterialLookup {
+        private final Map<String, Material> byRegistryName = new HashMap<>();
+        private final Map<String, List<Material>> preferredNames = new HashMap<>();
+        private final Map<String, List<Material>> registryPaths = new HashMap<>();
+        private final Set<String> registryIds = new HashSet<>();
+        private final boolean prePhase;
+
+        private ExternalMaterialLookup() {
+            IMaterialRegistryManager manager = GregTechAPI.materialManager;
+            prePhase = manager == null || manager.getPhase() == IMaterialRegistryManager.Phase.PRE;
+            if (manager == null) return;
+            for (MaterialRegistry registry : manager.getRegistries()) {
+                String modid = registry.getModid();
+                registryIds.add(modid);
+                for (Material material : registry.getAllMaterials()) {
+                    if (material == null || material.getRegistryName() == null) continue;
+                    byRegistryName.put(material.getRegistryName(), material);
+                    if ("gtqtcore".equals(modid) || "gregtech".equals(modid)) {
+                        add(preferredNames, modid + "\u0000" + normalize(material.getName()), material);
+                    }
+                    if (!material.getRegistryName().startsWith(Tags.MOD_ID + ":")) {
+                        String registered = material.getRegistryName();
+                        int separator = registered.indexOf(':');
+                        if (separator >= 0 && separator < registered.length() - 1) {
+                            add(registryPaths, normalize(registered.substring(separator + 1)), material);
+                        }
+                    }
+                }
+            }
+        }
+
+        @Nullable
+        public Material findExternal(String name) {
+            if (name == null || name.isEmpty()) return null;
+            int separator = name.indexOf(':');
+            if (separator >= 0) {
+                if (separator == 0 || separator == name.length() - 1 ||
+                        name.indexOf(':', separator + 1) >= 0 || name.startsWith(Tags.MOD_ID + ":")) return null;
+                Material exact = byRegistryName.get(name);
+                return exact != null && name.equals(exact.getRegistryName()) ? exact : null;
+            }
+
+            String normalized = normalize(name);
+            for (String namespace : new String[]{"gtqtcore", "gregtech"}) {
+                Material exact = byRegistryName.get(namespace + ":" + name);
+                if (exact != null) return exact;
+                if (!registryIds.contains(namespace)) continue;
+                Material normalizedMatch = unique(preferredNames.get(namespace + "\u0000" + normalized));
+                List<Material> matches = preferredNames.get(namespace + "\u0000" + normalized);
+                if (matches != null && matches.size() > 1) return null;
+                if (normalizedMatch != null) return normalizedMatch;
+            }
+            if (prePhase) return null;
+            return unique(registryPaths.get(normalized));
+        }
+
+        private static void add(Map<String, List<Material>> index, String key, Material material) {
+            if (key == null || key.isEmpty()) return;
+            index.computeIfAbsent(key, ignored -> new ArrayList<>()).add(material);
+        }
+
+        @Nullable
+        private static Material unique(@Nullable List<Material> matches) {
+            return matches == null || matches.size() != 1 ? null : matches.get(0);
+        }
     }
 
     private static String normalize(String path) {

@@ -59,7 +59,7 @@ class CrucibleFractionalHeatTest {
         assertEquals(0, weight(1, 0, -1));
     }
 
-    private static double weight(long amount, int remainder, double density) {
+    private static double weight(long amount, long remainder, double density) {
         return CrucibleTransferLogic.materialWeightKg(amount, remainder, CrucibleFluidUnits.STORAGE_UNIT,
                 density, GTValues.M);
     }

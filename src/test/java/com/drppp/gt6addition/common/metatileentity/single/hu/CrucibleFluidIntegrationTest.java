@@ -2,6 +2,7 @@ package com.drppp.gt6addition.common.metatileentity.single.hu;
 
 import com.drppp.gt6addition.api.capability.interfaces.ICrucibleEnergyReceiver;
 import com.drppp.gt6addition.api.crucible.ICrucibleMold;
+import com.drppp.gt6addition.common.event.GT6ServerTickClock;
 import com.mojang.authlib.GameProfile;
 import gregtech.api.GregTechAPI;
 import gregtech.api.GTValues;
@@ -58,16 +59,22 @@ import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestReporter;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -75,6 +82,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /** Actual MTE fill/drain, tick and NBT paths, with no chunks or save files. */
 class CrucibleFluidIntegrationTest {
+    private static final long GT6_SOURCE_U = 648648000L;
+    private static final long TEST_STORAGE_UNIT = 12972960000L;
     private static final Map<Field, Object> previousFluidRegistry = new LinkedHashMap<>();
     private static final Map<Field, Object> previousToolRemapper = new LinkedHashMap<>();
     private static IMaterialRegistryManager previousMaterials;
@@ -175,9 +184,10 @@ class CrucibleFluidIntegrationTest {
                 .fluid(new Fluid("parity_bound_liquid_b", texture, texture).setTemperature(300),
                         FluidStorageKeys.LIQUID, FluidState.LIQUID).build();
         multiPhase = Material.builder(1900, new ResourceLocation("gregtech", "parity_multiphase"))
-                .color(0x345678)
+                .ingot().color(0x345678)
                 .fluid(new Fluid("parity_molten", texture, texture).setTemperature(3000),
                         FluidStorageKeys.MOLTEN, FluidState.LIQUID).build();
+        multiPhase.getProperty(PropertyKey.INGOT).setSmeltingInto(multiPhase);
         FluidProperty phases = multiPhase.getProperty(PropertyKey.FLUID);
         multiPhaseGas = new Fluid("parity_gas", texture, texture).setTemperature(3000).setGaseous(true);
         multiPhasePlasma = new Fluid("parity_plasma", texture, texture).setTemperature(3000).setGaseous(true);
@@ -336,6 +346,11 @@ class CrucibleFluidIntegrationTest {
             material.getProperty(PropertyKey.INGOT).setSmeltingInto(ash);
             mineralFixtures.put(configuredNames[i], material);
         }
+        Material.builder(2016, new ResourceLocation("gregtech", "duranium")).ingot().build();
+        Material.builder(2017, new ResourceLocation("gregtech", "tritanium")).ingot().build();
+        Material.builder(2018, new ResourceLocation("gtqtcore", "duranium")).ingot().build();
+        Material.builder(2019, new ResourceLocation("gtqtcore", "tritanium")).ingot().build();
+        Material.builder(2020, new ResourceLocation("gregtech", "magnesium")).ingot().build();
         redstonia = Material.builder(2015, new ResourceLocation("gregtech", "redstonia")).gem().build();
         // Same-name external identities, deliberately distinct from CEu's
         // singletons. No production registration or host-property changes.
@@ -472,14 +487,14 @@ class CrucibleFluidIntegrationTest {
             for (FluidStorageKey key : new FluidStorageKey[]{FluidStorageKeys.MOLTEN,
                     FluidStorageKeys.GAS, FluidStorageKeys.PLASMA}) {
                 property.setPrimaryKey(key);
-                assertFalse(GT6MaterialHazardData.isGasOnlyMaterial(multiPhase));
+                assertEquals(Long.MAX_VALUE, CrucibleMaterialPhaseData.boilingPoint(multiPhase));
                 Vessel vessel = new Vessel();
                 vessel.readFromNBT(state(3000, multiPhase.getRegistryName(), GTValues.L, GTValues.L));
                 vessel.update();
                 NBTTagCompound retained = onlyContent(vessel.save());
                 assertEquals(multiPhase.getRegistryName(), retained.getString("Material"));
                 assertEquals(GTValues.M, retained.getLong("Amount"));
-                assertEquals(0, retained.getInteger("FluidRemainder"));
+                assertEquals(0, retained.getLong("FluidRemainder"));
                 assertEquals(0, vessel.world.blockChanges);
                 Vessel loaded = new Vessel();
                 loaded.readFromNBT(vessel.save());
@@ -496,12 +511,8 @@ class CrucibleFluidIntegrationTest {
 
     @Test
     void plainForgeGasAndPlasmaBindingsUseUnknownGasFallbackOnlyOnActualTick() {
-        assertFalse(GT6MaterialHazardData.isGasOnlyMaterial(null));
-        assertFalse(GT6MaterialHazardData.isGasOnlyMaterial(osmium));
-        assertFalse(GT6MaterialHazardData.isGasOnlyMaterial(liquidAlias));
         for (Material material : new Material[]{primaryGas, primaryPlasma}) {
             assertFalse(material.getFluid() instanceof AttributedFluid);
-            assertTrue(GT6MaterialHazardData.isGasOnlyMaterial(material));
             assertEquals(Long.MAX_VALUE, CrucibleMaterialPhaseData.boilingPoint(material.getName()));
             Vessel vessel = new Vessel();
             vessel.readFromNBT(emptyAt(300));
@@ -518,7 +529,9 @@ class CrucibleFluidIntegrationTest {
                 assertEquals(1000, vessel.fluids().fill(offered, true));
                 assertEquals(1, vessel.save().getTagList("Contents", 10).tagCount());
                 vessel.update();
-                assertEquals(0, vessel.save().getTagList("Contents", 10).tagCount());
+                NBTTagCompound retained = onlyContent(vessel.save());
+                assertEquals(material.getRegistryName(), retained.getString("Material"));
+                assertTrue(retained.getLong("Amount") > 0L);
                 assertEquals(0, vessel.world.blockChanges);
             } finally {
                 fluid.setTemperature(temperature);
@@ -528,8 +541,7 @@ class CrucibleFluidIntegrationTest {
 
     @Test
     void knownGt6BoilingPointOverridesGasOnlyBindingFallback() {
-        assertTrue(GT6MaterialHazardData.isGasOnlyMaterial(fluidRefinedIron));
-        assertEquals(3134, CrucibleMaterialPhaseData.boilingPoint(fluidRefinedIron.getName()));
+        assertEquals(3134, CrucibleMaterialPhaseData.boilingPoint(fluidRefinedIron));
         Vessel below = new Vessel();
         below.readFromNBT(state(3133, fluidRefinedIron.getRegistryName(), 1000, 1000));
         below.update();
@@ -657,10 +669,10 @@ class CrucibleFluidIntegrationTest {
         NBTTagCompound saved = vessel.save();
         Vessel restored = new Vessel();
         restored.readFromNBT(saved);
-        // The legacy-compatible reader reconstructs an implicit self target;
-        // it must preserve every stored content field while adding that target.
+        // Solid entries have no pending solidification target. Read-back must
+        // preserve the saved content exactly instead of inventing that tag.
         NBTTagCompound expected = onlyContent(saved).copy();
-        expected.setString("SolidifyTarget", neutralCalcite.getRegistryName());
+        assertFalse(expected.hasKey("SolidifyTarget"));
         assertEquals(expected, onlyContent(restored.save()));
         restored.update();
         assertEquals(GTValues.M, onlyContent(restored.save()).getLong("Amount"));
@@ -768,20 +780,21 @@ class CrucibleFluidIntegrationTest {
     void fluidArrivalExpansionThatFitsCommitsTheSamePreparedQuantityAfterSimulation() {
         Vessel vessel = new Vessel();
         vessel.readFromNBT(state(2000, "gregtech:tin", 13 * GTValues.L, GTValues.L));
+        Material lavaTarget = MetaTileEntityCrucible.resolveMaterial("lava");
         FluidStack offered = Materials.Obsidian.getFluid(137);
         NBTTagCompound before = vessel.save();
         assertEquals(137, vessel.fluids().fill(offered, false));
         assertEquals(before, vessel.save());
         assertEquals(137, vessel.fluids().fill(offered, true));
         assertEquals(137, offered.amount);
-        NBTTagCompound lava = content(vessel.save(), "gregtech:lava");
+        NBTTagCompound lava = content(vessel.save(), lavaTarget.getRegistryName());
         assertEquals(137, volume(lava, GTValues.L));
         assertTrue(lava.getBoolean("Molten"));
         assertTrue(vessel.getCurrentTemperature() < 2000 && vessel.getCurrentTemperature() >= 1300);
         assertEquals(13 * GTValues.M, content(vessel.save(), "gregtech:tin").getLong("Amount"));
         Vessel loaded = new Vessel();
         loaded.readFromNBT(vessel.save());
-        assertEquals(lava, content(loaded.save(), "gregtech:lava"));
+        assertEquals(lava, content(loaded.save(), lavaTarget.getRegistryName()));
     }
 
     @Test
@@ -799,7 +812,7 @@ class CrucibleFluidIntegrationTest {
         NBTTagCompound iron = onlyContent(vessel.save());
         assertEquals("gregtech:iron", iron.getString("Material"));
         assertEquals(exact.amount, iron.getLong("Amount"));
-        assertEquals(exact.remainder, iron.getInteger("FluidRemainder"));
+        assertEquals(exact.remainder, iron.getLong("FluidRemainder"));
         assertTrue(iron.getBoolean("Molten"));
         Vessel loaded = new Vessel();
         loaded.readFromNBT(vessel.save());
@@ -825,7 +838,7 @@ class CrucibleFluidIntegrationTest {
         assertNotNull(exact);
         assertEquals("gregtech:ice", ice.getString("Material"));
         assertEquals(exact.amount, ice.getLong("Amount"));
-        assertEquals(exact.remainder, ice.getInteger("FluidRemainder"));
+        assertEquals(exact.remainder, ice.getLong("FluidRemainder"));
         assertFalse(ice.getBoolean("Molten"));
         assertTrue(vessel.getCurrentTemperature() < 273);
     }
@@ -1073,11 +1086,11 @@ class CrucibleFluidIntegrationTest {
         Vessel vessel = new Vessel();
         NBTTagCompound old = state(300, "gregtech:sulfuric_acid", 1000, 1000);
         old.removeTag("FluidQuantityVersion");
-        onlyContent(old).setInteger("FluidRemainder", 1);
+        onlyContent(old).setLong("FluidRemainder", 1);
         vessel.readFromNBT(old);
         NBTTagCompound loaded = onlyContent(vessel.save());
         assertEquals(GTValues.M, loaded.getLong("Amount"));
-        assertEquals(CrucibleFluidUnits.STORAGE_UNIT / GTValues.L, loaded.getInteger("FluidRemainder"));
+        assertEquals(CrucibleFluidUnits.STORAGE_UNIT / GTValues.L, loaded.getLong("FluidRemainder"));
         assertEquals(1000, volume(loaded, 1000));
         Vessel reloaded = new Vessel();
         reloaded.readFromNBT(vessel.save());
@@ -1087,7 +1100,8 @@ class CrucibleFluidIntegrationTest {
     @Test
     void oldGlycerylNameBindsOnlyToVerifiedNitroglycerinWithoutLosingItsQuantity() {
         assertSame(nitroglycerin, MetaTileEntityCrucible.resolveMaterial("Glyceryl"));
-        assertSame(nitroglycerin, MetaTileEntityCrucible.resolveMaterial("gregtech:glyceryl"));
+        assertNull(MetaTileEntityCrucible.resolveMaterial("gregtech:glyceryl"),
+                "Explicit registry identities must stay exact; only legacy unqualified GT6 names use aliases");
         assertNull(MetaTileEntityCrucible.resolveMaterial("thirdparty:glyceryl"));
         assertEquals(1000, CrucibleFluidInput.resolve(nitroglycerin.getFluid(1)).unit);
         assertSame(nitroglycerin, MetaTileEntityCrucible.getSmeltingTarget(nitroglycerin));
@@ -1141,7 +1155,7 @@ class CrucibleFluidIntegrationTest {
         NBTTagCompound saved = vessel.save();
         NBTTagCompound entry = onlyContent(saved);
         assertEquals(3L * GTValues.M, entry.getLong("Amount"));
-        assertEquals(0, entry.getInteger("FluidRemainder"));
+        assertEquals(0, entry.getLong("FluidRemainder"));
         assertEquals(3000, vessel.getCurrentTemperature());
         Vessel loaded = new Vessel();
         loaded.readFromNBT(saved);
@@ -1171,7 +1185,7 @@ class CrucibleFluidIntegrationTest {
             assertEquals(before, vessel.save());
             assertEquals(accepted, vessel.fluids().fill(input, true));
             assertEquals(16L * GTValues.M, onlyContent(vessel.save()).getLong("Amount"));
-            assertEquals(0, onlyContent(vessel.save()).getInteger("FluidRemainder"));
+            assertEquals(0, onlyContent(vessel.save()).getLong("FluidRemainder"));
             NBTTagCompound full = vessel.save();
             assertEquals(0, vessel.fluids().fill(input, true));
             assertEquals(full, vessel.save());
@@ -1221,14 +1235,14 @@ class CrucibleFluidIntegrationTest {
         }
         NBTTagCompound initial = onlyContent(vessel.save());
         assertEquals(expected.amount, initial.getLong("Amount"));
-        assertEquals(expected.remainder, initial.getInteger("FluidRemainder"));
+        assertEquals(expected.remainder, initial.getLong("FluidRemainder"));
         assertEquals(1, vessel.fluids().drain(1000, true).amount);
         expected = CrucibleFluidUnits.drainStored(expected.amount, expected.remainder, 1, GTValues.L);
         assertNotNull(expected);
         assertTrue(expected.amount > 0 || expected.remainder > 0);
         NBTTagCompound residual = onlyContent(vessel.save());
         assertEquals(expected.amount, residual.getLong("Amount"));
-        assertEquals(expected.remainder, residual.getInteger("FluidRemainder"));
+        assertEquals(expected.remainder, residual.getLong("FluidRemainder"));
         assertNull(vessel.fluids().drain(1, true));
         Vessel loaded = new Vessel();
         loaded.readFromNBT(vessel.save());
@@ -1308,7 +1322,7 @@ class CrucibleFluidIntegrationTest {
         source.readFromNBT(state(3000, multiPhase.getRegistryName(), 3001, 1000));
         NBTTagCompound sourceEntry = onlyContent(source.save());
         long sourceAmount = sourceEntry.getLong("Amount");
-        int sourceRemainder = sourceEntry.getInteger("FluidRemainder");
+        long sourceRemainder = sourceEntry.getLong("FluidRemainder");
         Vessel receiver = new Vessel();
         receiver.readFromNBT(state(2500, "gregtech:tin", 15 * GTValues.L, GTValues.L));
         NBTTagCompound before = receiver.save();
@@ -1317,7 +1331,7 @@ class CrucibleFluidIntegrationTest {
         assertEquals(GTValues.M, source.fillMoldAtSide(receiver, EnumFacing.WEST, EnumFacing.UP));
         NBTTagCompound remaining = onlyContent(source.save());
         assertEquals(sourceAmount - GTValues.M, remaining.getLong("Amount"));
-        assertEquals(sourceRemainder, remaining.getInteger("FluidRemainder"));
+        assertEquals(sourceRemainder, remaining.getLong("FluidRemainder"));
         assertEquals(15L * GTValues.M, content(receiver.save(), "gregtech:tin").getLong("Amount"));
         assertEquals(GTValues.M, content(receiver.save(), multiPhase.getRegistryName()).getLong("Amount"));
         assertTrue(receiver.getCurrentTemperature() > 2500 && receiver.getCurrentTemperature() < 3000);
@@ -1403,14 +1417,16 @@ class CrucibleFluidIntegrationTest {
     }
 
     @Test
-    void coreOxideActuallyMeltsToSharedHematiteThenSolidifiesWithoutChangingAmount() {
+    void coreOxideKeepsGt6SelfTargetAcrossHeatingAndCooling() {
         Vessel vessel = new Vessel();
         NBTTagCompound initial = state(1207, "gtqtcore:iron_iii_oxide", GTValues.L, GTValues.L);
         onlyContent(initial).setBoolean("Molten", false);
         vessel.readFromNBT(initial);
         vessel.update();
         NBTTagCompound melted = onlyContent(vessel.save());
-        assertEquals("gregtech:banded_iron", melted.getString("Material"));
+        // GT6 MT.Hematite explicitly points to itself for both phase targets;
+        // a same-composition Core material must retain its exact identity.
+        assertEquals("gtqtcore:iron_iii_oxide", melted.getString("Material"));
         assertEquals(GTValues.M, melted.getLong("Amount"));
         assertTrue(melted.getBoolean("Molten"));
         NBTTagCompound cooler = vessel.save();
@@ -1419,7 +1435,7 @@ class CrucibleFluidIntegrationTest {
         vessel.readFromNBT(cooler);
         vessel.update();
         NBTTagCompound solid = onlyContent(vessel.save());
-        assertEquals("gregtech:banded_iron", solid.getString("Material"));
+        assertEquals("gtqtcore:iron_iii_oxide", solid.getString("Material"));
         assertEquals(GTValues.M, solid.getLong("Amount"));
         assertFalse(solid.getBoolean("Molten"));
     }
@@ -1516,7 +1532,7 @@ class CrucibleFluidIntegrationTest {
         assertEquals(1234, vessel.fluids().fill(new FluidStack(FluidRegistry.WATER, 1234), true));
         assertEquals(145, vessel.fluids().fill(new FluidStack(FluidRegistry.LAVA, 145), true));
         NBTTagCompound saved = vessel.save();
-        assertTrue(content(saved, "gregtech:water").getInteger("FluidRemainder") > 0);
+        assertTrue(content(saved, "gregtech:water").getLong("FluidRemainder") > 0);
         Vessel loaded = new Vessel();
         loaded.readFromNBT(saved);
         // Historical SolidifyTarget is deliberately re-resolved from current
@@ -1526,7 +1542,7 @@ class CrucibleFluidIntegrationTest {
             NBTTagCompound before = content(saved, name);
             NBTTagCompound after = content(loaded.save(), name);
             assertEquals(before.getLong("Amount"), after.getLong("Amount"));
-            assertEquals(before.getInteger("FluidRemainder"), after.getInteger("FluidRemainder"));
+            assertEquals(before.getLong("FluidRemainder"), after.getLong("FluidRemainder"));
             assertEquals(before.getBoolean("Molten"), after.getBoolean("Molten"));
         }
         assertEquals(saved.getLong("OldTemperature"), loaded.save().getLong("OldTemperature"));
@@ -1538,7 +1554,10 @@ class CrucibleFluidIntegrationTest {
 
     @Test
     void externalObsidianUsesSourceHotTargetAndProjectBucketQuantity() {
-        assertSame(Materials.Lava, MetaTileEntityCrucible.getSmeltingTarget(externalObsidian));
+        Material lavaTarget = MetaTileEntityCrucible.resolveMaterial("lava");
+        assertSame(lavaTarget, MetaTileEntityCrucible.getSmeltingTarget(externalObsidian));
+        assertFalse(lavaTarget.hasProperty(PropertyKey.FLUID),
+                "Compatibility must not synthesize a fluid on the selected host identity");
         assertSame(ash, externalObsidian.getProperty(PropertyKey.INGOT).getSmeltingInto());
         assertEquals(CrucibleFluidUnits.materialAmount(1000, GTValues.L),
                 MetaTileEntityCrucible.getSmeltingOutputAmount(externalObsidian, GTValues.M));
@@ -1554,12 +1573,12 @@ class CrucibleFluidIntegrationTest {
                 assertEquals(GTValues.M, entry.getLong("Amount"));
                 assertFalse(entry.getBoolean("Molten"));
             } else {
-                assertEquals(Materials.Lava.getRegistryName(), entry.getString("Material"));
+                assertEquals(lavaTarget.getRegistryName(), entry.getString("Material"));
                 assertEquals(1000, volume(entry, GTValues.L));
-                assertEquals(1000, vessel.fluids().drain(2000, false).amount);
+                assertNull(vessel.fluids().drain(2000, false),
+                        "A host target without a registered liquid must not be exposed as CEu Lava");
                 Vessel loaded = new Vessel();
                 loaded.readFromNBT(vessel.save());
-                loaded.update();
                 assertEquals(1000, volume(onlyContent(loaded.save()), GTValues.L));
             }
         }
@@ -1567,7 +1586,8 @@ class CrucibleFluidIntegrationTest {
 
     @Test
     void externalLavaColdTargetUsesWholeBucketsAndPreservesRemainderAcrossReheat() {
-        assertSame(Materials.Obsidian, MetaTileEntityCrucible.getSolidifyingTarget(externalLava));
+        Material obsidianTarget = MetaTileEntityCrucible.resolveMaterial("obsidian");
+        assertSame(obsidianTarget, MetaTileEntityCrucible.getSolidifyingTarget(externalLava));
         for (int temperature : new int[]{1299, 1300}) {
             Vessel vessel = new Vessel();
             vessel.readFromNBT(state(temperature, externalLava.getRegistryName(), 1145, GTValues.L));
@@ -1578,7 +1598,7 @@ class CrucibleFluidIntegrationTest {
                 continue;
             }
             NBTTagCompound cold = vessel.save();
-            assertEquals(GTValues.M, content(cold, Materials.Obsidian.getRegistryName()).getLong("Amount"));
+            assertEquals(GTValues.M, content(cold, obsidianTarget.getRegistryName()).getLong("Amount"));
             assertEquals(145, volume(content(cold, externalLava.getRegistryName()), GTValues.L));
             Vessel loaded = new Vessel();
             loaded.readFromNBT(cold);
@@ -1588,8 +1608,7 @@ class CrucibleFluidIntegrationTest {
             warmer.setLong("OldTemperature", 1299);
             loaded.readFromNBT(warmer);
             loaded.update();
-            assertEquals(145, volume(content(loaded.save(), externalLava.getRegistryName()), GTValues.L));
-            assertEquals(1000, volume(content(loaded.save(), Materials.Lava.getRegistryName()), GTValues.L));
+            assertEquals(1145, volume(content(loaded.save(), externalLava.getRegistryName()), GTValues.L));
         }
         assertFalse(externalLava.hasProperty(PropertyKey.FLUID), "Compatibility must not synthesize a host fluid");
     }
@@ -1609,7 +1628,7 @@ class CrucibleFluidIntegrationTest {
                 assertEquals(temperature == 272 ? Materials.Ice.getRegistryName() : externalWater.getRegistryName(),
                         entry.getString("Material"));
                 assertEquals(GTValues.M, entry.getLong("Amount"));
-                assertEquals(0, entry.getInteger("FluidRemainder"));
+                assertEquals(0, entry.getLong("FluidRemainder"));
                 assertEquals(temperature != 272, entry.getBoolean("Molten"));
                 Vessel loaded = new Vessel();
                 loaded.readFromNBT(saved);
@@ -1618,7 +1637,7 @@ class CrucibleFluidIntegrationTest {
                 // compare the identity, phase and exact inventory quantity.
                 assertEquals(entry.getString("Material"), restored.getString("Material"));
                 assertEquals(entry.getLong("Amount"), restored.getLong("Amount"));
-                assertEquals(entry.getInteger("FluidRemainder"), restored.getInteger("FluidRemainder"));
+                assertEquals(entry.getLong("FluidRemainder"), restored.getLong("FluidRemainder"));
                 assertEquals(entry.getBoolean("Molten"), restored.getBoolean("Molten"));
             }
         }
@@ -1627,14 +1646,15 @@ class CrucibleFluidIntegrationTest {
 
     @Test
     void actualTickCondensesLavaOnlyBelow1300AndOnlyInWholeBuckets() {
+        Material obsidianTarget = MetaTileEntityCrucible.resolveMaterial("obsidian");
         for (int temperature : new int[]{1299, 1300}) {
             Vessel vessel = new Vessel();
             vessel.readFromNBT(state(temperature, "gregtech:lava", 1145, GTValues.L));
             vessel.update();
             NBTTagCompound saved = vessel.save();
             if (temperature == 1299) {
-                assertEquals(GTValues.M, content(saved, "gregtech:obsidian").getLong("Amount"));
-                assertFalse(content(saved, "gregtech:obsidian").getBoolean("Molten"));
+                assertEquals(GTValues.M, content(saved, obsidianTarget.getRegistryName()).getLong("Amount"));
+                assertFalse(content(saved, obsidianTarget.getRegistryName()).getBoolean("Molten"));
                 assertEquals(145, volume(content(saved, "gregtech:lava"), GTValues.L));
             } else {
                 assertEquals(1, saved.getTagList("Contents", 10).tagCount());
@@ -1646,6 +1666,8 @@ class CrucibleFluidIntegrationTest {
 
     @Test
     void lavaCondensationAndRemeltingDoNotUseTheHostPrimaryGasUnit() {
+        Material obsidianTarget = MetaTileEntityCrucible.resolveMaterial("obsidian");
+        Material lavaTarget = MetaTileEntityCrucible.resolveMaterial("lava");
         FluidProperty property = Materials.Lava.getProperty(PropertyKey.FLUID);
         FluidStorageKey primary = property.getPrimaryKey();
         try {
@@ -1654,7 +1676,7 @@ class CrucibleFluidIntegrationTest {
             Vessel cold = new Vessel();
             cold.readFromNBT(state(1299, "gregtech:lava", 1145, GTValues.L));
             cold.update();
-            assertEquals(GTValues.M, content(cold.save(), "gregtech:obsidian").getLong("Amount"));
+            assertEquals(GTValues.M, content(cold.save(), obsidianTarget.getRegistryName()).getLong("Amount"));
             assertEquals(145, volume(content(cold.save(), "gregtech:lava"), GTValues.L));
             Vessel loaded = new Vessel();
             loaded.readFromNBT(cold.save());
@@ -1674,8 +1696,10 @@ class CrucibleFluidIntegrationTest {
             warmer.setLong("OldTemperature", 1299);
             loaded.readFromNBT(warmer);
             loaded.update();
-            assertEquals(1145, volume(onlyContent(loaded.save()), GTValues.L));
-            assertEquals(1145, loaded.fluids().drain(2000, false).amount);
+            assertEquals(145, volume(content(loaded.save(), "gregtech:lava"), GTValues.L));
+            assertEquals(1000, volume(content(loaded.save(), lavaTarget.getRegistryName()), GTValues.L));
+            assertEquals(145, loaded.fluids().drain(2000, false).amount,
+                    "Only the exact CEu material's registered liquid is projected");
         } finally {
             property.setPrimaryKey(primary);
         }
@@ -1683,6 +1707,7 @@ class CrucibleFluidIntegrationTest {
 
     @Test
     void ambiguousHostLavaBindingBlocksProjectionButNotInternalBucketConversion() {
+        Material obsidianTarget = MetaTileEntityCrucible.resolveMaterial("obsidian");
         FluidProperty property = Materials.Lava.getProperty(PropertyKey.FLUID);
         Fluid gas = property.get(FluidStorageKeys.GAS);
         try {
@@ -1691,7 +1716,7 @@ class CrucibleFluidIntegrationTest {
             Vessel vessel = new Vessel();
             vessel.readFromNBT(state(1299, "gregtech:lava", 1145, GTValues.L));
             vessel.update();
-            assertEquals(GTValues.M, content(vessel.save(), "gregtech:obsidian").getLong("Amount"));
+            assertEquals(GTValues.M, content(vessel.save(), obsidianTarget.getRegistryName()).getLong("Amount"));
             assertEquals(145, volume(content(vessel.save(), "gregtech:lava"), GTValues.L));
             NBTTagCompound before = vessel.save();
             assertNull(vessel.fluids().drain(2000, false));
@@ -1699,7 +1724,7 @@ class CrucibleFluidIntegrationTest {
             Vessel loaded = new Vessel();
             loaded.readFromNBT(before);
             assertEquals(145, volume(content(loaded.save(), "gregtech:lava"), GTValues.L));
-            assertEquals(GTValues.M, content(loaded.save(), "gregtech:obsidian").getLong("Amount"));
+            assertEquals(GTValues.M, content(loaded.save(), obsidianTarget.getRegistryName()).getLong("Amount"));
         } finally {
             property.store(FluidStorageKeys.GAS, gas);
         }
@@ -1762,11 +1787,13 @@ class CrucibleFluidIntegrationTest {
     }
 
     @Test
-    void lavaRemainderAndRemeltedObsidianCoalesceForTheFluidProjection() {
+    void lavaRemainderAndRemeltedObsidianKeepExactHostMaterialIdentities() {
+        Material obsidianTarget = MetaTileEntityCrucible.resolveMaterial("obsidian");
+        Material lavaTarget = MetaTileEntityCrucible.resolveMaterial("lava");
         Vessel vessel = new Vessel();
         vessel.readFromNBT(state(1299, "gregtech:lava", 1145, GTValues.L));
         vessel.update();
-        assertEquals(GTValues.M, content(vessel.save(), "gregtech:obsidian").getLong("Amount"));
+        assertEquals(GTValues.M, content(vessel.save(), obsidianTarget.getRegistryName()).getLong("Amount"));
         assertEquals(145, volume(content(vessel.save(), "gregtech:lava"), GTValues.L));
         assertNull(vessel.fluids().drain(2000, false), "Cold remainder is not extractable");
         for (int cycle = 0; cycle < 3; cycle++) {
@@ -1775,19 +1802,20 @@ class CrucibleFluidIntegrationTest {
             hotter.setLong("OldTemperature", 1299);
             vessel.readFromNBT(hotter);
             vessel.update();
-            NBTTagCompound combined = onlyContent(vessel.save());
-            assertEquals("gregtech:lava", combined.getString("Material"));
-            assertEquals(1145, volume(combined, GTValues.L));
-            assertEquals(1145, vessel.fluids().getTankProperties()[0].getContents().amount);
+            NBTTagCompound remelted = content(vessel.save(), lavaTarget.getRegistryName());
+            assertEquals(1000, volume(remelted, GTValues.L));
+            assertEquals(145, volume(content(vessel.save(), "gregtech:lava"), GTValues.L));
+            assertEquals(145, vessel.fluids().getTankProperties()[0].getContents().amount,
+                    "The light remaining CEu lava fraction remains drainable; the host target does not replace it");
             NBTTagCompound beforeDrain = vessel.save();
-            assertEquals(1145, vessel.fluids().drain(2000, false).amount);
+            assertEquals(145, vessel.fluids().drain(2000, false).amount);
             assertEquals(beforeDrain, vessel.save());
             NBTTagCompound colder = vessel.save();
             colder.setLong("Temperature", 1299);
             colder.setLong("OldTemperature", 1300);
             vessel.readFromNBT(colder);
             vessel.update();
-            assertEquals(GTValues.M, content(vessel.save(), "gregtech:obsidian").getLong("Amount"));
+            assertEquals(GTValues.M, content(vessel.save(), obsidianTarget.getRegistryName()).getLong("Amount"));
             assertEquals(145, volume(content(vessel.save(), "gregtech:lava"), GTValues.L));
         }
     }
@@ -1800,6 +1828,12 @@ class CrucibleFluidIntegrationTest {
         entries.appendTag(onlyContent(state(300, "gregtech:water", 234, 1000)));
         vessel.readFromNBT(first);
         NBTTagCompound before = vessel.save();
+        assertEquals(1, before.getTagList("Contents", 10).tagCount(),
+                "Legacy duplicate material entries must coalesce during NBT load");
+        assertEquals(357, volume(onlyContent(before), 1000),
+                "The exact fractional total must be visible before the first server tick");
+        assertEquals(357, vessel.fluids().getTankProperties()[0].getContents().amount,
+                "The first fluid projection after load must include every duplicate entry");
         assertEquals(1, vessel.fluids().fill(new FluidStack(FluidRegistry.WATER, 1), false));
         assertEquals(before, vessel.save(), "Simulation must not normalize old saves");
         vessel.update();
@@ -1861,6 +1895,7 @@ class CrucibleFluidIntegrationTest {
 
     @Test
     void actualRainTickTruncatesRainfallBeforeDoublingThunderInput() {
+        setServerTick(10);
         for (boolean thunder : new boolean[]{false, true}) {
             Vessel vessel = new Vessel();
             vessel.offsetTick = 10;
@@ -1877,10 +1912,12 @@ class CrucibleFluidIntegrationTest {
 
     @Test
     void rainRespectsTimingExposureBiomeAndUnifiedCapacity() {
+        setServerTick(9);
         Vessel wrongTick = new Vessel();
         wrongTick.world.rain = true;
         wrongTick.update();
         assertEquals(0, wrongTick.save().getTagList("Contents", 10).tagCount());
+        setServerTick(10);
         Vessel covered = new Vessel();
         covered.offsetTick = 10;
         covered.update();
@@ -1906,6 +1943,8 @@ class CrucibleFluidIntegrationTest {
 
     @Test
     void waterFreezesBelow273AndDoesNotRemainDrainable() {
+        assertSame(Materials.Water, MetaTileEntityCrucible.resolveMaterial("gregtech:water"));
+        assertSame(Materials.Ice, MetaTileEntityCrucible.getSolidifyingTarget(Materials.Water));
         Vessel frozen = new Vessel();
         frozen.readFromNBT(state(272, "gregtech:water", 1000, 1000));
         frozen.update();
@@ -1921,6 +1960,7 @@ class CrucibleFluidIntegrationTest {
 
     @Test
     void reheatingOneObsidianRestores1000MbRatherThanMetal144Mb() {
+        Material lavaTarget = MetaTileEntityCrucible.resolveMaterial("lava");
         Vessel vessel = new Vessel();
         NBTTagCompound state = state(1299, "gregtech:obsidian", GTValues.L, GTValues.L);
         onlyContent(state).setBoolean("Molten", false);
@@ -1930,10 +1970,11 @@ class CrucibleFluidIntegrationTest {
         heated.setLong("Temperature", 1300);
         vessel.readFromNBT(heated);
         vessel.update();
-        assertEquals("gregtech:lava", onlyContent(vessel.save()).getString("Material"));
-        assertEquals(1000, vessel.fluids().drain(2000, false).amount);
-        assertEquals(1000, vessel.fluids().drain(2000, true).amount);
-        assertEquals(0, vessel.save().getTagList("Contents", 10).tagCount());
+        NBTTagCompound lava = onlyContent(vessel.save());
+        assertEquals(lavaTarget.getRegistryName(), lava.getString("Material"));
+        assertEquals(1000, volume(lava, GTValues.L));
+        assertNull(vessel.fluids().drain(2000, false),
+                "The external target has no liquid registration, so the Forge fluid API stays empty");
     }
 
     @Test
@@ -1961,7 +2002,8 @@ class CrucibleFluidIntegrationTest {
         assertEquals(queue, loaded.save().getTagList("PendingItems", 10));
         assertEquals(1000, loaded.fluids().drain(1000, true).amount);
         loaded.update();
-        assertEquals(GTValues.M, content(loaded.save(), "gregtech:obsidian").getLong("Amount"));
+        assertEquals(GTValues.M, content(loaded.save(), MetaTileEntityCrucible.resolveMaterial("obsidian")
+                .getRegistryName()).getLong("Amount"));
         assertEquals(15_000, volume(content(loaded.save(), "gregtech:water"), 1000));
         assertEquals(64, loaded.getPendingItemCount()); // Queue A imported; slot A appended at the tail.
         assertTrue(loaded.getImportItems().getStackInSlot(0).isEmpty());
@@ -2024,10 +2066,59 @@ class CrucibleFluidIntegrationTest {
         vessel.readFromNBT(legacy);
         assertEquals(GTValues.L, vessel.fluids().drain(1000, false).amount);
         assertEquals(1, vessel.save().getInteger("WaterUnitVersion"));
-        assertEquals(1, vessel.save().getInteger("FluidQuantityVersion"));
+        assertEquals(3, vessel.save().getInteger("FluidQuantityVersion"));
         Vessel loaded = new Vessel();
         loaded.readFromNBT(vessel.save());
         assertEquals(GTValues.L, loaded.fluids().drain(1000, false).amount);
+    }
+
+    @Test
+    void versionTwoCrucibleAndBasinFractionsMigrateLosslesslyToVersionThree() {
+        long oldAmount = 5L * GTValues.M + 123L;
+        long oldRemainder = CrucibleFluidUnits.PHASE_STORAGE_UNIT - 1L;
+        java.math.BigInteger oldNumerator = java.math.BigInteger.valueOf(oldAmount)
+                .multiply(java.math.BigInteger.valueOf(CrucibleFluidUnits.PHASE_STORAGE_UNIT))
+                .add(java.math.BigInteger.valueOf(oldRemainder));
+        java.math.BigInteger[] expected = oldNumerator
+                .multiply(java.math.BigInteger.valueOf(CrucibleFluidUnits.STORAGE_UNIT /
+                        CrucibleFluidUnits.PHASE_STORAGE_UNIT))
+                .divideAndRemainder(java.math.BigInteger.valueOf(CrucibleFluidUnits.STORAGE_UNIT));
+
+        NBTTagCompound crucibleV2 = state(293, "gregtech:iron", 0, GTValues.L);
+        onlyContent(crucibleV2).setLong("Amount", oldAmount);
+        onlyContent(crucibleV2).setLong("FluidRemainder", oldRemainder);
+        crucibleV2.setInteger("FluidQuantityVersion", 2);
+        crucibleV2.setInteger("WaterUnitVersion", 1);
+        Vessel vessel = new Vessel();
+        vessel.readFromNBT(crucibleV2);
+        NBTTagCompound crucibleV3 = vessel.save();
+        NBTTagCompound crucibleContent = onlyContent(crucibleV3);
+        assertEquals(expected[0].longValueExact(), crucibleContent.getLong("Amount"));
+        assertEquals(expected[1].longValueExact(), crucibleContent.getLong("FluidRemainder"));
+        assertEquals(3, crucibleV3.getInteger("FluidQuantityVersion"));
+        Vessel reloadedVessel = new Vessel();
+        reloadedVessel.readFromNBT(crucibleV3);
+        assertEquals(crucibleContent.getLong("Amount"), onlyContent(reloadedVessel.save()).getLong("Amount"));
+        assertEquals(crucibleContent.getLong("FluidRemainder"),
+                onlyContent(reloadedVessel.save()).getLong("FluidRemainder"));
+
+        NBTTagCompound basinV2 = new NBTTagCompound();
+        basinV2.setString("Material", "gregtech:iron");
+        basinV2.setLong("Amount", oldAmount);
+        basinV2.setLong("FluidRemainder", oldRemainder);
+        basinV2.setLong("Temperature", 293L);
+        basinV2.setInteger("FluidQuantityVersion", 2);
+        Basin basin = new Basin();
+        basin.readFromNBT(basinV2);
+        NBTTagCompound basinV3 = basin.save();
+        assertEquals(expected[0].longValueExact(), basinV3.getLong("Amount"));
+        assertEquals(expected[1].longValueExact(), basinV3.getLong("FluidRemainder"));
+        assertEquals(3, basinV3.getInteger("FluidQuantityVersion"));
+        Basin reloadedBasin = new Basin();
+        reloadedBasin.readFromNBT(basinV3);
+        NBTTagCompound basinReloaded = reloadedBasin.save();
+        assertEquals(basinV3.getLong("Amount"), basinReloaded.getLong("Amount"));
+        assertEquals(basinV3.getLong("FluidRemainder"), basinReloaded.getLong("FluidRemainder"));
     }
 
     @Test
@@ -2207,7 +2298,13 @@ class CrucibleFluidIntegrationTest {
         vessel.world.entities.add(dropped);
         vessel.update();
         assertTrue(dropped.isDead);
-        assertEquals(GTValues.M + 3 * GTValues.M / 4, onlyContent(vessel.save()).getLong("Amount"));
+        // The tool account carries an exact CEu registry name while the
+        // GT6-added recycle entry is unqualified. With both host identities
+        // registered, preserve their namespaces rather than merging them by
+        // spelling alone.
+        assertEquals(3L * GTValues.M / 4,
+                content(vessel.save(), Materials.Obsidian.getRegistryName()).getLong("Amount"));
+        assertEquals(GTValues.M, content(vessel.save(), externalObsidian.getRegistryName()).getLong("Amount"));
     }
 
     private static ItemStack toolAccount(int damage, int maximum) {
@@ -2499,13 +2596,16 @@ class CrucibleFluidIntegrationTest {
         state.setLong("Temperature", temperature);
         state.setLong("OldTemperature", temperature);
         state.setInteger("WaterUnitVersion", 1);
-        state.setInteger("FluidQuantityVersion", 1);
+        // The helper encodes quantities with the current STORAGE_UNIT; mark
+        // that exact representation as v3. Legacy-version cases below mutate
+        // the version deliberately and should encode their own old denominator.
+        state.setInteger("FluidQuantityVersion", 3);
         CrucibleFluidUnits.Quantity quantity = CrucibleFluidUnits.storedFluidAmount(volume, unit);
         assertNotNull(quantity);
         NBTTagCompound entry = new NBTTagCompound();
         entry.setString("Material", material);
         entry.setLong("Amount", quantity.amount);
-        entry.setInteger("FluidRemainder", quantity.remainder);
+        entry.setLong("FluidRemainder", quantity.remainder);
         entry.setBoolean("Molten", true);
         NBTTagList contents = new NBTTagList();
         contents.appendTag(entry);
@@ -2580,7 +2680,7 @@ class CrucibleFluidIntegrationTest {
             NBTTagCompound content = onlyContent(vessel.save());
             assertEquals(material.getRegistryName(), content.getString("Material"));
             assertEquals(GTValues.M, content.getLong("Amount"));
-            assertEquals(0, content.getInteger("FluidRemainder"));
+            assertEquals(0, content.getLong("FluidRemainder"));
             assertFalse(content.getBoolean("Molten"));
             assertEquals(0, vessel.world.blockChanges);
             Vessel restored = new Vessel();
@@ -2625,7 +2725,7 @@ class CrucibleFluidIntegrationTest {
             NBTTagCompound result = onlyContent(vessel.save());
             assertEquals(temperature == 399 ? nativeOak.getRegistryName() : ash.getRegistryName(), result.getString("Material"));
             assertEquals(temperature == 399 ? GTValues.M : GTValues.M / 4, result.getLong("Amount"));
-            assertEquals(0, result.getInteger("FluidRemainder"));
+            assertEquals(0, result.getLong("FluidRemainder"));
             assertEquals(0, vessel.world.blockChanges);
             Vessel restored = new Vessel();
             restored.readFromNBT(vessel.save());
@@ -2650,12 +2750,12 @@ class CrucibleFluidIntegrationTest {
         NBTTagCompound result = onlyContent(vessel.save());
         assertEquals(ash.getRegistryName(), result.getString("Material"));
         assertEquals(0, result.getLong("Amount"));
-        assertEquals(CrucibleFluidUnits.STORAGE_UNIT / 4, result.getInteger("FluidRemainder"));
+        assertEquals(CrucibleFluidUnits.STORAGE_UNIT / 4, result.getLong("FluidRemainder"));
         Vessel loaded = new Vessel();
         loaded.readFromNBT(vessel.save());
         loaded.update();
         assertEquals(0, onlyContent(loaded.save()).getLong("Amount"));
-        assertEquals(result.getInteger("FluidRemainder"), onlyContent(loaded.save()).getInteger("FluidRemainder"));
+        assertEquals(result.getLong("FluidRemainder"), onlyContent(loaded.save()).getLong("FluidRemainder"));
         assertEquals(0, loaded.world.blockChanges);
     }
 
@@ -2779,7 +2879,7 @@ class CrucibleFluidIntegrationTest {
                 NBTTagCompound result = onlyContent(vessel.save());
                 assertEquals((temperature == 399 ? nativeWood : ash).getRegistryName(), result.getString("Material"));
                 assertEquals(temperature == 399 ? GTValues.M : GTValues.M / 4, result.getLong("Amount"));
-                assertEquals(0, result.getInteger("FluidRemainder"));
+                assertEquals(0, result.getLong("FluidRemainder"));
                 assertEquals(0, vessel.world.blockChanges);
                 Vessel restored = new Vessel();
                 restored.readFromNBT(vessel.save());
@@ -2872,7 +2972,7 @@ class CrucibleFluidIntegrationTest {
             NBTTagCompound result = onlyContent(vessel.save());
             assertEquals(target.getRegistryName(), result.getString("Material"), families[i]);
             assertEquals(amounts[i], result.getLong("Amount"), families[i]);
-            assertEquals(0, result.getInteger("FluidRemainder"));
+            assertEquals(0, result.getLong("FluidRemainder"));
             assertTrue(result.getBoolean("Molten"));
             assertEquals(0, vessel.world.blockChanges);
         }
@@ -3019,7 +3119,7 @@ class CrucibleFluidIntegrationTest {
             NBTTagCompound result = onlyContent(vessel.save());
             assertEquals(outputs[i].getRegistryName(), result.getString("Material"), sources[i]);
             assertEquals(6L * GTValues.M * numerator[i] / denominator[i], result.getLong("Amount"));
-            assertEquals(0, result.getInteger("FluidRemainder"));
+            assertEquals(0, result.getLong("FluidRemainder"));
             assertEquals(0, vessel.world.blockChanges, "Host flags must not burn/explode a source mineral");
             Vessel reloaded = new Vessel();
             reloaded.readFromNBT(vessel.save());
@@ -3227,6 +3327,13 @@ class CrucibleFluidIntegrationTest {
         return contents.getCompoundTagAt(0);
     }
 
+    private static void setServerTick(long tick) {
+        GT6ServerTickClock.reset();
+        for (long current = 0; current < tick; current++) {
+            GT6ServerTickClock.advance();
+        }
+    }
+
     @Test
     void shortCircuitedAlloyLookupKeepsSourceYieldAndRefusesIncompleteIngredients() throws Exception {
         java.lang.reflect.Method alloy = MetaTileEntityCrucible.class.getDeclaredMethod("processAlloys");
@@ -3259,6 +3366,411 @@ class CrucibleFluidIntegrationTest {
         assertEquals(before, incomplete.save());
     }
 
+    @Test
+    void duraniumAlloysConsumeExactGt6ElementRegistryIdentities() throws Exception {
+        java.lang.reflect.Method alloy = MetaTileEntityCrucible.class.getDeclaredMethod("processAlloys");
+        alloy.setAccessible(true);
+
+        Vessel wrongNamespace = new Vessel();
+        NBTTagCompound wrongIdentity = state(3000, "gtqtcore:duranium", 7 * GTValues.L, GTValues.L);
+        NBTTagCompound magnesium = new NBTTagCompound();
+        magnesium.setString("Material", "gregtech:magnesium");
+        magnesium.setLong("Amount", GTValues.M);
+        magnesium.setBoolean("Molten", true);
+        wrongIdentity.getTagList("Contents", 10).appendTag(magnesium);
+        wrongNamespace.readFromNBT(wrongIdentity);
+        NBTTagCompound before = wrongNamespace.save();
+        alloy.invoke(wrongNamespace);
+        assertEquals(before, wrongNamespace.save(),
+                "a same-named GTQTCore material must not substitute for GT6's exact Dn identity");
+
+        Vessel partialBatch = new Vessel();
+        NBTTagCompound partialInput = state(3000, "gregtech:duranium", 6 * GTValues.L, GTValues.L);
+        partialInput.getTagList("Contents", 10).appendTag(magnesium.copy());
+        partialBatch.readFromNBT(partialInput);
+        alloy.invoke(partialBatch);
+        NBTTagCompound partialOutput = partialBatch.save();
+        assertEquals("gregtech:duranium_alloy", content(partialOutput, "gregtech:duranium_alloy")
+                .getString("Material"));
+        assertEquals(48L * GTValues.M / 7L, content(partialOutput, "gregtech:duranium_alloy").getLong("Amount"),
+                "GT6 converts 6/7 of a 7:1 recipe when six Duranium ingots and one Magnesium ingot are present");
+        assertEquals(GTValues.M / 7L, content(partialOutput, "gregtech:magnesium").getLong("Amount"));
+        assertEquals(2, partialOutput.getTagList("Contents", 10).tagCount());
+
+        Vessel duranium = new Vessel();
+        NBTTagCompound duraniumInput = state(3000, "gregtech:duranium", 7 * GTValues.L, GTValues.L);
+        duraniumInput.getTagList("Contents", 10).appendTag(magnesium.copy());
+        duranium.readFromNBT(duraniumInput);
+        alloy.invoke(duranium);
+        NBTTagCompound duraniumOutput = onlyContent(duranium.save());
+        assertEquals("gregtech:duranium_alloy", duraniumOutput.getString("Material"));
+        assertEquals(8 * GTValues.M, duraniumOutput.getLong("Amount"));
+
+        Vessel tritanium = new Vessel();
+        NBTTagCompound tritaniumInput = state(3000, "gregtech:tritanium", 3 * GTValues.L, GTValues.L);
+        NBTTagCompound elementalDuranium = new NBTTagCompound();
+        elementalDuranium.setString("Material", "gregtech:duranium");
+        elementalDuranium.setLong("Amount", GTValues.M);
+        elementalDuranium.setBoolean("Molten", true);
+        tritaniumInput.getTagList("Contents", 10).appendTag(elementalDuranium);
+        tritanium.readFromNBT(tritaniumInput);
+        alloy.invoke(tritanium);
+        NBTTagCompound tritaniumOutput = onlyContent(tritanium.save());
+        assertEquals("gregtech:tritanium_alloy", tritaniumOutput.getString("Material"));
+        assertEquals(4 * GTValues.M, tritaniumOutput.getLong("Amount"));
+    }
+
+    @Test
+    void everyGt6AlloyRowUsesGt6SubunitConversionsAndExactStoredFractions() throws Exception {
+        IMaterialRegistryManager previous = GregTechAPI.materialManager;
+        try {
+            installAlloyRecipeMaterialFixtures();
+            java.lang.reflect.Method matcher = MetaTileEntityCrucible.class.getDeclaredMethod(
+                    "findBestGt6RecipeMatch", Set.class, List.class);
+            matcher.setAccessible(true);
+            java.lang.reflect.Method apply = null;
+            long[] conversionScenarios = {1L, GT6_SOURCE_U / 3L + 17L, GT6_SOURCE_U};
+            List<GT6AlloyRecipes> recipes = GT6AlloyRecipes.getRecipes();
+            assertEquals(147, recipes.size());
+            for (GT6AlloyRecipes recipe : recipes) {
+                assertTrue(recipe.outputUnits > 0L, recipe.output);
+                assertEquals(recipe.inputs.length, recipe.inputUnits.length, recipe.output);
+                for (long coefficient : recipe.inputUnits) assertTrue(coefficient > 0L, recipe.output);
+
+                for (long conversions : conversionScenarios) {
+                    Vessel vessel = new Vessel();
+                    vessel.readFromNBT(gt6AlloyState(recipe, conversions));
+                    Set<Material> matchedOutputs = Collections.newSetFromMap(new IdentityHashMap<>());
+                    Object match = matcher.invoke(vessel, matchedOutputs, Collections.singletonList(recipe));
+                    assertNotNull(match, recipe.output + " at " + conversions + " GT6 subunits");
+                    if (apply == null) {
+                        apply = MetaTileEntityCrucible.class.getDeclaredMethod("applyAlloy", match.getClass());
+                        apply.setAccessible(true);
+                    }
+                    apply.invoke(vessel, match);
+
+                    NBTTagCompound result = vessel.save();
+                    NBTTagCompound output = content(result, "gregtech:" + recipe.output);
+                    CrucibleFluidUnits.Quantity expected = gt6StoredAmount(recipe.outputUnits * conversions);
+                    assertEquals(expected.amount, output.getLong("Amount"), recipe.output);
+                    assertEquals(expected.remainder, output.getLong("FluidRemainder"), recipe.output);
+                    assertEquals(1, result.getTagList("Contents", 10).tagCount(), recipe.output);
+                    assertEquals(3, result.getInteger("FluidQuantityVersion"), recipe.output);
+
+                    Vessel restored = new Vessel();
+                    restored.readFromNBT(result);
+                    NBTTagCompound restoredOutput = content(restored.save(), "gregtech:" + recipe.output);
+                    assertEquals(output.getLong("Amount"), restoredOutput.getLong("Amount"), recipe.output);
+                    assertEquals(output.getLong("FluidRemainder"), restoredOutput.getLong("FluidRemainder"), recipe.output);
+                }
+
+                Vessel shortByOneGt6Atom = new Vessel();
+                NBTTagCompound shortState = gt6AlloyState(recipe, 1L);
+                NBTTagCompound firstIngredient = content(shortState, alloyRegistryName(recipe.inputs[0]));
+                CrucibleFluidUnits.Quantity oneLess = gt6StoredAmount(recipe.inputUnits[0] - 1L);
+                firstIngredient.setLong("Amount", oneLess.amount);
+                firstIngredient.setLong("FluidRemainder", oneLess.remainder);
+                shortByOneGt6Atom.readFromNBT(shortState);
+                NBTTagCompound before = shortByOneGt6Atom.save();
+                Object shortMatch = matcher.invoke(shortByOneGt6Atom,
+                        Collections.newSetFromMap(new IdentityHashMap<>()), Collections.singletonList(recipe));
+                assertNull(shortMatch, recipe.output + " must reject one missing GT6 base subunit");
+                assertEquals(before, shortByOneGt6Atom.save(), recipe.output);
+            }
+        } finally {
+            GregTechAPI.materialManager = previous;
+        }
+    }
+
+    @Test
+    void equalYieldGt6AlloysFollowTheFirstMoltenContentReference() throws Exception {
+        IMaterialRegistryManager previous = GregTechAPI.materialManager;
+        try {
+            installAlloyRecipeMaterialFixtures();
+            java.lang.reflect.Method process = MetaTileEntityCrucible.class.getDeclaredMethod("processAlloys");
+            process.setAccessible(true);
+            for (String[] order : new String[][]{
+                    {"gregtech:tin", "gregtech:zinc", "gregtech:copper"},
+                    {"gregtech:zinc", "gregtech:tin", "gregtech:copper"}}) {
+                NBTTagCompound state = emptyAt(2000L);
+                state.setInteger("FluidQuantityVersion", 3);
+                state.setInteger("WaterUnitVersion", 1);
+                NBTTagList contents = new NBTTagList();
+                for (String name : order) {
+                    long ingots = "gregtech:copper".equals(name) ? 3L : 1L;
+                    NBTTagCompound entry = new NBTTagCompound();
+                    entry.setString("Material", name);
+                    entry.setLong("Amount", ingots * GTValues.M);
+                    entry.setLong("FluidRemainder", 0L);
+                    entry.setBoolean("Molten", true);
+                    contents.appendTag(entry);
+                }
+                state.setTag("Contents", contents);
+                Vessel vessel = new Vessel();
+                vessel.readFromNBT(state);
+                process.invoke(vessel);
+                NBTTagCompound result = vessel.save();
+                String expectedAlloy = "gregtech:tin".equals(order[0]) ? "gregtech:bronze" : "gregtech:brass";
+                assertEquals(4L * GTValues.M, content(result, expectedAlloy).getLong("Amount"));
+                String unconsumed = "gregtech:tin".equals(order[0]) ? "gregtech:zinc" : "gregtech:tin";
+                assertEquals(GTValues.M, content(result, unconsumed).getLong("Amount"));
+                assertEquals(2, result.getTagList("Contents", 10).tagCount());
+            }
+        } finally {
+            GregTechAPI.materialManager = previous;
+        }
+    }
+
+    @Test
+    void globalGt6AlloySelectorChoosesUniqueMaximumAcrossEveryExecutableRecipePair(TestReporter reporter) throws Exception {
+        IMaterialRegistryManager previous = GregTechAPI.materialManager;
+        try {
+            installAlloyRecipeMaterialFixtures();
+            List<GT6AlloyRecipes> recipes = GT6AlloyRecipes.getRecipes();
+            Method resolveIndex = MetaTileEntityCrucible.class.getDeclaredMethod(
+                    "resolveGt6RecipeIndex", List.class);
+            resolveIndex.setAccessible(true);
+            Class<?> indexType = Class.forName(MetaTileEntityCrucible.class.getName() + "$ResolvedGt6RecipeIndex");
+            Object recipeIndex = resolveIndex.invoke(null, recipes);
+            Method matcher = MetaTileEntityCrucible.class.getDeclaredMethod(
+                    "findBestGt6RecipeMatch", Set.class, indexType);
+            matcher.setAccessible(true);
+            Field matchOutput = Class.forName(MetaTileEntityCrucible.class.getName() + "$AlloyMatch")
+                    .getDeclaredField("alloy");
+            Field matchConversions = matchOutput.getDeclaringClass().getDeclaredField("conversions");
+            matchOutput.setAccessible(true);
+            matchConversions.setAccessible(true);
+            Field capacityField = MetaTileEntityCrucible.class.getDeclaredField("CAPACITY");
+            capacityField.setAccessible(true);
+            long capacity = capacityField.getLong(null);
+            BigInteger capacityBudget = BigInteger.valueOf(capacity).multiply(BigInteger.valueOf(7))
+                    .divide(BigInteger.valueOf(8));
+            BigInteger maxStoredNumerator = BigInteger.valueOf(capacity)
+                    .multiply(BigInteger.valueOf(CrucibleFluidUnits.STORAGE_UNIT));
+            Map<String, Material> bindings = new LinkedHashMap<>();
+            for (GT6AlloyRecipes recipe : recipes) {
+                Material output = bindAlloyFixtureMaterial(bindings, recipe.output);
+                assertNotNull(output, "Missing isolated alloy output fixture " + recipe.output);
+                assertNotSame(Materials.NULL, output, "Missing isolated alloy output fixture " + recipe.output);
+                for (String input : recipe.inputs) bindAlloyFixtureMaterial(bindings, input);
+            }
+
+            int executableRows = recipes.size();
+            int pairs = 0;
+            int uniqueScenarios = 0;
+            int tiedScenarios = 0;
+            int unrepresentableScenarios = 0;
+            Vessel vessel = new Vessel();
+            for (int firstIndex = 0; firstIndex < recipes.size(); firstIndex++) {
+                GT6AlloyRecipes first = recipes.get(firstIndex);
+                for (int secondIndex = firstIndex + 1; secondIndex < recipes.size(); secondIndex++) {
+                    GT6AlloyRecipes second = recipes.get(secondIndex);
+                    pairs++;
+
+                    List<Material> fixtureMaterials = new ArrayList<>();
+                    List<Long> fixtureCoefficients = new ArrayList<>();
+                    appendAlloyComponents(first, bindings, fixtureMaterials, fixtureCoefficients);
+                    appendAlloyComponents(second, bindings, fixtureMaterials, fixtureCoefficients);
+                    BigInteger totalInputUnits = BigInteger.ZERO;
+                    for (Long coefficient : fixtureCoefficients) {
+                        totalInputUnits = totalInputUnits.add(BigInteger.valueOf(coefficient));
+                    }
+                    BigInteger conversionBudget = BigInteger.valueOf(GT6_SOURCE_U).multiply(capacityBudget)
+                            .divide(BigInteger.valueOf(GTValues.M).multiply(totalInputUnits));
+                    long fixtureConversions = conversionBudget.compareTo(BigInteger.valueOf(GT6_SOURCE_U)) >= 0 ?
+                            GT6_SOURCE_U : conversionBudget.longValueExact();
+                    if (fixtureConversions <= 0L) {
+                        unrepresentableScenarios++;
+                        continue;
+                    }
+
+                    IdentityHashMap<Material, Long> storedAtoms = new IdentityHashMap<>();
+                    BigInteger occupied = BigInteger.ZERO;
+                    NBTTagList fixtureContents = new NBTTagList();
+                    for (int i = 0; i < fixtureMaterials.size(); i++) {
+                        Material material = fixtureMaterials.get(i);
+                        long atoms = Math.multiplyExact(fixtureCoefficients.get(i), fixtureConversions);
+                        CrucibleFluidUnits.Quantity amount = CrucibleFluidUnits.fromGt6Atoms(atoms);
+                        assertNotNull(amount, "Unrepresentable pair fixture for " + material.getRegistryName());
+                        assertEquals(atoms, CrucibleFluidUnits.gt6AtomicAmount(CrucibleFluidUnits.storedNumerator(
+                                amount.amount, amount.remainder)), "Inexact pair fixture for " + material.getRegistryName());
+                        storedAtoms.put(material, atoms);
+                        occupied = occupied.add(CrucibleFluidUnits.storedNumerator(amount.amount, amount.remainder));
+                        NBTTagCompound entry = new NBTTagCompound();
+                        entry.setString("Material", String.valueOf(material.getRegistryName()));
+                        entry.setLong("Amount", amount.amount);
+                        entry.setLong("FluidRemainder", amount.remainder);
+                        entry.setBoolean("Molten", true);
+                        fixtureContents.appendTag(entry);
+                    }
+                    assertTrue(occupied.compareTo(maxStoredNumerator) <= 0, "Pair fixture exceeds vessel capacity");
+
+                    GT6AlloyRecipes winner = null;
+                    Material winnerMaterial = null;
+                    long winnerConversions = 0L;
+                    long winnerYield = -1L;
+                    boolean tiedForBest = false;
+                    assertTrue(gt6FixtureConversions(first, bindings, storedAtoms) > 0L,
+                            "First pair recipe is not feasible: " + first.output + " / " + second.output);
+                    assertTrue(gt6FixtureConversions(second, bindings, storedAtoms) > 0L,
+                            "Second pair recipe is not feasible: " + first.output + " / " + second.output);
+                    for (GT6AlloyRecipes candidate : recipes) {
+                        long conversions = gt6FixtureConversions(candidate, bindings, storedAtoms);
+                        if (conversions <= 0L) continue;
+                        long yield = Math.multiplyExact(candidate.outputUnits, conversions);
+                        if (yield > winnerYield) {
+                            winner = candidate;
+                            winnerMaterial = bindings.get(alloyRegistryName(candidate.output));
+                            winnerConversions = conversions;
+                            winnerYield = yield;
+                            tiedForBest = false;
+                        } else if (yield == winnerYield) {
+                            tiedForBest = true;
+                        }
+                    }
+                    if (tiedForBest) {
+                        tiedScenarios++;
+                        continue;
+                    }
+                    assertNotNull(winner, "Pair fixture has no positive-yield winner");
+
+                    NBTTagCompound state = emptyAt(Integer.MAX_VALUE);
+                    state.setLong("OldTemperature", Integer.MAX_VALUE);
+                    state.setInteger("FluidQuantityVersion", 3);
+                    state.setInteger("WaterUnitVersion", 1);
+                    state.setTag("Contents", fixtureContents);
+                    vessel.readFromNBT(state);
+                    Set<Material> matchedOutputs = Collections.newSetFromMap(new IdentityHashMap<>());
+                    Object actualMatch = matcher.invoke(vessel, matchedOutputs, recipeIndex);
+                    assertNotNull(actualMatch, "Production selector returned no pairwise match");
+                    assertSame(winnerMaterial, matchOutput.get(actualMatch),
+                            "Wrong unique maximum for " + first.output + " versus " + second.output);
+                    assertEquals(winnerConversions, matchConversions.getLong(actualMatch),
+                            "Wrong conversion count for " + first.output + " versus " + second.output);
+                    uniqueScenarios++;
+                }
+            }
+            assertEquals(executableRows * (executableRows - 1) / 2, pairs, "Pair count did not cover the full table");
+            assertEquals(pairs, uniqueScenarios + tiedScenarios + unrepresentableScenarios,
+                    "Pairwise results are not fully accounted for");
+            assertTrue(uniqueScenarios > 0, "No unique-yield pairwise scenarios were checked");
+            reporter.publishEntry("GT6 alloy pairwise selection",
+                    "rows=" + executableRows + " pairs=" + pairs + " unique=" + uniqueScenarios +
+                            " tied=" + tiedScenarios + " unrepresentable=" + unrepresentableScenarios);
+        } finally {
+            GregTechAPI.materialManager = previous;
+        }
+    }
+
+    private static Material bindAlloyFixtureMaterial(Map<String, Material> bindings, String name) {
+        String registryName = alloyRegistryName(name);
+        return bindings.computeIfAbsent(registryName, ignored -> MetaTileEntityCrucible.resolveMaterial(name));
+    }
+
+    private static void appendAlloyComponents(GT6AlloyRecipes recipe, Map<String, Material> bindings,
+                                              List<Material> materials, List<Long> coefficients) {
+        for (int i = 0; i < recipe.inputs.length; i++) {
+            Material input = bindAlloyFixtureMaterial(bindings, recipe.inputs[i]);
+            assertNotNull(input, "Missing isolated alloy fixture " + recipe.inputs[i]);
+            assertNotSame(Materials.NULL, input, "Missing isolated alloy fixture " + recipe.inputs[i]);
+            int existing = -1;
+            for (int j = 0; j < materials.size(); j++) {
+                if (materials.get(j) == input) {
+                    existing = j;
+                    break;
+                }
+            }
+            if (existing < 0) {
+                materials.add(input);
+                coefficients.add(recipe.inputUnits[i]);
+            } else {
+                coefficients.set(existing, Math.addExact(coefficients.get(existing), recipe.inputUnits[i]));
+            }
+        }
+    }
+
+    private static long gt6FixtureConversions(GT6AlloyRecipes recipe, Map<String, Material> bindings,
+                                              IdentityHashMap<Material, Long> storedAtoms) {
+        IdentityHashMap<Material, Long> required = new IdentityHashMap<>();
+        for (int i = 0; i < recipe.inputs.length; i++) {
+            Material input = bindAlloyFixtureMaterial(bindings, recipe.inputs[i]);
+            if (input == null || input == Materials.NULL) return 0L;
+            required.put(input, Math.addExact(required.getOrDefault(input, 0L), recipe.inputUnits[i]));
+        }
+        long conversions = Long.MAX_VALUE;
+        for (Map.Entry<Material, Long> component : required.entrySet()) {
+            Long available = storedAtoms.get(component.getKey());
+            if (available == null) return 0L;
+            conversions = Math.min(conversions, available / component.getValue());
+        }
+        return conversions == Long.MAX_VALUE ? 0L : conversions;
+    }
+
+    private static void installAlloyRecipeMaterialFixtures() throws Exception {
+        Constructor<MaterialRegistryManager> registryConstructor = MaterialRegistryManager.class.getDeclaredConstructor();
+        registryConstructor.setAccessible(true);
+        MaterialRegistryManager registry = registryConstructor.newInstance();
+        GregTechAPI.materialManager = registry;
+        Set<String> registryNames = new LinkedHashSet<>();
+        Set<String> namespaces = new LinkedHashSet<>();
+        for (GT6AlloyRecipes recipe : GT6AlloyRecipes.getRecipes()) {
+            registryNames.add(alloyRegistryName(recipe.output));
+            for (String input : recipe.inputs) registryNames.add(alloyRegistryName(input));
+        }
+        for (String name : registryNames) {
+            namespaces.add(name.substring(0, name.indexOf(':')));
+        }
+        for (String namespace : namespaces) {
+            if (!"gregtech".equals(namespace)) registry.createRegistry(namespace);
+        }
+        registry.unfreezeRegistries();
+        int id = 4096;
+        for (String name : registryNames) {
+            int separator = name.indexOf(':');
+            Material.builder(id++, new ResourceLocation(name.substring(0, separator), name.substring(separator + 1)))
+                    .ingot().build();
+        }
+        registry.closeRegistries();
+    }
+
+    private static String alloyRegistryName(String name) {
+        return name.indexOf(':') >= 0 ? name : "gregtech:" + name;
+    }
+
+    private static NBTTagCompound gt6AlloyState(GT6AlloyRecipes recipe, long conversions) {
+        NBTTagCompound state = emptyAt(Integer.MAX_VALUE);
+        state.setInteger("FluidQuantityVersion", 3);
+        state.setInteger("WaterUnitVersion", 1);
+        NBTTagList contents = new NBTTagList();
+        for (int i = 0; i < recipe.inputs.length; i++) {
+            long gt6Amount = Math.multiplyExact(recipe.inputUnits[i], conversions);
+            CrucibleFluidUnits.Quantity stored = gt6StoredAmount(gt6Amount);
+            assertNotNull(stored, recipe.output);
+            NBTTagCompound entry = new NBTTagCompound();
+            entry.setString("Material", alloyRegistryName(recipe.inputs[i]));
+            entry.setLong("Amount", stored.amount);
+            entry.setLong("FluidRemainder", stored.remainder);
+            entry.setBoolean("Molten", true);
+            contents.appendTag(entry);
+        }
+        state.setTag("Contents", contents);
+        return state;
+    }
+
+    private static CrucibleFluidUnits.Quantity gt6StoredAmount(long gt6Units) {
+        assertEquals(TEST_STORAGE_UNIT, CrucibleFluidUnits.STORAGE_UNIT,
+                "The save denominator must retain exact GT6 U to CEu M ratios");
+        java.math.BigInteger numerator = java.math.BigInteger.valueOf(gt6Units)
+                .multiply(java.math.BigInteger.valueOf(GTValues.M))
+                .multiply(java.math.BigInteger.valueOf(TEST_STORAGE_UNIT));
+        java.math.BigInteger[] parts = numerator.divideAndRemainder(java.math.BigInteger.valueOf(GT6_SOURCE_U));
+        assertEquals(java.math.BigInteger.ZERO, parts[1], "GT6 source quantities must be exactly representable");
+        java.math.BigInteger[] stored = parts[0].divideAndRemainder(
+                java.math.BigInteger.valueOf(TEST_STORAGE_UNIT));
+        assertTrue(stored[0].compareTo(java.math.BigInteger.valueOf(Long.MAX_VALUE)) <= 0);
+        return new CrucibleFluidUnits.Quantity(stored[0].longValue(), stored[1].longValue());
+    }
+
     private static NBTTagCompound content(NBTTagCompound data, String name) {
         NBTTagList contents = data.getTagList("Contents", 10);
         for (int i = 0; i < contents.tagCount(); i++) {
@@ -3271,7 +3783,7 @@ class CrucibleFluidIntegrationTest {
 
     private static int volume(NBTTagCompound entry, int unit) {
         return CrucibleFluidUnits.storedFluidVolume(entry.getLong("Amount"),
-                entry.getInteger("FluidRemainder"), unit);
+                entry.getLong("FluidRemainder"), unit);
     }
 
     private static final class Basin extends MetaTileEntityCastingBasin {
@@ -3433,6 +3945,10 @@ class CrucibleFluidIntegrationTest {
         @Override public World getWorld() { return world; }
         @Override public BlockPos getPos() { return BlockPos.ORIGIN; }
         @Override public long getOffsetTimer() { return offsetTick; }
+        @Override public void update() {
+            world.totalWorldTime = offsetTick;
+            super.update();
+        }
         @Override public void markDirty() { dirtyCalls++; }
         @Override public void scheduleRenderUpdate() { renderCalls++; }
         IFluidHandler fluids() {
@@ -3469,6 +3985,7 @@ class CrucibleFluidIntegrationTest {
 
     private static final class TestWorld extends World {
         int entityQueries, blockChanges, lavaChanges, fireChanges;
+        long totalWorldTime;
         IBlockState lastBlockState;
         boolean rain, thunder, exposeWrittenBlock;
         Biome biome = Biomes.PLAINS;
@@ -3480,6 +3997,7 @@ class CrucibleFluidIntegrationTest {
         @Override protected IChunkProvider createChunkProvider() { return null; }
         @Override protected boolean isChunkLoaded(int x, int z, boolean allowEmpty) { return false; }
         @Override public BlockPos getSpawnPoint() { return BlockPos.ORIGIN; }
+        @Override public long getTotalWorldTime() { return totalWorldTime; }
         @Override public Biome getBiome(BlockPos pos) { return biome; }
         @Override public boolean isRainingAt(BlockPos pos) { return rain; }
         @Override public boolean isThundering() { return thunder; }

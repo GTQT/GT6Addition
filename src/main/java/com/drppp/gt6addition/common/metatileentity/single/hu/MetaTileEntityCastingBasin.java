@@ -85,7 +85,7 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
 
     private Material material;
     private long materialAmount;
-    private int fluidRemainder;
+    private long fluidRemainder;
     private long temperature = ENVIRONMENT_TEMPERATURE;
     private int displayHeight;
     private int lastDisplayHeight = -1;
@@ -542,11 +542,11 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound data) {
         super.writeToNBT(data);
-        data.setInteger(NBT_FLUID_QUANTITY_VERSION, 2);
+        data.setInteger(NBT_FLUID_QUANTITY_VERSION, 3);
         if (hasContents() && material != Materials.NULL) {
             data.setString(NBT_MATERIAL, material.getRegistryName());
             data.setLong(NBT_AMOUNT, materialAmount);
-            data.setInteger(NBT_FLUID_REMAINDER, fluidRemainder);
+            data.setLong(NBT_FLUID_REMAINDER, fluidRemainder);
             data.setLong(NBT_TEMPERATURE, temperature);
         } else {
             data.removeTag(NBT_MATERIAL);
@@ -565,9 +565,10 @@ public class MetaTileEntityCastingBasin extends MetaTileEntity implements ITempe
             material = null;
         }
         materialAmount = data.getLong(NBT_AMOUNT);
-        fluidRemainder = data.getInteger(NBT_FLUID_REMAINDER);
+        fluidRemainder = data.getLong(NBT_FLUID_REMAINDER);
         int quantityVersion = data.getInteger(NBT_FLUID_QUANTITY_VERSION);
-        int savedUnit = quantityVersion >= 2 ? CrucibleFluidUnits.STORAGE_UNIT :
+        long savedUnit = quantityVersion >= 3 ? CrucibleFluidUnits.STORAGE_UNIT :
+                quantityVersion >= 2 ? CrucibleFluidUnits.PHASE_STORAGE_UNIT :
                 quantityVersion >= 1 ? CrucibleFluidUnits.LEGACY_STORAGE_UNIT :
                         material == null ? GTValues.L : CrucibleFluidUnits.legacyFluidUnit(material.getName());
         if (fluidRemainder < 0 || fluidRemainder >= savedUnit) fluidRemainder = 0;

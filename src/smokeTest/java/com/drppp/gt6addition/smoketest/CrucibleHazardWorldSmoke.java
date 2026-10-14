@@ -30,6 +30,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Explosion;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.FakePlayer;
@@ -38,6 +39,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 /** Registered materials and actual world side effects; never packaged in the mod JAR. */
@@ -56,12 +58,13 @@ final class CrucibleHazardWorldSmoke {
         corrosion(world, player);
         boilingBeforeCorrosion(world, player);
         explosiveBoundary(world, player);
+        directExplosionExposure(world, player);
         shellBoundary(world, player);
         fireSelection(world);
         hollowCollisionAndSelection(world, player);
         hotContactAndRecycling(world, player);
         frostContactBoundary(world, player);
-        return 12;
+        return 13;
     }
 
     private static void lowDensityAndColdGas(WorldServer world, FakePlayer player) {
@@ -177,6 +180,75 @@ final class CrucibleHazardWorldSmoke {
             noMachineDrop(world, vessel);
         }
         pass("EXPLOSIVE_BOUNDARY_AND_STRENGTH");
+    }
+
+    private static void directExplosionExposure(WorldServer world, FakePlayer player) {
+        MetaTileEntityCrucible vessel = place(world, player, 15);
+        BlockPos origin = vessel.getPos();
+        EntityCow exposed = cow(world, origin, 1);
+        EntityCow shielded = new EntityCow(world);
+        shielded.setPosition(origin.getX() + 4.5, origin.getY() + .5, origin.getZ() + .5);
+        check(world.spawnEntity(shielded), "Explosion shield target spawn failed");
+        SmokeBossCow boss = new SmokeBossCow(world);
+        boss.setPosition(origin.getX() + 1.5, origin.getY() + .5, origin.getZ() + 1.5);
+        check(world.spawnEntity(boss), "Explosion boss target spawn failed");
+        for (int x = 2; x <= 3; x++) {
+            for (int y = 0; y <= 2; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    world.setBlockState(origin.add(x, y, z), Blocks.OBSIDIAN.getDefaultState(), 3);
+                }
+            }
+        }
+        // The production path removes the crucible shell before creating the
+        // explosion. Leaving the fixture machine in place would block every
+        // exposure ray because the blast origin is at its lower block corner.
+        world.setBlockToAir(origin);
+        BlockPos wallCenter = origin.add(2, 1, 0);
+        ExplosionObservation observation = new ExplosionObservation(world, origin);
+        MinecraftForge.EVENT_BUS.register(observation);
+        try {
+            Class<?> explosionType = Class.forName(
+                    "com.drppp.gt6addition.common.metatileentity.single.hu.CrucibleGt6Explosion");
+            Method explode = explosionType.getDeclaredMethod("explode", World.class, double.class,
+                    double.class, double.class, float.class, boolean.class, boolean.class);
+            explode.setAccessible(true);
+            explode.invoke(null, world, (double) origin.getX(), (double) origin.getY(),
+                    (double) origin.getZ(), 6.0F, false, true);
+        } catch (ReflectiveOperationException failure) {
+            throw new AssertionError("Could not invoke isolated GT6 explosion fixture", failure);
+        } finally {
+            MinecraftForge.EVENT_BUS.unregister(observation);
+        }
+        check(observation.starts == 1 && observation.detonations == 1 && observation.strength == 6.0F,
+                "Isolated GT6 explosion did not dispatch at the requested strength");
+        check(exposed.getHealth() < exposed.getMaxHealth() &&
+                        (Math.abs(exposed.motionX) + Math.abs(exposed.motionY) + Math.abs(exposed.motionZ)) > 0,
+                "GT6 explosion failed to damage or knock back an exposed living entity: health=" +
+                        exposed.getHealth() + "/" + exposed.getMaxHealth() + " pos=" + exposed.posX + "," +
+                        exposed.posY + "," + exposed.posZ + " distance=" +
+                        exposed.getDistance(origin.getX(), origin.getY(), origin.getZ()) + " motion=" +
+                        exposed.motionX + "," + exposed.motionY + "," + exposed.motionZ +
+                        " world=" + exposed.world.isRemote + " alive=" + exposed.isEntityAlive());
+        check(shielded.getHealth() == shielded.getMaxHealth() - 1F &&
+                        Math.abs(shielded.motionX) + Math.abs(shielded.motionY) + Math.abs(shielded.motionZ) < 1.0E-7 &&
+                        world.getBlockState(wallCenter).getBlock() == Blocks.OBSIDIAN,
+                "GT6 exposure through an explosion-resistant wall must yield only the +1 minimum damage and " +
+                        "no knockback: health=" + shielded.getHealth() + "/" + shielded.getMaxHealth() +
+                        " motion=" + shielded.motionX + "," + shielded.motionY + "," + shielded.motionZ +
+                        " wall=" + world.getBlockState(wallCenter));
+        check(boss.getHealth() == boss.getMaxHealth() &&
+                        Math.abs(boss.motionX) + Math.abs(boss.motionY) + Math.abs(boss.motionZ) < 1.0E-7,
+                "GT6 boss-name exemption failed to prevent explosion damage/knockback: class=" +
+                        boss.getClass().getName() + " health=" + boss.getHealth() + "/" + boss.getMaxHealth() +
+                        " motion=" + boss.motionX + "," + boss.motionY + "," + boss.motionZ);
+        exposed.setDead();
+        shielded.setDead();
+        boss.setDead();
+        pass("GT6_EXPLOSION_EXPOSURE_SHIELD_BOSS");
+    }
+
+    private static final class SmokeBossCow extends EntityCow {
+        SmokeBossCow(WorldServer world) { super(world); }
     }
 
     private static void shellBoundary(WorldServer world, FakePlayer player) {
