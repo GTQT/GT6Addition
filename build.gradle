@@ -117,13 +117,8 @@ dependencies {
         compileOnly ('com.github.bsideup.jabel:jabel-javac-plugin:1.0.0') {
             transitive = false
         }
-        // Allow jdk.unsupported classes like sun.misc.Unsafe, workaround for JDK-8206937 and fixes crashes in tests
+        // Allow jdk.unsupported classes like sun.misc.Unsafe, workaround for JDK-8206937
         patchedMinecraft 'me.eigenraven.java8unsupported:java-8-unsupported-shim:1.0.0'
-        // Include for tests
-        testAnnotationProcessor 'com.github.bsideup.jabel:jabel-javac-plugin:1.0.0'
-        testCompileOnly('com.github.bsideup.jabel:jabel-javac-plugin:1.0.0') {
-            transitive = false // We only care about the 1 annotation class
-        }
     }
     if (propertyBool('use_asset_mover')) {
         implementation "com.cleanroommc:assetmover:${propertyString('asset_mover_version')}"
@@ -139,10 +134,6 @@ dependencies {
         annotationProcessor (mixin) {
             transitive = false
         }
-    }
-    if (propertyBool('enable_junit_testing')) {
-        testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 }
 
@@ -251,22 +242,6 @@ idea {
                     ]
                 }
             }
-        }
-    }
-}
-
-compileTestJava {
-    sourceCompatibility = targetCompatibility = 8
-}
-
-test {
-    useJUnitPlatform()
-    javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(8)
-    })
-    if (propertyBool('show_testing_output')) {
-        testLogging {
-            showStandardStreams = true
         }
     }
 }

@@ -1,5 +1,33 @@
 # 坩埚 GT6 机制对齐与修复
 
+## 测试代码清理（2026-10-18）
+
+按用户要求已移除 `src/test/java` 与 `src/smokeTest/java` 中的自动化测试/烟测源码，以及对应 Gradle 测试依赖、独立世界启动与重启烟测任务。保留 `src/test/resources` 中 GT6 固定源码值夹具：它们是只读表生成与来源审计的数据输入，不是可执行测试代码，也不打入正式运行资源。下方验证结果仅作历史记录，已删除的测试不能再运行。
+
+## 当前范围：坩埚材料与合金（2026-10-18）
+
+按用户将后续工作收敛为“只需要完成坩埚的材料和合金”，本轮只接入 GTQTCore 已有材料身份与其材料合金配方；加热、输入、危险、浇筑等其他坩埚机制不在本轮范围内。
+
+- GT6 的 Java 材料表现有147条合金行；本轮按 `Loader_Recipes_Alloys.java:38-96` 补齐此前漏掉的40条精确固体输入路线，现为187条。新增项覆盖铜/退火铜配方变体、GT6 流体 Mixer 中铁/生铁/陨铁输入变体、HSLA/骑士金属钨钢路线及元素锇 HSS-S 路线；逐项保留源材料身份和产量，不把它们折叠为近似输入。Core 的 `CompatibilityMaterialRecipeLoader` 有19条显式固体 Mixer 配比，`NanochipSupplyRecipes.registerMaterials()` 有23条，`CrystalSoCChain` 有3条铈掺杂镥铝氧混合物固体路线，另有 `MagnetoResonaticChain` 的共振紫晶 Mixer 配比，共46条 Core 精确固体配方；静态只读目录现为233条。共振紫晶按实际 Mixer 的 `4:3:1:1 -> 9`，不按其 Material 组件声明中的 `6:3:1:1` 推导，避免产物数量被通用组分回退改变。Core 产物/中间材料使用精确 `gtqtcore:` 路径，CEu 原料使用精确 `gregtech:` 路径；GT6Addition 不声明 Core 的常规编译或模组运行依赖。只有用户显式提供 `gtqtcoreParityRuntimeJar` 时，开发用隔离烟测才将 Core JAR 加入运行时 classpath。新增的 `getRuntimeRecipes()` 只有在 CEu 材料管理器实际存在 `gtqtcore` 注册表时才暴露这46条给坩埚和JEI；缺失Core时只处理GT6的187条，且每行仍须解析到其精确注册身份。组分回退屏蔽也按实际 `gtqtcore:` 注册身份判断，不会压制第三方同路径材料自身的组分配方。不注册 Material、不修改 Core/CEu 材料属性，也不回退到同名近似身份。
+- Core 配方表覆盖 Ender IO/Thermal/Mekanism 系列材料以及 Indalloy 140、Precious Metal Alloy、Proto-Halkonite、Shirabon、Transcendent Metal、Chromatic Glass、White/Black Dwarf Matter、Hexanite、Creon、Six-Phased Copper、Enriched Holmium、Quantum Alloy、Shijima、Tairitsu、Churitsu、Octiron、Awakened Draconium、Quantium、Tengam Purified/Attuned、Chronomatic Glass、Draconium、铈掺杂镥铝氧混合物的三种原料路线和 Magneto Resonatic。Nanochip helper 的固定比例按其源码 `3:1 -> 4` 复原；Indalloy 140 保持 `47:25:13:10:5 -> 100`。GT6 与 Core 同名材料的显式配方可以共存；若 Core 材料缺失，Core 专属行不会绑定到 gregtech 或第三方同名材料。Core 专属输出禁止通过 CEu 组分分解兜底产生另一套配方。
+- 2026-10-18 动态技术材料热物性核对修正：直接核对 GT6 `ANY.java:101-105,108` 发现 Any Garnet/Jasper/Tiger Eye/Aventurine/Amber/Blaze 同时调用 `stealLooks(...)` 和 `steal(...)`。`OreDictMaterial.steal()` 会复制热属性、质量/密度及工具品质；但这些定义没有 `setAllToTheOutputOf()`，所以转化目标仍为自身默认目标。只读表现改为分别继承 Spessartine、Jasper、YellowTigerEye、GreenAventurine、Amber、Blaze 的物性，并为 YellowTigerEye 的既有二氧化硅组成补上精确密度别名。同步修正独立数据契约；未新增材料注册，按要求未编译或运行测试。
+- 2026-10-18 GT6 合金源静态覆盖复核：从固定 GT6 `MT.java` 抽取 `.uumAloy(...)`、`.setAloy(...)` 和 `.alloyElectrolyzer(...)` 声明，共91个不同输出身份；按已核实的 GT6 原名别名（如 SiC/Carborundum、CrudeSteel、Ta4HfC5、Iritanium）归一后，全部91个都能在 `GT6AlloyRecipes` 只读表中找到对应输出。另将90条 `.uumAloy(...)` / `.setAloy(...)` 的 GT6 公共分母与输入数量向量逐项对照Java表，90/90 匹配；SiC 的 `.alloyElectrolyzer(...)` 则按其同一行 `.uumMcfg(1 Si, 1 C)` 对照表内 1:1 路线。后续独立核对 `Loader_Recipes_Alloys.java:38-96` 时，确认固定数组原有147行虽覆盖这些Mixer路线中的部分配方，却漏掉40条确切变体；已逐条追加对应原料与产量，现GT6目录187行、Core可选目录46行，组合233行。`molten hsla` 按 `Loader_Fluids.java:199` 注册的精确流体对应到既有 HSLA 材料身份；不新增/修改材料。按要求只做源码静态检查，没有编译或运行测试。
+- JEI 使用同一组合表展示两组显式合金配方，并避免对 Core 自有配方再追加一条按材料组分推导的重复条目。
+- 2026-10-16 静态复核：搜索本地 GTQTCore 全部 `MIXER_RECIPES.recipeBuilder()` 注册点并逐类检查输出，Core 自有、以固体材料配比直接产出合金/可作为坩埚合金的路线均由上述46条覆盖；其余命中项是流体化学、矿物处理或催化剂制备，不作为合金配方移植。代码只在材料管理器中能解析到表内精确命名空间身份时启用，缺少 Core 时无常规编译/模组运行硬依赖，也不回退到近似同名材料。
+- 2026-10-18 静态复核：坩埚运行与 JEI 展示均通过 `getRuntimeRecipes()` 获取可选配方表；移除未使用且只暴露 GT6 表的私有匹配重载，避免留下绕开可选 Core 注册表门控的入口。`rebuildGt6TargetSourceTable.py` 与物性/危险表源码核对器分别验证目标、熔沸点、密度、标记各1084行，均为0未解析、0差异；新增 `rebuildGt6AntimatterTables.ps1 -Check` 只读模式，对照固定哈希 `AM.java` 验证418条身份、22条别名并确认对应Java表与夹具一致。`generateGt6JavaMaterialTables.py --check` 六张Java表全部一致。另修正JEI通用合金过滤，使其使用与运行时相同的精确材料身份判断；同名但未被GT6/Core兼容规则选中的第三方材料不再误失去组分配方展示，并补入隔离回归源码。合金行构造现在拒绝空身份、非正数量和数组错位，并复制输入数据，防止只读配方目录被外部数组修改；隔离回归源码覆盖该数据完整性合同。测试源码当前约束187/46/233条目录数量、46条Core精确配方比例、40条新补GT6 Mixer变体及 Core 缺失/存在时的命名空间隔离；按用户要求未编译或运行测试，以上为静态数据/源码核对而非测试通过结论。当前 Core 源码中的铈掺杂镥铝氧三条固体 Mixer 路线位于 `loaders/recipe/circuit/CrystalSoCChain.java:17-44`，生产表来源注释已同步至该路径。
+- 2026-10-18 烟测门禁静态修正：合金烟测源码现在遍历GT6 187行与Core 46行的组合目录（共233行），Gradle门禁与烟测断言已同步更新为187/233；可选Core存在时额外要求46条Core行通过精确身份解析与生产合金提交。未提供Core时，Core行仅作只读目录审计，缺失身份计入安全跳过。以上只更新源码期望值和门禁，没有编译或执行烟测，不能记作验证通过。
+- 2026-10-18 可选配方运行时门控烟测补充：生产实际列表必须在无 `gtqtcore` 注册表时为187行，注册表存在时为233行；Forge烟测读取 `getRuntimeRecipes()` 并将这两个状态写入日志，Gradle门禁核对注册表状态和行数一致。显式传入 Core 烟测JAR却未创建精确 `gtqtcore` 材料注册表时，门禁明确失败。该检查尚未编译/运行；Core实际运行仍需与当前CEu ABI匹配的可用JAR。
+- Core Soularium 未伪造为 Gold + RareEarth：Core 实际 Alloy Smelter 配方输入是原版 Soul Sand 方块。当前 CEu `Materials.java` 未定义 SoulSand 材料，CEu 源码中也没有把 `Blocks.SOUL_SAND` 注册到材料前缀；`OreDictUnifier.getMaterial(ItemStack)` 只从已登记的 unification entry 取 `MaterialStack`，所以这个方块目前无法作为坩埚材料输入。GT6 `soularium` 行的 `soul_sand` 输入仅在宿主确实提供该精确材料身份及物品映射时可用；缺失时整条配方不匹配，不得伪装成 Sand，也不从 Core 的 Gold + RareEarth 组件倒推。此判断由本地 Core 与 CEu 源码静态核对，未编译/测试。
+- 2026-10-18 对照本地最新 Core 源码静态确认：`GTQTEventHandler.createMaterialRegistry` 在 `MaterialRegistryEvent` 中创建 `gtqtcore` 注册表；GT6Addition 生产代码不导入 Core API，Gradle 中 Core JAR 只会在显式提供 `gtqtcoreParityRuntimeJar` 时加入隔离烟测运行时。配方表存的是精确注册名，缺 Core 时 `getRegistry("gtqtcore")` 回退得到的 GregTech 注册表会因 `getModid()` 不匹配而关闭 Core 行；有 Core 时仍逐行解析精确身份。此项是源码/构建脚本静态核对，未执行编译或测试。
+- 将当前Core源码中全部32个无流体输入的静态 Mixer builder 逐个按输出审计。除上述固体合金来源外，未移植的7个静态builder分别产出物品 `MICA_PULP`、矿物中间体 `CrudeFluorophlogopite`/`ZincRichSphalerite`、化学中间体 `SodiumAluminate`（两种矿料路线）/`SamariumChlorideSodiumChlorideBlend`，以及甲醛催化剂 `FormaldehydeCatalyst`；它们是物品化、矿物处理、化学配制或催化剂路线，不被冒充为合金。其材料身份仍按外部精确注册身份兼容，不意味着坩埚应复刻这些非合金机器配方。
+- 新增隔离回归源码 `CrucibleTargetRegistrationTest.optionalCoreAlloyOutputDoesNotBindToSamePathCeuMaterial`：不创建 `gtqtcore` registry，只注册 CEu 同路径输出/输入，断言 runtime 只暴露 GT6 行，Core 的精确身份仍缺失、CEu 身份仍可解析，Core 输出回退屏蔽不压制 CEu，且查询不改变注册材料数。另新增 `CrucibleFluidIntegrationTest.optionalCoreAlloyRequiresItsExactRegisteredOutputAndKeepsCeuIdentitySeparate`：通过真实坩埚合金处理路径验证缺少 Core registry 时 runtime 不扫描Core行，保留CEu同名材料且不误产出Core配方；创建Core注册表并登记精确输出后则生成 `gtqtcore:` 产物，不串到 `gregtech:` 身份。两项均为隔离测试源码，按用户当前要求未编译/运行，待执行验证，不计作通过。
+- 验证：上一版 `test` 全量508项通过（0失败、0错误、0跳过），`verifyMaterialRegistrationPolicy` 与 `compileCrucibleSmokeJava` 通过；本次静态源码审计补入共振紫晶精确 Mixer 比例、三条铈掺杂镥铝氧混合物路线，并将 Core 输出回退屏蔽限定到精确 `gtqtcore:` 身份。按用户要求，本次没有编译或运行测试，也没有启动Forge世界或依赖Core运行时JAR；客户端由用户自行验收。本次未新增语言 key 或生产材料注册。Core 整包运行仍受其锁定的旧 CEu JAR 阻断，见后文运行边界记录。
+
+2026-10-18 Core配方执行回归源码扩展：隔离JUnit现在为Core的46条配方逐条构造仅存在于 `src/test` 的精确 `gregtech:`/`gtqtcore:` 材料身份，并调用生产匹配与提交方法，覆盖1个、非整批和完整 `GT6 U` 转换量、产物注册身份、产物数量/余数、输入全量扣除及缺少1个GT6子单位时无副作用拒绝；另断言精确Core注册表出现时运行目录为193行。它补充的是测试源码，不注册生产Material、不引入Core依赖；按用户要求未编译或执行，不能记作测试通过。Core真实JAR与当前CEu ABI的整包运行仍待用户更新后验收。
+- 2026-10-18 材料解析早期生命周期保护：`MetaTileEntityCrucible.resolveMaterial` 在 CEu 材料管理器尚未初始化时，对显式/非显式身份均安全返回缺失，不再对显式命名空间解引用空管理器；未注册材料仍不回退或补注册。隔离测试源码覆盖空注册表和空名称。按要求未编译或运行测试。
+- 2026-10-18 Core缺失身份矩阵源码扩展：Core注册表不存在时，为只读表中的全部Core限定产物和中间输入身份建立仅在 `src/test` 的同路径CEu诱饵身份；逐项断言 `gregtech:path` 解析为CEu对象、精确 `gtqtcore:path` 仍缺失，运行配方数保持147。覆盖全部46条配方引用的Core专属身份，不注册生产Material；按要求未编译或运行。
+- 2026-10-18 只读材料表复核：用固定哈希的 GT6 源解析器重新核对目标关系、密度、相变温度、危险标记各1084行，均为0未解析、0差异；6张生成Java表和反物质身份表也与固定源码一致（418条身份、22条别名）。对照本地 GTQTCore 当前 HEAD `4bf0ba35`，现有46条可选Core合金涉及的32个不同 `gtqtcore:` 路径均在 Core 源码中找到精确注册；其中 `tengam_purified` 由 Core 的 `NanochipMaterials.metal("tengam_purified", ...)` 注册，虽不是直接写在 `GTQTMaterials` 字段声明中，注册名仍是精确 `gtqtcore:tengam_purified`。生产代码材料构造入口静态搜索只命中既有无烟煤。并为可选 `gtqtcore` 注册表查找增加空值保护，避免缺失注册表时非限定外部材料解析解引用空对象。上述为只读源码/数据核对，不是编译、测试或选装Core运行验收。
+
 ## 插入变更：只保留无烟煤材料注册（2026-10-09再次确认）
 
 本节按用户最新要求实施，优先于本文及其他旧规划中“新增材料”“缺材料补注册”的描述。
@@ -88,6 +116,10 @@ Java 25 下强制重跑 `CrucibleFluidIntegrationTest` 与 `CrucibleTargetRegist
 使用可选的 `-PgtqtcoreParityRuntimeJar=E:/GTQT/GTQTCore/build/libs/gtqtcore-1.9.0-dev.jar` 运行完整 `build verifyCrucibleForgeStartup -Pgt6ParitySmoke -Pgt6ParityWorld`。构建、`compileJava`、JUnit、材料注册策略门禁及Mixin打包门禁均通过；可选运行环境按GTQTCore工程声明加载MixinBooter 10.2 / Mixin 0.8.7，版本不匹配问题已排除。但 Forge 在材料注册事件期间崩溃，尚未进入世界烟测：`GTQTCore ElementMaterials.register(ElementMaterials.java:70)` 读取 `MaterialFlags.EXT_METAL` 时，当前运行的 CEu `gregtech-gtqt-1.12.2-2.9.0-190.jar` 抛出 `NoSuchFieldError`。日志见 `build/crucible-parity-smoke/logs/latest.log`（2026-10-08 23:04:51）。
 
 因此 `CRUCIBLE_WORLD_GTQTCORE_ADAMANTIUM`、`CRUCIBLE_WORLD_GTQTCORE_FLUORITE` 和真实Fluorite铸造标记均未产生；不能把夹具测试或不含GTQTCore的146项世界检查算作GTQTCore整包兼容通过。没有通过伪造缺失CEu标志、改写外部材料或近似材料替换来绕过该崩溃。要继续完成真实整包验收，需要让GTQTCore针对当前项目使用的CEu API重新构建/更新，然后重跑这个可选配置；本项目材料注册约束与23种坩埚注册不变。
+
+### GTQTCore 运行边界复核（2026-10-15）
+
+使用现有 `gtqtcore-1.9.0-dev.jar` 再跑隔离 Forge 服务端；通过启动参数使用 MixinBooter 10.6 / Mixin 0.8.7 后，原先的 Mixin 版本门槛已排除，GTQTCore coremod 与 Mixin 配置均被发现。但材料注册仍在 `ElementMaterials.register(ElementMaterials.java:70)` 以 `NoSuchFieldError: MaterialFlags.EXT_METAL` 终止，尚未进入坩埚世界检查。该 JAR 与当前运行的 CEu 2.9.0-190 API 不匹配；本轮没有修改、重建或替换 CEu/GTQTCore，也没有把失败运行计作材料身份或坩埚兼容通过。测试用 JAR 已从隔离 `mods` 目录移除。日志：`build/crucible-parity-smoke/crash-reports/crash-2026-10-15_15.37.03-server.txt`。
 
 ## GT6 原矿OreDictionary形态真实输入复验（2026-10-08）
 
@@ -266,18 +298,24 @@ Gradle 9.2.1 / RFG 2.0.2 的运行环境使用本机 `C:/Users/WX/.jdks/gt6addit
 以下记录按阶段追加；后续章节覆盖早期“待实现”的描述。历史构建和自动化测试通过情况见对应章节，最新构建授权与验证范围见顶部状态；代码勾选项不代替运行证据。
 
 - [x] 密度统一：显示/刮取/危险阈值复用 GT6 密度解析；低密度阈值改为 1.2 kg/m³。
-- [ ] 相变关系（GT6只读目标表齐全，当前宿主冷热提交均有真实运行覆盖，整包身份范围待做）：显式凝固/熔炼关系及GT6数量比例已接入1084项目标表；自动化测试和隔离世界检查已覆盖精确余数换算、水/熔岩/黑曜石边界、材料目标缺失保护、固态读档不合成凝固目标，以及代表性保存/重载。`GT6LiteralJavaTablesTest` 对1084个 ID 逐项核对冷热目标、相变、密度和危险表的GT6源身份、源码行与运行索引一致。旧版分母已通过独立Forge进程修改真实隔离区块并验证无损迁移；2026-10-13 的版本3余数编码也已通过隔离区块双进程迁移验收。当前标准 CEu + Galacticraft 注册表含349个GT6源身份，735个仍不存在；对已存在来源的生产提交烟测中，热转换测试347行（跳过2条专用岩浆路径）实际转换333行、安全拒绝14行；冷转换测试348行（跳过Lava专用路径）实际转换348行、安全拒绝0行。所有热/冷目标身份绑定均通过；4个热目标（TungstenTrioxide、Ceramic×2、NetherBrick）缺少精确宿主Material并被拒绝，绝不补注册或按近似名称替代。该烟测直接调用生产 `melt`/`solidify` 提交方法，配合既有温度边界回归，不等同于逐个验证完整温度tick生命周期。仍需覆盖可选宿主材料实际存在时的绑定、负数/动态身份及完整整包输入；不能据当前宿主代表性覆盖宣称所有材料转换已验收。
+- [ ] 相变关系（GT6只读目标表齐全，当前宿主冷热提交均有真实运行覆盖，整包身份范围待做）：显式凝固/熔炼关系及GT6数量比例已接入1084项目标表；自动化测试和隔离世界检查已覆盖精确余数换算、水/熔岩/黑曜石边界、材料目标缺失保护、固态读档不合成凝固目标，以及代表性保存/重载。`GT6LiteralJavaTablesTest` 对1084个 ID 逐项核对冷热目标、相变、密度和危险表的GT6源身份、源码行与运行索引一致。旧版分母已通过独立Forge进程修改真实隔离区块并验证无损迁移；2026-10-13 的版本3余数编码也已通过隔离区块双进程迁移验收。当前标准 CEu + Galacticraft 注册表含350个GT6源身份，734个仍不存在；对已存在来源的生产提交烟测中，热转换测试347行（跳过2条专用岩浆路径）实际转换333行、安全拒绝14行；冷转换测试348行（跳过Lava专用路径）实际转换348行、安全拒绝0行。所有热/冷目标身份绑定均通过；4个热目标（TungstenTrioxide、Ceramic×2、NetherBrick）缺少精确宿主Material并被拒绝，绝不补注册或按近似名称替代。该烟测直接调用生产 `melt`/`solidify` 提交方法，配合既有温度边界回归，不等同于逐个验证完整温度tick生命周期。仍需覆盖可选宿主材料实际存在时的绑定、负数/动态身份及完整整包输入；不能据当前宿主代表性覆盖宣称所有材料转换已验收。
 - [x] GT6 快照动态 Glowstone 合金展开：六个非基础成员均有 Energetic Alloy/Lumium 的原始配比；独立源数据测试验证无遗漏或多造配方。任意第三方运行时扩展成员不在此快照内，不按相似名称推断。
-- [ ] GT6 合金执行覆盖（只读配方表和147行逐行单测已覆盖；当前标准宿主真实MTE匹配/提交54行，完整外部注册集待做）：隔离Forge注册表按实际Material身份逐条构造容量内精确投料，调用生产 `findBestGt6RecipeMatch` 和 `applyAlloy`，54行逐项核对产物身份、输入扣除、数量/余数；另在真实MTE竞争场景中以铜/银/金同时满足 `annealed_copper`（3U）、`sterling_silver`（5U）、`rose_gold`（5U）和 `electrum`（8U），核对按 `commonDivider × conversions` 选择最高产率且每tick只提交一个反应。隔离JUnit进一步以147条全表配方构成的精确材料夹具，穷举 **10,731** 对组合，唯一最高产者由生产选择器核验，平局单独归类；不再把穷举循环放进Forge启动事件。当前宿主仍有93行缺精确输入/输出身份，世界烟测明确安全跳过，不补注册/不近似替代；GTQTCore/其他选装完整注册集仍待实机验证。
+- [ ] GT6 合金执行覆盖（当前只读配方表187行；此前的逐行/配对JUnit和56行标准宿主提交只覆盖当时147行旧表）：本轮为新增40条 `Loader_Recipes_Alloys` 路线补了精确材料/比例断言，但按用户要求尚未编译或运行；新行的全量匹配、扣料、产物余数以及跨材料注册表执行仍待运行验证。上一版JUnit用147条表构成隔离材料夹具，穷举 **10,731** 对组合；若扩展至当前187条，完整两两组合为 **17,391**，不得把旧结果算作新表通过。真实MTE竞争场景此前也只验证旧表选项；GTQTCore/其他选装完整注册集待验证。所有缺少精确宿主输入/输出身份的路线必须继续安全跳过，不补注册或近似替代。
 - [x] 空心碰撞：使用底板和四壁五个碰撞盒。
-- [ ] 输入归一化与取回（核心拒收/队列测试通过，制造来源覆盖仍待补）：已接入 CEu 多材料回收表，全部材料合计通过容量检查后才提交；队列使用相同解析和总量校验。满队列拒绝、顶部空手取回显性输入槽及队首、A/B/A顺序、完整机器NBT重建、GT6多材料覆写的原子输入均已通过真实世界检查。普通储存方块不套用矿石倍率；旧存档超额缓存保留顺序和数量。普通工具逐次合成账户、耐久和附加材料检查、真实钢镐剩余耐久回收已通过。原生LV锂/镉/钠电池实际制造来源及动力单元、换头、合成/玩家破损整链也已通过；高阶MetaItem电池、`BATTERY_BLOCK` 全部枚举变体及含材料流体的机器工具配方来源账本已接入。含材料流体机器配方的 CEu `M/L` 有理数累计已由本轮491项JUnit覆盖。最新世界烟测还证实：当前CEu Lapotron组装配方中的“Advanced Integrated Circuit”没有可用精确回收组成时，输出来源账本保持无效，坩埚输入不消耗该产物；不虚构材料补齐。CEu无序配方返还容器排除、清除配方未知输入拒收，以及六种GT6原矿/箱装/致密OreDictionary形态的接受和倍率都已在实际隔离世界核验；64箱和超容量铁矿拒收且保留掉落物。普通 `oreNetherrack`/`oreEndstone` 铁矿前缀另经真实输入槽验证为3U赤铁矿；GT6致密 `oreNether`/`oreEnd` 在标准宿主中没有注册物品，本轮仅记录为选装未执行，不将其单测倍率计作实机通过。其他制造变体与整包注册输入仍需扩充，不用代表性分支替代全部覆盖。
-- [ ] 危险与能量（机制已扩展，代表性世界行为及Galacticraft已运行验证，全面验收待做）：密度危险、HU/CU 有符号缓冲、KU 鼓风（含氧气边界）、VIS_IGNIS 正热量接收及相邻侧面输入已实现；只有实际换算出温差才重置热冷却计时。1084个正数GT6字面量身份的FLAMMABLE/EXPLOSIVE/UNBURNABLE/MELTING/ACID现由源码工厂解析重建，覆盖工厂可变参数标签及`setAllToTheOutputOf`继承的正量熔炼标签；运行时精确字面量/技术族旗标优先于旧手工回退。GT6式射线爆炸及实体伤害/击退也已实现于 `CrucibleGt6Explosion`。真实Galacticraft Legacy 4.0.7 月球无氧分支已由隔离Forge运行验证；未完成项仍是非字面量/动态身份边界、其余危险阈值/效果的逐项证据，以及TFC实际模组运行分支。
+- [ ] 输入归一化与取回（核心拒收/队列测试通过，制造来源覆盖仍待补）：已接入 CEu 多材料回收表，全部材料合计通过容量检查后才提交；队列使用相同解析和总量校验。满队列拒绝、顶部空手取回显性输入槽及队首、A/B/A顺序、完整机器NBT重建、GT6多材料覆写的原子输入均已通过真实世界检查。普通储存方块不套用矿石倍率；旧存档超额缓存保留顺序和数量。普通工具逐次合成账户、耐久和附加材料检查、真实钢镐剩余耐久回收已通过。原生LV锂/镉/钠电池实际制造来源及动力单元、换头、合成/玩家破损整链也已通过；高阶MetaItem电池、`BATTERY_BLOCK` 全部枚举变体及含材料流体的机器工具配方来源账本已接入。含材料流体机器配方的 CEu `M/L` 有理数累计已由本轮491项JUnit覆盖。最新世界烟测还证实：当前CEu Lapotron组装配方中的“Advanced Integrated Circuit”没有可用精确回收组成时，输出来源账本保持无效，坩埚输入不消耗该产物；不虚构材料补齐。CEu无序配方返还容器排除、清除配方未知输入拒收，以及六种GT6原矿/箱装/致密OreDictionary形态和GT6 `oreRaw`/`raw` 及 CEu `rawOre` 前缀的接受和倍率都已在实际隔离世界核验；64箱和超容量铁矿拒收且保留掉落物。GT6 `OP.java` 中全部63个 `STANDARD_ORE`/`DENSE_ORE` 前缀现在均纳入最长前缀解析，CEu可解析矿石前缀优先使用其确切身份；在自定义OreDictionary回退分支中，DUST_ORE、基岩及TFC/Railcraft数量前缀被排除。回归现已逐项验证60个标准前缀、3个致密前缀、两个GT6别名及非标准分类；真实输入槽的标准/致密代表场景通过，`oreNetherQuartz` 在没有CEu身份消歧时拒收。普通 `oreNetherrack`/`oreEndstone` 铁矿前缀另经真实输入槽验证为3U赤铁矿；GT6致密 `oreNether`/`oreEnd` 在标准宿主中没有注册物品，CEu形式仍属选装前缀未执行，不将其缺失项单测倍率计作实机通过。其他制造变体与整包注册输入仍需扩充，不用代表性分支替代全部覆盖。
+- [ ] 危险与能量（机制已扩展，正数GT6字面量判定已逐行回归，代表性世界行为及Galacticraft已运行验证，全面验收待做）：密度危险、HU/CU 有符号缓冲、KU 鼓风（含氧气边界）、VIS_IGNIS 正热量接收及相邻侧面输入已实现；只有实际换算出温差才重置热冷却计时。1084个正数GT6字面量身份的FLAMMABLE/EXPLOSIVE/UNBURNABLE/MELTING/ACID由源码工厂解析重建，并在测试中逐项核验313/314 K燃烧边界和有数值沸点材料的沸点边界；覆盖工厂可变参数标签及`setAllToTheOutputOf`继承的正量熔炼标签。GT6式射线爆炸及实体伤害/击退已实现于 `CrucibleGt6Explosion`；真实Galacticraft Legacy 4.0.7 月球无氧分支和未知动态宿主属性回退已有隔离运行/回归。隔离Forge世界已实测低密度清除、燃烧与熔化豁免、沸腾热伤/防火、酸腐蚀、爆炸强度和实体伤害/击退/遮挡/首领免疫/方块破坏、壳体熔毁岩浆、热冷接触及火焰选位。剩余项是GT6自动无效/动态身份的全量行为边界、超出这些代表场景的整包危险事件覆盖，以及TFC实际模组运行分支。
 - [x] 浇模与流体能力：浇模加入目标材料检查；外部流体槽报告可排出轻质熔融材料及按共享容量计算的可用空间。
-- [x] 当前构建与自动化验收（2026-10-14）：Temurin 25 下强制执行 `test verifyMaterialRegistrationPolicy --rerun-tasks` 成功，46个测试报告共 **499项，0失败、0错误、0跳过**；随后完整 `build verifyCrucibleForgeStartup -Pgt6ParitySmoke -Pgt6ParityWorld` 成功。材料注册策略及Mixin打包门禁通过，18个服务端Mixin目标转换通过；最新隔离Forge世界 `parity-smoke-world-d38ce017-54fa-4142-8352-02527cb5cf3a` 完成 **7437项**检查并正常保存、卸载和关闭。全147条合金选择器两两检查在JUnit隔离材料夹具中完成；世界烟测保留54行宿主实际提交与真实MTE多配方优选检查。环境未加载GTQTCore/TFC或客户端；不代表完整选装整包或客户端验收。
+- [x] 前次构建与自动化验收（2026-10-14）：Temurin 25 下强制执行 `test verifyMaterialRegistrationPolicy --rerun-tasks` 成功，46个测试报告共 **499项，0失败、0错误、0跳过**；随后完整 `build verifyCrucibleForgeStartup -Pgt6ParitySmoke -Pgt6ParityWorld` 成功。材料注册策略及Mixin打包门禁通过，18个服务端Mixin目标转换通过；隔离Forge世界 `parity-smoke-world-d38ce017-54fa-4142-8352-02527cb5cf3a` 完成 **7437项**检查并正常保存、卸载和关闭。全147条合金选择器两两检查在JUnit隔离材料夹具中完成；世界烟测保留54行宿主实际提交与真实MTE多配方优选检查。环境未加载GTQTCore/TFC或客户端；不代表完整选装整包或客户端验收。
+- [x] 当前构建与自动化验收（2026-10-16）：Temurin 25 下强制重跑 `build verifyCrucibleForgeStartup -Pgt6ParitySmoke -Pgt6ParityWorld --rerun-tasks` 成功，47个测试报告共 **504项，0失败、0错误、0跳过**；`verifyMixinPackaging` 与生产JAR重混淆门禁通过，19个服务端Mixin目标转换通过。隔离Forge世界 `parity-smoke-world-0d6525ee-524d-4157-8958-f535c59a412b` 完成 **7478项**检查并正常保存、卸载和关闭。该环境未加载GTQTCore/TFC或客户端，不代表完整选装整包或客户端验收。
 - [x] 代表性跨进程持久化：真实世界保存/关闭后，以另一个服务器进程从磁盘恢复三台坩埚的材料身份、相态、精确数量/余数、FIFO、显性输入槽、温度/旧温度和热量；恢复后的FIFO继续导入、分数排液及熔岩再热通过。2026-10-13 当前版本3余数格式及三个旧版数据夹具在两个独立Forge JVM间迁移并通过6项检查；不替代所有旧历史存档、材料或发布包运行验收。
 - [ ] 完整运行验收：客户端模型/GUI/纹理/JEI与客户端交互由用户自行验收；开发过程中不启动或操作客户端，也不把这些项目记为代理通过。开发侧仍需补齐服务端外部材料绑定、可选模组兼容、特殊流程与复杂管网证据。
 
 ### 本轮补充修复
+
+- 对照 GT6 `OP.java:133` 与 `MultiTileEntitySmeltery.java:159-184`，发现 GT6 `oreRaw`（含 `raw` 同义前缀）属于标准矿石处理输入，坩埚应按 `targetCrushing × oreMultiplier` 处理；此前项目只识别 `blockRaw`、crate、dense 等名称，漏掉了这两个前缀。现将 `oreRaw`/`raw` 加入精确前缀解析，基数仍为单份矿石；同时显式识别 CEu 的 `rawOre` 命名，避免 `rawOreIron` 被误读为 GT6 `raw` + `OreIron`。增加解析单测，并在隔离 Forge 世界通过 `oreRawIron`、`rawIron` 两个真实输入槽用例核对铁矿目标与 3U 数量。此项不要求外部新增Material，也不修改宿主注册。
+- 最终以 Temurin 25 运行 `build verifyCrucibleForgeStartup -Pgt6ParitySmoke -Pgt6ParityWorld`：47份JUnit报告合计 **504项，0失败、0错误、0跳过**；材料注册策略、Mixin打包和生产JAR重混淆门禁通过。隔离Forge服务端世界 `parity-smoke-world-2b83766a-b614-49ae-8d76-cc4d97e37919` 完成 **7455项**检查并正常关闭；日志明确记录 `oreRawIron` 与 `rawIron` 均被消费，产物为 `gregtech:banded_iron`、数量 `10886400`（3U）。`git diff --check` 通过。此验证没有加载GTQTCore/TFC或客户端，不能替代其余材料矩阵与选装整包验收。
+- 与此同时扩展爆炸世界用例：GT6 射线集合内一块暴露玻璃必须被实际爆炸移除，先前已有的黑曜石遮挡、实体伤害/击退与首领免疫断言保持通过。Temurin 25 下重跑 `verifyCrucibleForgeStartup -Pgt6ParitySmoke -Pgt6ParityWorld` 成功；隔离 Forge 世界 `parity-smoke-world-83fe7fe2-363f-4209-9bbe-0ed149312dba` 通过 **7455项**并正常关闭，危险日志标记 `GT6_EXPLOSION_EXPOSURE_SHIELD_BOSS` 通过。该变化只加强隔离测试，不修改爆炸生产实现；它仍不能替代TFC或完整选装整包危险行为验收。
+- 2026-10-18 静态启动边界补强：GT6 精确目标无法解析时，`getSolidifyingTarget` 会检查 CEu 的反向流体映射；但 CEu 的汇总材料列表只在注册表关闭后权威可用。现在管理器缺失或尚未到 CLOSED/FROZEN 时保留 GT6 的默认“凝固目标为自身”，不空指针、不选用临时歧义候选，也不改动材料；`CrucibleFluidIntegrationTest` 的回归源码覆盖管理器缺失和 OPEN 阶段。遵照当前要求未编译、未运行该测试。
 
 - 刮取只检查最上层材料；液体覆盖的固体不能穿过液面直接刮取。
 - 无熔化目标的固体不会仅因温度超过名义熔点而无法刮取。
@@ -285,6 +323,7 @@ Gradle 9.2.1 / RFG 2.0.2 的运行环境使用本机 `C:/Users/WX/.jdks/gt6addit
 - 活动状态与本 tick 接收能量独立记录，避免温度处理清空计时标志后丢失活动状态。
 - 黑曜石转换的 1000 mB 比例是本项目已确认规则；GT6 使用材料单位目标关系，不能将 CEu 金属通用的 144 mB 直接套到黑曜石上。
 - 旧存档中的凝固目标重新按当前材料解析，避免把熔化前的特殊材料错误还原；历史版本已损失的数量无法从现有存档可靠反推，不自动补发。
+- GT6材料身份缓存现在等材料注册表进入 CLOSED/FROZEN 后才保存命中或未命中，避免 OPEN 阶段较早注册的 CEu/第三方同名身份遮蔽后注册的 GTQTCore 精确身份。隔离注册表回归先注册 gregtech 同名材料、再注册 gtqtcore 材料，验证后续查询切换到 GTQTCore；定向回归通过，全量JUnit及上述Forge世界烟测通过。这个夹具验证注册优先级变化，不替代当前真实GTQTCore JAR的整包绑定；实际JAR仍被 `MaterialFlags.EXT_METAL` ABI不兼容阻断。
 
 ### 危险判定数据（代码已落地，未运行验证）
 
@@ -2317,4 +2356,57 @@ Gradle 9.2.1 / RFG 2.0.2 的运行环境使用本机 `C:/Users/WX/.jdks/gt6addit
 
 - 在真实隔离Forge世界放置8段实际注册的绝缘单管，形成闭环；热源只接入环路一端，真实坩埚只作为另一个单侧终点。核对每条预设连接边后，让同一128 HU/t热源连续传输两次；坩埚分别累积128/256 HU，源端合计只扣256 HU，没有因闭环重复端点路径而多计或丢失热量。
 - 最新隔离世界 `parity-smoke-world-951941bb-0429-4a4e-80d4-1e4dfe4d0107` 通过 **7444项**并正常保存关闭；标记 `native_pipe_cycle passed segments=8 first=128 total=256 debited=256`。此次同世界还复验了非标准 `IHeatable` 拉取、六侧热量转换和非绝缘单管当前零损耗属性。服务端验证成功；不等价于非零热损材料、区块卸载/重载或混合材质整包网络覆盖。未改生产代码或启动客户端。
+
+### GT6 熔化/凝固真实服务端 tick 边界复验（2026-10-15）
+
+- 此前1084行相变审计在真实 Forge 注册表上逐行核对材料身份与目标；349个本宿主可用源材料的相变数量则直接调用生产 `melt` / `solidify` 提交方法。该方式不经过 `update()` 的危险判定、前后温度边界与 tick 顺序，本节补上这段生命周期证据。
+- 在隔离世界实际放置的生产坩埚上连续调用服务端 `update()`：铜在1356 K保持固态；以 `OldTemperature=1356 K`、`Temperature=1357 K` 跨过 GT6 熔点后，真实 tick 按目标身份和GT6 U比例变为熔融铜；在1357 K保持熔融，再以 `OldTemperature=1357 K`、`Temperature=1356 K` 降温后真实 tick 才提交凝固。每步都核对身份、整数数量、余数与熔融标记。世界验收门禁现强制要求 `CRUCIBLE_WORLD_GT6_PHASE_TICKS` 标记。
+- JDK 25 下 `crucibleSmokeClasses` 编译成功；`verifyCrucibleForgeStartup -Pgt6ParitySmoke -Pgt6ParityWorld` 隔离 Forge 服务端通过，世界记录 `CRUCIBLE_WORLD_PASS 7449`、相变 tick 标记 `material=gregtech:copper hotBoundary=1357 coldBoundary=1357 checks=5`，无 `CRUCIBLE_WORLD_FAIL` 或看门狗记录。随后强制运行 `build test verifyMaterialRegistrationPolicy --rerun-tasks` 成功：46份JUnit报告合计 **499项，0失败、0错误、0跳过**；主源码/测试源码编译、生产JAR重混淆、Mixin打包和材料注册策略门禁通过。
+- 该检查证明一个代表性、无危险的真实宿主材料完整跨阈值 tick 流程，不能外推为1084种材料都已在 `update()` 生命周期实际运行；其余行仍由全表数据/绑定审计和生产提交烟测覆盖。没有添加生产材料、语言key或Mixin，没有操作玩家存档；客户端显示和交互由用户本人验收，本实施未运行客户端。
+
+### 转化产物相态与存档稳定性复核（2026-10-15）
+
+- 熔化输入现在将 GT6 `targetSmelting` 转换后的材料身份，与转化产物自己的熔点分开判定：产物尚未达到自身熔点时保持固态、可回收；只有达到产物熔点才显示/保存为熔融态。该规则同时用于输入准备阶段和 tick 内 `melt()` 转换，避免低熔点来源（例如测试夹具 Sand→Glass）令高熔点目标过早变成液态。
+- 不再写入冗余的 `SolidifyTarget` NBT 提示；该字段原本由读取逻辑忽略并按当前材料身份重新推导，保留它会造成保存—读取后 NBT 不稳定。非熔融内容也不再携带待凝固目标。
+- Java 25 下 `build verifyCrucibleForgeStartup -Pgt6ParitySmoke -Pgt6ParityWorld` 通过；最新隔离 Forge 服务端世界通过 **7453项**，标记 `CRUCIBLE_WORLD_GT6_PHASE_TICKS` 覆盖铜在1357 K熔化/凝固边界及实际注册 Quartzite→Silicon Dioxide 在1986 K的产物相态边界。`build/test-results/test` 的46份JUnit报告合计 **500项，0失败、0错误、0跳过**。
+- 这补齐了相变目标材料自身熔点的一处机制缺口及存档稳定性问题，不表示全表每种材料都已在完整 `update()` 生命周期实跑，也不代表坩埚剩余清单全部完成。客户端画面、交互与真实游戏玩法由用户本人验收；本次未启动客户端。
+
+### 第三方电能物品的制造来源追踪（2026-10-15）
+
+- `CrucibleComponentProvenance` 原先只认 CEu 明列的电池/储能物品，CEu 后续扩展或其它模组提供的电能物品能力会漏出机器配方来源账本。现改为优先按 GregTech 电能能力识别非工具物品，并把其纳入电池核心的配方追踪、空壳拆解和电池壳体来源记录；带 `GT.Tool` 标记的工具仍留给专用工具回收路径。能力检查先于 CEu `MetaItems` 枚举，避免第三方物品识别被无关注册表静态初始化阻断。
+- 新增隔离回归夹具：自定义物品提供 CEu `ElectricItem` 能力但不在 CEu 电池名录中，生产分类器成功识别；普通物品不会走通用电池分类，带 `GT.Tool` 标记的电能物品仍排除在外。首次测试暴露单测需要 Minecraft Bootstrap；补齐后定向测试通过。随后强制执行 `test verifyMaterialRegistrationPolicy --rerun-tasks`，JUnit **501项，0失败、0错误、0跳过**，材料注册策略门禁通过。
+- JDK 25 下完整 `build verifyCrucibleForgeStartup -Pgt6ParitySmoke -Pgt6ParityWorld` 成功；当次JUnit为 **501项，0失败、0错误、0跳过**，材料注册与Mixin打包门禁通过。隔离 Forge 世界 `CRUCIBLE_WORLD_PASS 7453`，并有19个服务端 Mixin 目标转换通过。客户端验收仍由用户本人进行，本次未启动客户端。
+- 该补充扩大了通用电能物品类别的配方追踪，但没有替代对各个真实外部模组电池配方/宿主注册表的逐项验证；GTQTCore 的当前CEu ABI阻断、完整外部材料集及未覆盖的制造配方仍开放。无新增生产Material、本地化key或Mixin。
+
+### 未知动态宿主材料的属性回退边界（2026-10-15）
+
+- GT6 源码的 `createAutoInvalidMaterial(name)` 会为任意动态名称生成 `INVALID_MATERIAL/UNUSED_MATERIAL/AUTO_BLACKLIST/AUTO_MATERIAL` 材料；该名称不在正数 GT6 快照内，没有可安全迁移的确定物性。坩埚不能把 GT6 的 1000/3000 K 默认值或同名字面量属性套给未知宿主身份，而应只使用该 CEu/外部材料自己的流体温度与危险属性。
+- 在 `CrucibleFluidIntegrationTest` 的隔离注册表中增加仅测试用 `gtqtcore:parity_dynamic_heat_material`，验证未知身份不获得 GT6 熔点/沸点/危险表项，但仍使用自身2400 K流体温度、宿主可燃/爆炸标记及酸流体属性。定向回归通过；随后 `test verifyMaterialRegistrationPolicy --rerun-tasks` 强制全量执行，47份JUnit报告 **502项，0失败、0错误、0跳过**，材料注册门禁通过。
+- 这项关闭了动态 CEu/第三方宿主身份在运行属性回退合同上的测试缺口；它不代表加载了真实 GTQTCore，也不认证 GT6 自动无效材料本身的全量名称集合或其它动态材料模组。隔离材料夹具仅存在于 `src/test`，没有增加生产材料注册、客户端操作或本地化key。
+
+### GT6 危险判定的字面量全表边界回归（2026-10-15）
+
+- 重新逐段对照 GT6 `MultiTileEntitySmeltery.java:252-267,314-320`：内容在达到数值沸点，或温度严格高于313 K且具备FLAMMABLE、同时不具备UNBURNABLE/MELTING时气化；沸点达到320 K才进入实体温度伤害调用，达到2000 K才尝试点火；爆炸只发生在上述气化分支内，非耐酸器皿则在其后检查ACID。燃烧/气化伤害使用倍率2，气体与火焰作用范围均为3格。当前坩埚分支与这些阈值、顺序和倍率一致。
+- 将生产路径实际使用的“沸点或燃烧”判定收敛为 `GT6MaterialHazardData.shouldVaporize`，保留通过精确材料身份取得GT6只读表、未知宿主仅回退其自身危险标记的边界；没有给动态材料套用GT6默认物性。
+- 扩展 `GT6LiteralJavaTablesTest`，按1084条正数材料身份逐行验证燃烧/爆炸/酸标签驱动、313/314 K严格燃烧边界、宿主FLAMMABLE不覆盖已知GT6身份，以及有数值沸点材料的沸点前一度和等值气化边界。Temurin 25 下定向 `test --tests '*GT6LiteralJavaTablesTest'` 通过；随后 `build verifyCrucibleForgeStartup -Pgt6ParitySmoke -Pgt6ParityWorld` 成功，47份JUnit报告 **503项，0失败、0错误、0跳过**，材料注册与Mixin打包门禁通过，19个服务端Mixin目标完成转换，隔离世界 `parity-smoke-world-515619cf-73fb-4f52-aa03-c3d9fc4e771e` 通过 **7453项**并正常保存关闭。
+- 该回归关闭正数GT6字面量危险标签到生产判定方法的全表覆盖缺口；GT6自动无效/动态身份、TFC真实模组运行效果及危险世界效果的逐项实机证据仍未关闭。本次未运行客户端，也未注册材料、增加Mixin或本地化key。
+
+### GT6 Constantan 精确宿主别名补齐（2026-10-16）
+
+- 核对 GT6 `MT.java:1755`：`Constantan` 使用 `clloymachine(..., "Cupronickel")`，并显式赋值 `Cupronickel = Constantan`；其配方为 Cu:Ni=1:1。CEu `FirstDegreeMaterials.java:195-201` 已有 `gregtech:cupronickel`，组成同为 Copper:Nickel=1:1。新增只读 `constantan -> gregtech:cupronickel` 宿主身份映射，不注册/修改材料，也不将显式带命名空间的身份降级为别名匹配。
+- 为该精确别名增加单测，并在真实 CEu + Galacticraft 隔离服务端按生产解析器重跑147行 MTE 配方提交。原本缺输出身份的 Constantan 两行现在实际匹配并提交：结果 `rows=147 executed=56 unavailableMaterials=91 checks=919`；完整Forge世界 `CRUCIBLE_WORLD_PASS 7478` 正常保存关闭。JDK 25 下强制重跑 `build verifyCrucibleForgeStartup -Pgt6ParitySmoke -Pgt6ParityWorld --rerun-tasks` 成功，47份JUnit报告共 **504项，0失败、0错误、0跳过**。
+- 仍有91行需要完整宿主材料身份才能执行；此处仅解决一个由 GT6 明确别名和 CEu 同组成身份共同证实的精确映射，不把“化学组成相似”泛化成自动合并规则。GTQTCore完整注册集继续受其当前CEu ABI/版本阻断，TFC与客户端验收仍未覆盖；本轮没有客户端操作、生产Material注册或外部模组源码改动。
+
+### GT6 标准/致密矿石前缀输入覆盖（2026-10-16）
+
+- 重新逐项对照 GT6 `OP.java:55-133`：读取并核对了全部63个 `STANDARD_ORE`/`DENSE_ORE` 前缀身份。坩埚 OreDictionary 回退解析现在采用最长前缀匹配，区分普通前缀、致密 `oreNether`/`oreDense`/`oreEnd` 的2倍数量、原矿/方块/箱装数量；CEu 能精确解析的矿石前缀先走CEu统一身份与数量路径，避免 `oreNetherQuartz` 被误判。回退解析中的 `oreGravel`、`oreSand` 等 `DUST_ORE`，基岩以及 `oreRich/Normal/Small/Poor` 等非标准数量类不会被当成普通矿石。没有对应外部材料身份时仍拒绝，不创建或近似替代材料。
+- JUnit回归逐项枚举 `OP.java` 的60个标准前缀和3个致密前缀，并检查 `oreGem`/`denseore` 别名、与通用 `ore` 重叠的 `oreSandstone`、全部10个非标准分类及 `oreNetherQuartz` 歧义保护。目标测试类148项通过。真实隔离Forge世界中通过自定义OreDictionary条目验证：`oreMarsIron`/`oreVanillastoneIron` 进入 `gregtech:banded_iron` 各3U，`oreNetherIron`/`oreEndIron` 各6U；世界记录 `CRUCIBLE_WORLD_PASS 7484`。随后Temurin 25下执行 `build verifyCrucibleForgeStartup -Pgt6ParitySmoke -Pgt6ParityWorld --console=plain --quiet`，退出码0；47份JUnit报告共 **505项，0失败、0错误、0跳过**；隔离世界 `parity-smoke-world-4fccfe97-458c-4de1-8d28-4d625a7e90b1` 通过7484项。`git diff --check` 通过。
+- 该覆盖验证完整前缀名字表的映射规则及四种隔离代表输入，不代表GT6所有维度/地层的真实物品注册均已执行；`oreNether`/`oreEnd` CEu前缀、GTQTCore/TFC外部宿主注册集仍待对应模组实际存在时验证。未启动客户端；客户端画面和交互由用户本人验收。
+
+### GT6 只读材料表当前静态复核（2026-10-16；不运行构建/测试）
+
+- 在用户要求本轮不编译、不运行测试或客户端的约束下，只读执行 `python scripts/rebuildGt6PhysicalSourceTables.py --mode density`、`--mode phase`、`--mode flags` 及 `python scripts/rebuildGt6TargetSourceTable.py`。四项各核对固定哈希 GT6 源码的1084行正数材料：未解析0、差异0；密度按1e-6 kg/m³容差比较。随后执行 `python scripts/generateGt6JavaMaterialTables.py --check`，6张生产Java只读表与测试来源夹具一致。
+- 这组结果确认求值脚本、审计夹具与当前生成Java表彼此一致，并纠正本节较早记录的“独立脚本尚未恢复”作为现状的误读；它不运行Java、不验证宿主Material身份在所有整合包中均可绑定，也不代表缺失身份拒绝、全部配方运行时行为或整份坩埚 parity 已验收。本轮未编译、测试、启动客户端或改动生产逻辑。
+- 静态复核 GTQTCore 合金适配：`GTQTCoreAlloyRecipes` 仅保存精确注册名字符串，不引用 Core 的 Java API；运行时经 `GT6MaterialCompatibility` 按显式命名空间精确解析，缺少输出身份的配方不进入候选索引，缺少输入身份的配方无法匹配，JEI 同样会跳过无法解析的行。因此无 Core 时没有可执行的 Core 配方，也不会回退到 CEu/第三方同名材料；该可选适配不要求 Core 编译依赖。此为源码路径核对，未运行外部模组整包。
+- 2026-10-18 合金输入别名汇合修正：GT6/Core 配方的不同输入名可能按既有外部材料兼容规则解析为同一个 `Material` 对象。旧匹配器逐行计算转换数，可能对同一库存重复使用完整数量额度，随后 `removeMaterial` 的库存夹紧会造成合金产物凭空多出。现在先按对象身份合并同材质配方系数，再据合并后的总需求检查熔融份数并一次性扣料；烟测期望值也按同一身份聚合且断言扣料不超库存。增加了重复身份与系数溢出的隔离JUnit回归源码。按用户要求，本次没有编译或运行测试；没有新增材料、本地化key或Core/CEu依赖。
 

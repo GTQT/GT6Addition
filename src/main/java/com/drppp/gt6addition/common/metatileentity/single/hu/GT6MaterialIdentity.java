@@ -67,11 +67,16 @@ final class GT6MaterialIdentity {
             }
         }
 
-        // A failed lookup during the PRE phase may become resolvable once all
-        // optional registries close; only cache misses after that point.
-        if (mechanicsName != null || (GregTechAPI.materialManager != null &&
-                GregTechAPI.materialManager.getPhase() !=
-                        gregtech.api.unification.material.registry.IMaterialRegistryManager.Phase.PRE)) {
+        // OPEN registries can still gain an optional, higher-priority or
+        // same-named external material. Caching a positive or negative result
+        // before they close can permanently select a provisional identity or
+        // hide a later exact binding. Resolve live until registration closes.
+        gregtech.api.unification.material.registry.IMaterialRegistryManager manager =
+                GregTechAPI.materialManager;
+        if (manager != null && (manager.getPhase() ==
+                gregtech.api.unification.material.registry.IMaterialRegistryManager.Phase.CLOSED ||
+                manager.getPhase() ==
+                        gregtech.api.unification.material.registry.IMaterialRegistryManager.Phase.FROZEN)) {
             CANONICAL_MECHANICS_NAMES.put(material, mechanicsName == null ? "" : mechanicsName);
         }
         return mechanicsName;

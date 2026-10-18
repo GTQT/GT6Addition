@@ -57,7 +57,7 @@ public final class GT6MaterialCompatibility {
             Material preferred = findExternal(namespace + ":" + name);
             if (preferred != null) return preferred;
             MaterialRegistry registry = GregTechAPI.materialManager.getRegistry(namespace);
-            if (!namespace.equals(registry.getModid())) continue;
+            if (registry == null || !namespace.equals(registry.getModid())) continue;
             Material normalizedMatch = null;
             for (Material material : registry.getAllMaterials()) {
                 if (!normalized.equals(normalize(material.getName()))) continue;

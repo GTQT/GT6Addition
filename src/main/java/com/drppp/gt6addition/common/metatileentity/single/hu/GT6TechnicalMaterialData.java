@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 /** ANY.java:36-92,97-149. Statistics, processing outputs and tags are independent.
- * steal() copies heat/density, stealLooks() does neither, and
+ * steal() copies heat/mass/density/quality, stealLooks() copies appearance only, and neither
  * setAllToTheOutputOf() copies target identities/quantities (and can add MELTING
  * through setSmelting). The profile stores only tags directly added by ANY.init;
  * source-member tags are never inherited implicitly.
@@ -40,14 +40,18 @@ final class GT6TechnicalMaterialData {
         copy(profiles, "anysapphire", "sapphire", "gregtech:sapphire");
         copy(profiles, "anyemerald", "emerald", "gregtech:emerald");
         copy(profiles, "anyamethyst", "amethyst", "gregtech:amethyst");
+        // ANY.java:101-105 calls stealLooks and steal on these families.
+        // They inherit the underlying material's heat/density, but no
+        // setAllToTheOutputOf call means their processing targets stay self/U.
         stats(profiles, "anygarnet", "spessartine");
         stats(profiles, "anyjasper", "jasper");
-        stats(profiles, "anytigereye", "tigereye");
+        stats(profiles, "anytigereye", "yellowtigereye");
         stats(profiles, "anyaventurine", "greenaventurine");
         stats(profiles, "anyamber", "amber");
         copy(profiles, "anyfluorite", "fluorite", "gtqtcore:fluorite");
         // MT.Phosphorus is Ca3(PO4)2, NOT the elemental MT.P/CEu phosphorus.
         copy(profiles, "anyphosphorus", "tricalciumphosphate", "gregtech:tricalcium_phosphate");
+        // ANY.java:108 likewise steals Blaze's stats, but not its targets.
         stats(profiles, "anyblaze", "blaze");
         copy(profiles, "anyprismarine", "prismarine", "gt6addition:prismarine");
         copy(profiles, "anygrains", "wheat", "gregtech:wheat");

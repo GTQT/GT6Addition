@@ -1,12 +1,14 @@
 package com.drppp.gt6addition.common.metatileentity.single.hu;
 
+import gregtech.api.unification.material.Material;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Collections;
 
-/** Verified GT6 definition-time and additional alloying recipes, in material units. */
+/** Verified GT6 and GTQTCore alloy recipes, in material units. */
 public final class GT6AlloyRecipes {
     /** GT6 CS.U: exact material quantity represented by one normal item. */
     static final long GT6_U = 648648000L;
@@ -85,6 +87,9 @@ public final class GT6AlloyRecipes {
             new GT6AlloyRecipes("energetic_alloy", 1, new String[]{"inductive_alloy", "glowstone"}, new long[]{2, 1}),
             new GT6AlloyRecipes("vibrant_alloy", 1, new String[]{"energetic_alloy", "ender_pearl"}, new long[]{1, 1}),
             new GT6AlloyRecipes("electrical_steel", 1, new String[]{"steel", "silicon"}, new long[]{1, 1}),
+            // MT.java:1810 uses its exact SoulSand material identity. CEu does
+            // not map the vanilla Soul Sand block to a MaterialStack, so this
+            // row stays unavailable unless a host supplies that exact identity.
             new GT6AlloyRecipes("soularium", 1, new String[]{"soul_sand", "gold"}, new long[]{9, 1}),
             new GT6AlloyRecipes("end_steel", 1, new String[]{"endstone", "obsidian_steel", "obsidian"},
                     new long[]{1, 1, 9}),
@@ -221,7 +226,103 @@ public final class GT6AlloyRecipes {
                     new String[]{"annealed_copper", "barium", "yttrium"}, new long[]{3, 2, 1}),
             new GT6AlloyRecipes("yttrium_barium_cuprate", 6,
                     new String[]{"copper", "barium", "yttrium"}, new long[]{3, 2, 1}),
-            new GT6AlloyRecipes("ferrite", 8, new String[]{"hematite", "lithium_oxide"}, new long[]{5, 3})
+            new GT6AlloyRecipes("ferrite", 8, new String[]{"hematite", "lithium_oxide"}, new long[]{5, 3}),
+
+            // Loader_Recipes_Alloys.java:38-53, copper / annealed-copper
+            // alternatives which were missing from the original literal set.
+            new GT6AlloyRecipes("purple_alloy", 2,
+                    new String[]{"copper", "silver", "redstone", "nikolite"}, new long[]{1, 1, 4, 4}),
+            new GT6AlloyRecipes("purple_alloy", 2,
+                    new String[]{"annealed_copper", "silver", "redstone", "nikolite"},
+                    new long[]{1, 1, 4, 4}),
+            new GT6AlloyRecipes("signalum", 4,
+                    new String[]{"copper", "silver", "redstone"}, new long[]{3, 1, 10}),
+            new GT6AlloyRecipes("signalum", 4,
+                    new String[]{"annealed_copper", "silver", "redstone"}, new long[]{3, 1, 10}),
+            new GT6AlloyRecipes("black_bronze", 5,
+                    new String[]{"copper", "silver", "gold"}, new long[]{3, 1, 1}),
+            new GT6AlloyRecipes("black_bronze", 5,
+                    new String[]{"annealed_copper", "silver", "gold"}, new long[]{3, 1, 1}),
+            new GT6AlloyRecipes("hepatizon", 8,
+                    new String[]{"copper", "tin", "gold"}, new long[]{3, 1, 4}),
+            new GT6AlloyRecipes("hepatizon", 8,
+                    new String[]{"annealed_copper", "tin", "gold"}, new long[]{3, 1, 4}),
+            new GT6AlloyRecipes("arsenic_bronze", 5,
+                    new String[]{"copper", "tin", "arsenic"}, new long[]{3, 1, 1}),
+            new GT6AlloyRecipes("arsenic_bronze", 5,
+                    new String[]{"annealed_copper", "tin", "arsenic"}, new long[]{3, 1, 1}),
+            new GT6AlloyRecipes("bismuth_bronze", 5,
+                    new String[]{"copper", "zinc", "bismuth"}, new long[]{3, 1, 1}),
+            new GT6AlloyRecipes("bismuth_bronze", 5,
+                    new String[]{"annealed_copper", "zinc", "bismuth"}, new long[]{3, 1, 1}),
+
+            // Loader_Recipes_Alloys.java:56-63, all four registered iron
+            // melts are distinct exact inputs (not an alias/fallback rule).
+            new GT6AlloyRecipes("invar", 3,
+                    new String[]{"iron", "nickel"}, new long[]{2, 1}),
+            new GT6AlloyRecipes("invar", 3,
+                    new String[]{"pig_iron", "nickel"}, new long[]{2, 1}),
+            new GT6AlloyRecipes("invar", 3,
+                    new String[]{"meteoric_iron", "nickel"}, new long[]{2, 1}),
+            new GT6AlloyRecipes("kanthal", 3,
+                    new String[]{"iron", "aluminium", "chrome"}, new long[]{1, 1, 1}),
+            new GT6AlloyRecipes("kanthal", 3,
+                    new String[]{"pig_iron", "aluminium", "chrome"}, new long[]{1, 1, 1}),
+            new GT6AlloyRecipes("kanthal", 3,
+                    new String[]{"meteoric_iron", "aluminium", "chrome"}, new long[]{1, 1, 1}),
+            new GT6AlloyRecipes("tin_alloy", 2,
+                    new String[]{"iron", "tin"}, new long[]{1, 1}),
+            new GT6AlloyRecipes("tin_alloy", 2,
+                    new String[]{"pig_iron", "tin"}, new long[]{1, 1}),
+            new GT6AlloyRecipes("tin_alloy", 2,
+                    new String[]{"meteoric_iron", "tin"}, new long[]{1, 1}),
+            new GT6AlloyRecipes("angmallen", 2,
+                    new String[]{"iron", "gold"}, new long[]{1, 1}),
+            new GT6AlloyRecipes("angmallen", 2,
+                    new String[]{"pig_iron", "gold"}, new long[]{1, 1}),
+            new GT6AlloyRecipes("angmallen", 2,
+                    new String[]{"meteoric_iron", "gold"}, new long[]{1, 1}),
+            new GT6AlloyRecipes("stainless_steel", 9,
+                    new String[]{"iron", "nickel", "chrome", "manganese"}, new long[]{6, 1, 1, 1}),
+            new GT6AlloyRecipes("stainless_steel", 9,
+                    new String[]{"wrought_iron", "nickel", "chrome", "manganese"},
+                    new long[]{6, 1, 1, 1}),
+            new GT6AlloyRecipes("stainless_steel", 9,
+                    new String[]{"pig_iron", "nickel", "chrome", "manganese"}, new long[]{6, 1, 1, 1}),
+            new GT6AlloyRecipes("stainless_steel", 9,
+                    new String[]{"meteoric_iron", "nickel", "chrome", "manganese"},
+                    new long[]{6, 1, 1, 1}),
+            new GT6AlloyRecipes("stainless_steel", 9,
+                    new String[]{"iron", "invar", "chrome", "manganese"}, new long[]{4, 3, 1, 1}),
+            new GT6AlloyRecipes("stainless_steel", 9,
+                    new String[]{"pig_iron", "invar", "chrome", "manganese"}, new long[]{4, 3, 1, 1}),
+            new GT6AlloyRecipes("stainless_steel", 9,
+                    new String[]{"meteoric_iron", "invar", "chrome", "manganese"}, new long[]{4, 3, 1, 1}),
+            new GT6AlloyRecipes("stainless_steel", 36,
+                    new String[]{"iron", "nichrome", "chrome", "manganese"}, new long[]{24, 5, 3, 4}),
+            new GT6AlloyRecipes("stainless_steel", 36,
+                    new String[]{"pig_iron", "nichrome", "chrome", "manganese"}, new long[]{24, 5, 3, 4}),
+            new GT6AlloyRecipes("stainless_steel", 36,
+                    new String[]{"meteoric_iron", "nichrome", "chrome", "manganese"},
+                    new long[]{24, 5, 3, 4}),
+            new GT6AlloyRecipes("electrotine_alloy", 1,
+                    new String[]{"iron", "nikolite"}, new long[]{1, 8}),
+            new GT6AlloyRecipes("electrotine_alloy", 1,
+                    new String[]{"pig_iron", "nikolite"}, new long[]{1, 8}),
+            new GT6AlloyRecipes("electrotine_alloy", 1,
+                    new String[]{"meteoric_iron", "nikolite"}, new long[]{1, 8}),
+
+            // Loader_Recipes_Alloys.java:65-67: HSLA and Knightmetal are
+            // exact molten inputs alongside steel and meteoric steel.
+            new GT6AlloyRecipes("tungsten_steel", 2,
+                    new String[]{"hsla", "tungsten"}, new long[]{1, 1}),
+            new GT6AlloyRecipes("tungsten_steel", 2,
+                    new String[]{"knightmetal", "tungsten"}, new long[]{1, 1}),
+
+            // Loader_Recipes_Alloys.java:95: alternate HSSS route uses
+            // elemental osmium identity, not an osmiridium substitute.
+            new GT6AlloyRecipes("hss_s", 9,
+                    new String[]{"hss_g", "osmium", "iridium"}, new long[]{6, 1, 2})
     };
 
     static final GT6AlloyRecipes[] ALL = withGlowstoneFamily();
@@ -415,12 +516,10 @@ public final class GT6AlloyRecipes {
     }
 
     /**
-     * Whether GT6's source snapshot is authoritative for this material's
-     * crucible-alloy behavior. Positive literal identities are represented by
-     * the generated Java target table; the remaining supported source
-     * identities come from their dedicated Java tables or explicit recipe
-     * allowlist. A known GT6 material with no recipe in {@link #ALL} must not
-     * fall through to a potentially different CEu component decomposition.
+     * Whether a verified GT6 source definition is authoritative for this
+     * material's crucible-alloy behavior. A material with an explicit recipe
+     * set, or a known source identity whose recipe is unavailable, must not
+     * fall through to a potentially different host component decomposition.
      */
     static boolean blocksHostCompositionFallback(String name) {
         if (name == null || name.isEmpty()) return false;
@@ -435,6 +534,16 @@ public final class GT6AlloyRecipes {
                 GT6TechnicalMaterialData.contains(normalized) ||
                 GT6NonpositiveMaterialData.contains(normalized) ||
                 GT6WoodMaterialData.contains(normalized);
+    }
+
+    /**
+     * Material-identity-aware counterpart for presentation consumers. A
+     * same-named material from a registry that is not selected by the shared
+     * GT6 compatibility rule must keep its own component-derived recipe.
+     */
+    public static boolean blocksHostCompositionFallbackFor(Material material) {
+        String mechanicsName = GT6MaterialIdentity.canonicalMechanicsName(material);
+        return mechanicsName != null && blocksHostCompositionFallback(mechanicsName);
     }
 
     private static GT6AlloyRecipes[] withGlowstoneFamily() {
@@ -463,15 +572,57 @@ public final class GT6AlloyRecipes {
         return Collections.unmodifiableList(Arrays.asList(ALL));
     }
 
+    /** GT6 source rows plus recipes read from the optional GTQTCore source tree. */
+    public static List<GT6AlloyRecipes> getAllRecipes() {
+        return CombinedRecipeHolder.ALL;
+    }
+
+    /**
+     * Recipes active for the currently loaded material registries. GTQTCore
+     * source rows stay in the read-only catalogue but are not scanned or
+     * exposed to runtime consumers when its exact registry is absent.
+     */
+    public static List<GT6AlloyRecipes> getRuntimeRecipes() {
+        return GTQTCoreAlloyRecipes.isCoreMaterialRegistryAvailable() ?
+                getAllRecipes() : getRecipes();
+    }
+
+    private static final class CombinedRecipeHolder {
+        private static final List<GT6AlloyRecipes> ALL = combineRecipeSources();
+
+        private static List<GT6AlloyRecipes> combineRecipeSources() {
+            List<GT6AlloyRecipes> recipes = new ArrayList<>(Arrays.asList(GT6AlloyRecipes.ALL));
+            recipes.addAll(GTQTCoreAlloyRecipes.getRecipes());
+            return Collections.unmodifiableList(recipes);
+        }
+    }
+
     public String getOutputName() { return output; }
     public long getOutputUnits() { return outputUnits; }
     public String[] getInputNames() { return inputs.clone(); }
     public long[] getInputUnits() { return inputUnits.clone(); }
 
-    private GT6AlloyRecipes(String output, long outputUnits, String[] inputs, long[] inputUnits) {
+    GT6AlloyRecipes(String output, long outputUnits, String[] inputs, long[] inputUnits) {
+        if (output == null || output.trim().isEmpty()) {
+            throw new IllegalArgumentException("Alloy output identity must not be empty");
+        }
+        if (outputUnits <= 0L) {
+            throw new IllegalArgumentException("Alloy output quantity must be positive: " + output);
+        }
+        if (inputs == null || inputUnits == null || inputs.length == 0 || inputs.length != inputUnits.length) {
+            throw new IllegalArgumentException("Alloy inputs and quantities must be non-empty and aligned: " + output);
+        }
+        for (int i = 0; i < inputs.length; i++) {
+            if (inputs[i] == null || inputs[i].trim().isEmpty()) {
+                throw new IllegalArgumentException("Alloy input identity must not be empty: " + output);
+            }
+            if (inputUnits[i] <= 0L) {
+                throw new IllegalArgumentException("Alloy input quantity must be positive: " + output);
+            }
+        }
         this.output = output;
         this.outputUnits = outputUnits;
-        this.inputs = inputs;
-        this.inputUnits = inputUnits;
+        this.inputs = inputs.clone();
+        this.inputUnits = inputUnits.clone();
     }
 }

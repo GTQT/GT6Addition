@@ -643,6 +643,7 @@ public final class CrucibleTransferLogic {
         densities.put("jasper", (2 * silicaDensity + densities.get("iron")) / 3);
         densities.put("redjasper", densities.get("jasper")); // Literal native name of the Jasper alias.
         densities.put("tigereye", silicaDensity);
+        densities.put("yellowtigereye", densities.get("tigereye")); // ANY.TigerEye steals MT.TigerEyeYellow.
         densities.put("greenaventurine", silicaDensity);
         densities.put("milkyquartz", silicaDensity);
         for (String name : new String[]{"amber", "ash", "ashes", "infuseddull", "hexoriumwhite"}) {
@@ -679,8 +680,8 @@ public final class CrucibleTransferLogic {
         GT6RemainingDensityData.addTo(densities);
         for (String name : GT6TechnicalMaterialData.names()) {
             GT6TechnicalMaterialData.Profile family = GT6TechnicalMaterialData.find(name);
-            // Every native stats source above is explicit. The three
-            // stealLooks-only families retain the constructor's 1 g/cm^3.
+            // Every native stats source above is explicit. Families with no
+            // steal() source retain the GT6 constructor density.
             densities.put(name, family.statsSource == null ? 1000D : densities.get(family.statsSource));
         }
         densities.put("anycoal/carbon", densities.get("anycoalcarbon"));

@@ -69,6 +69,17 @@ public final class CrucibleComponentProvenance {
                 MetaItems.TACHYON_REACTOR, MetaItems.COSMIC_STRING, MetaItems.ULTIMATE_BATTERY);
     }
 
+    /**
+     * Preserve manufacturing inputs for electric products added by CEu or
+     * another mod, without taking electric GregTech tools away from their
+     * dedicated head/power-unit provenance path.
+     */
+    static boolean isTrackedElectricItem(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || CrucibleToolRecycling.isTool(stack)) return false;
+        ItemStack probe = stack.copy();
+        return probe.hasCapability(GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM, null);
+    }
+
     /** Battery block variants are recipe products too, but are not electric-item capabilities. */
     private static boolean isBatteryPart(ItemStack stack) {
         return batteryPartType(stack) != null;
@@ -99,7 +110,9 @@ public final class CrucibleComponentProvenance {
     }
 
     static boolean isBattery(ItemStack stack) {
-        return isElectricBattery(stack) || isBatteryPart(stack);
+        // Check the capability first: electric products from another mod need
+        // not initialize CEu's registry-backed MetaItems list to be tracked.
+        return isTrackedElectricItem(stack) || isElectricBattery(stack) || isBatteryPart(stack);
     }
 
     private static String provenanceKey(ItemStack stack) {
@@ -211,7 +224,7 @@ public final class CrucibleComponentProvenance {
         ItemStack hull = ItemStack.EMPTY;
         int hullCount = 0;
         for (ItemStack input : items) {
-            if (isHull(output) && isElectricBattery(input)) {
+            if (isHull(output) && (isElectricBattery(input) || isTrackedElectricItem(input))) {
                 // The extractor discards filler, not the original manufactured hull.
                 if (items.size() != 1 || !fluids.isEmpty() || !input.hasTagCompound()) return invalid;
                 NBTTagCompound battery = input.getTagCompound().getCompoundTag(CrucibleElectricProvenance.TAG);
@@ -272,7 +285,7 @@ public final class CrucibleComponentProvenance {
         if (perOutputMaterials.isEmpty()) return invalid;
         NBTTagCompound result = encoded(output, perOutputMaterials, 1);
         if (result.isEmpty()) return invalid;
-        if (isElectricBattery(output) && !hull.isEmpty()) {
+        if ((isElectricBattery(output) || isTrackedElectricItem(output)) && !hull.isEmpty()) {
             if (hullCount != output.getCount()) return invalid;
             net.minecraft.nbt.NBTTagList entries = CrucibleElectricProvenance.encode(hullTotals, output.getCount());
             if (entries == null) return invalid;
@@ -359,7 +372,7 @@ public final class CrucibleComponentProvenance {
         ItemStack electricCore = null;
         for (ItemStack output : outputs) {
             if (isEmptyBatteryPart(output)) emptyPart = output;
-            else if (isElectricBattery(output)) electricCore = output;
+            else if (isElectricBattery(output) || isTrackedElectricItem(output)) electricCore = output;
             else return Collections.emptyList();
         }
         ItemStack filledPart = consumed.get(0);

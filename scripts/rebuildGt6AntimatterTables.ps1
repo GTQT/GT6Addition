@@ -1,5 +1,6 @@
 param(
-    [string]$Gt6SourceRoot
+    [string]$Gt6SourceRoot,
+    [switch]$Check
 )
 
 $ErrorActionPreference = 'Stop'
@@ -84,15 +85,44 @@ if ($aliasRows.Count -ne 22 -or $normalizedAliases.Count -ne 21) {
 }
 
 $resourcesTest = Join-Path (Get-Location) 'src\test\resources'
-[System.IO.Directory]::CreateDirectory($resourcesTest) | Out-Null
-$encoding = [System.Text.UTF8Encoding]::new($false)
-[System.IO.File]::WriteAllLines((Join-Path $resourcesTest 'gt6-antimatter-source-values.txt'), @("# AM_SHA256=$actualHash") + $sourceRows, $encoding)
-[System.IO.File]::WriteAllLines((Join-Path $resourcesTest 'gt6-antimatter-source-aliases.txt'), @("# AM_SHA256=$actualHash") + $aliasRows, $encoding)
-
 $generator = Join-Path (Get-Location) 'scripts\generateGt6JavaMaterialTables.py'
-python $generator --group antimatter
-if ($LASTEXITCODE -ne 0) {
-    throw "Failed to generate GT6 antimatter Java tables (exit code $LASTEXITCODE)"
+function Assert-ExactLines([string]$Path, [string[]]$Expected) {
+    if (-not [System.IO.File]::Exists($Path)) {
+        throw "Missing GT6 antimatter source fixture: $Path"
+    }
+    $actual = [System.IO.File]::ReadAllLines($Path, [System.Text.Encoding]::UTF8)
+    if ($actual.Length -ne $Expected.Length) {
+        throw "GT6 antimatter source fixture line count mismatch at $Path. Expected $($Expected.Length), found $($actual.Length)"
+    }
+    for ($line = 0; $line -lt $Expected.Length; $line++) {
+        if (-not [string]::Equals($actual[$line], $Expected[$line], [System.StringComparison]::Ordinal)) {
+            throw "GT6 antimatter source fixture mismatch at $Path`:$($line + 1). Expected '$($Expected[$line])', found '$($actual[$line])'"
+        }
+    }
 }
 
-Write-Output "Rebuilt 418 AM identity rows and 22 alias source rows (21 normalized aliases) from $amPath"
+$materialFixture = Join-Path $resourcesTest 'gt6-antimatter-source-values.txt'
+$aliasFixture = Join-Path $resourcesTest 'gt6-antimatter-source-aliases.txt'
+$expectedMaterialLines = @("# AM_SHA256=$actualHash") + $sourceRows.ToArray()
+$expectedAliasLines = @("# AM_SHA256=$actualHash") + $aliasRows.ToArray()
+
+if ($Check) {
+    Assert-ExactLines $materialFixture $expectedMaterialLines
+    Assert-ExactLines $aliasFixture $expectedAliasLines
+    python $generator --group antimatter --check
+} else {
+    [System.IO.Directory]::CreateDirectory($resourcesTest) | Out-Null
+    $encoding = [System.Text.UTF8Encoding]::new($false)
+    [System.IO.File]::WriteAllLines($materialFixture, $expectedMaterialLines, $encoding)
+    [System.IO.File]::WriteAllLines($aliasFixture, $expectedAliasLines, $encoding)
+    python $generator --group antimatter
+}
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to verify/rebuild GT6 antimatter Java tables (exit code $LASTEXITCODE)"
+}
+
+if ($Check) {
+    Write-Output "Verified 418 AM identity rows and 22 aliases (21 normalized aliases) against $amPath"
+} else {
+    Write-Output "Rebuilt 418 AM identity rows and 22 alias source rows (21 normalized aliases) from $amPath"
+}

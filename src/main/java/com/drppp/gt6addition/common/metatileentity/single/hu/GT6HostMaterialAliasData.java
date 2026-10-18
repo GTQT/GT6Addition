@@ -24,6 +24,11 @@ final class GT6HostMaterialAliasData {
         put(paths, "pvc", "gregtech:polyvinyl_chloride");
         put(paths, "hardplastic", "gregtech:polycarbonate");
         put(paths, "chromium", "gregtech:chrome");
+        // GT6 MT.Constantan (ID 8662) explicitly registers "Cupronickel" as
+        // an alias and assigns Cupronickel = Constantan. CEu's existing
+        // gregtech:cupronickel has the same Cu:Ni 1:1 composition; reuse that
+        // identity rather than registering or approximating a new material.
+        put(paths, "constantan", "gregtech:cupronickel");
         put(paths, "woodtreated", "gregtech:wood_sealed");
         put(paths, "padauk", "gregtech:paduak");
         put(paths, "cooperite", "gregtech:sheldonite");

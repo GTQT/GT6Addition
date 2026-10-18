@@ -142,6 +142,22 @@ final class GT6MaterialHazardData {
                 !CrucibleSmeltingRule.hasMeltingFlag(name);
     }
 
+    /** GT6 removes contents at their boiling point, or burns eligible contents above 313 K. */
+    static boolean shouldVaporize(String name, long temperature, long boilingPoint, boolean hostFlammable) {
+        return (boilingPoint != Long.MAX_VALUE && temperature >= boilingPoint) ||
+                shouldBurn(name, temperature, hostFlammable);
+    }
+
+    static boolean shouldVaporize(Material material, long temperature, long boilingPoint) {
+        String mechanicsName = GT6MaterialIdentity.canonicalMechanicsName(material);
+        if (mechanicsName == null) {
+            return (boilingPoint != Long.MAX_VALUE && temperature >= boilingPoint) ||
+                    shouldBurn(material, temperature);
+        }
+        return shouldVaporize(mechanicsName, temperature, boilingPoint,
+                material.hasFlags(MaterialFlags.FLAMMABLE));
+    }
+
     private static boolean hasGt6BurningExemption(String name) {
         GT6LiteralHazardData.Profile literal = GT6LiteralHazardData.find(name);
         GT6TechnicalMaterialData.Profile technical = GT6TechnicalMaterialData.find(name);

@@ -3,6 +3,7 @@ package com.drppp.gt6addition.intergations.jei.crucible;
 import com.drppp.gt6addition.common.metatileentity.single.hu.CrucibleFluidUnits;
 import com.drppp.gt6addition.common.metatileentity.single.hu.CrucibleMaterialPhaseData;
 import com.drppp.gt6addition.common.metatileentity.single.hu.GT6AlloyRecipes;
+import com.drppp.gt6addition.common.metatileentity.single.hu.GTQTCoreAlloyRecipes;
 import com.drppp.gt6addition.common.metatileentity.single.hu.MetaTileEntityCrucible;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
@@ -25,13 +26,15 @@ public final class CrucibleJeiRecipeMaker {
 
     public static List<CrucibleJeiRecipe> createRecipes() {
         List<CrucibleJeiRecipe> recipes = new ArrayList<>();
-        for (GT6AlloyRecipes definition : GT6AlloyRecipes.getRecipes()) {
+        for (GT6AlloyRecipes definition : GT6AlloyRecipes.getRuntimeRecipes()) {
             addGt6AlloyRecipe(recipes, definition);
         }
         for (Material material : GregTechAPI.materialManager.getRegisteredMaterials()) {
             if (material == null || material == Materials.NULL) continue;
             addMeltingRecipe(recipes, material);
-            if (isUsableOutputMaterial(material) && !GT6AlloyRecipes.hasCompleteRecipeSet(material.getName())) {
+            if (isUsableOutputMaterial(material) &&
+                    !GT6AlloyRecipes.blocksHostCompositionFallbackFor(material) &&
+                    !GTQTCoreAlloyRecipes.hasRecipeOutput(material.getRegistryName())) {
                 addAlloyRecipe(recipes, material);
             }
         }
